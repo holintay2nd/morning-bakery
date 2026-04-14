@@ -5,3 +5,5 @@ dist
 .env
 frontend/.env
 backend/.env
+.vite
+frontend/.vite
