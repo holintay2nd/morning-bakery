@@ -1,8 +1,21 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import api from '../api'
 
 export default function Hero() {
   const textRef = useRef(null)
+  const [hero, setHero] = useState({
+    title: 'Morning\nBakery',
+    subtitle: '당일 생산 · 당일 판매',
+    description: '매일 새벽 5시, 오늘의 빵을 굽기 시작합니다.\n신선함을 가장 중요하게 생각하는 작은 베이커리입니다.',
+    backgroundImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1920&q=80&auto=format&fit=crop',
+  })
+
+  useEffect(() => {
+    api.get('/content').then((res) => {
+      if (res.data.hero) setHero(res.data.hero)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const el = textRef.current
@@ -33,11 +46,10 @@ export default function Hero() {
       {/* 배경 이미지 */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1920&q=80&auto=format&fit=crop"
+          src={hero.backgroundImage}
           alt="모닝베이커리 매장 분위기"
           className="w-full h-full object-cover"
         />
-        {/* 어두운 오버레이 */}
         <div className="absolute inset-0 bg-gradient-to-b from-brown-900/60 via-brown-900/40 to-brown-900/70" />
       </div>
 
@@ -48,22 +60,24 @@ export default function Hero() {
         </p>
 
         <h1 className="font-serif text-5xl md:text-7xl leading-tight mb-6">
-          Morning
-          <br />
-          <span className="italic text-brown-300">Bakery</span>
+          {hero.title.split('\n').map((line, i) => (
+            <span key={i}>
+              {i === 1 ? <span className="italic text-brown-300">{line}</span> : line}
+              {i === 0 && <br />}
+            </span>
+          ))}
         </h1>
 
-        {/* 핵심 문구 강조 */}
         <div className="inline-block border border-cream-200/60 rounded-full px-6 py-2 mb-6">
           <p className="text-sm md:text-base tracking-widest text-cream-100 font-light">
-            당일 생산 · 당일 판매
+            {hero.subtitle}
           </p>
         </div>
 
         <p className="text-cream-200 text-sm md:text-base leading-relaxed mb-10 font-light">
-          매일 새벽 5시, 오늘의 빵을 굽기 시작합니다.
-          <br className="hidden md:block" />
-          신선함을 가장 중요하게 생각하는 작은 베이커리입니다.
+          {hero.description.split('\n').map((line, i) => (
+            <span key={i}>{line}{i < hero.description.split('\n').length - 1 && <br className="hidden md:block" />}</span>
+          ))}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
