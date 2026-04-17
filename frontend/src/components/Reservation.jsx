@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Send, CheckCircle } from 'lucide-react'
+import api from '../api'
 
 const CAKE_OPTIONS = [
   '생일 케이크',
@@ -39,16 +40,20 @@ export default function Reservation() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
-    // 실제 서비스에서는 API 호출로 교체하세요
-    console.log('예약 정보:', form)
-    setSubmitted(true)
+    try {
+      await api.post('/reservations', form)
+      setSubmitted(true)
+    } catch (err) {
+      console.error(err)
+      alert('예약 신청 중 오류가 발생했습니다. 다시 시도해 주세요.')
+    }
   }
 
   const resetForm = () => {
@@ -77,7 +82,7 @@ export default function Reservation() {
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">
           Cake Order
         </p>
-        <h2 className="font-serif text-3xl md:text-4xl text-cream-50 text-center mb-3">
+        <h2 className="font-sans font-bold text-3xl md:text-4xl text-cream-50 text-center mb-3">
           케이크 예약
         </h2>
         <p className="text-center text-brown-400 text-sm mb-12 leading-relaxed">

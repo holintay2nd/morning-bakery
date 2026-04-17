@@ -20,7 +20,7 @@
 
 @layer components {
   .section-title {
-    @apply text-3xl md:text-4xl font-serif text-brown-700 text-center mb-4;
+    @apply text-3xl md:text-4xl font-sans font-bold text-brown-700 text-center mb-4;
   }
 
   .section-subtitle {

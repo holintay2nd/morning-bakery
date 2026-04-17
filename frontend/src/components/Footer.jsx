@@ -1,4 +1,5 @@
-import { Instagram, Heart } from 'lucide-react'
+import { Instagram, Heart, Lock } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
   { label: '홈', href: '#home' },
@@ -8,6 +9,7 @@ const navLinks = [
 ]
 
 export default function Footer() {
+  const navigate = useNavigate()
   const handleScroll = (href) => {
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -80,9 +82,18 @@ export default function Footer() {
           <p className="text-xs text-brown-600">
             © 2024 Morning Bakery. All rights reserved.
           </p>
-          <p className="text-xs text-brown-600 flex items-center gap-1">
-            Made with <Heart size={10} className="text-brown-500" /> in Seoul
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-brown-600 flex items-center gap-1">
+              Made with <Heart size={10} className="text-brown-500" /> in Seoul
+            </p>
+            <button
+              onClick={() => navigate('/admin/login')}
+              className="flex items-center gap-1.5 text-xs text-brown-700 hover:text-brown-500 transition-colors"
+            >
+              <Lock size={11} />
+              관리자
+            </button>
+          </div>
         </div>
       </div>
     </footer>

@@ -37,7 +37,7 @@ export default function StoreInfo() {
                   <MapPin size={20} className="text-brown-500" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-brown-800 text-lg mb-1">위치</h3>
+                  <h3 className="font-sans font-bold text-brown-800 text-lg mb-1">위치</h3>
                   <p className="text-brown-500 text-sm leading-relaxed">
                     서울특별시 마포구 홍익로 00길 00
                     <br />
@@ -62,7 +62,7 @@ export default function StoreInfo() {
                   <Clock size={20} className="text-brown-500" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-serif text-brown-800 text-lg mb-3">운영 시간</h3>
+                  <h3 className="font-sans font-bold text-brown-800 text-lg mb-3">운영 시간</h3>
                   <ul className="space-y-2">
                     {hours.map((h) => (
                       <li key={h.day} className="flex justify-between text-sm">
@@ -87,7 +87,7 @@ export default function StoreInfo() {
                   <Phone size={20} className="text-brown-500" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-brown-800 text-lg mb-1">연락처</h3>
+                  <h3 className="font-sans font-bold text-brown-800 text-lg mb-1">연락처</h3>
                   <a
                     href="tel:02-000-0000"
                     className="text-brown-600 text-sm hover:text-brown-400 transition-colors"
