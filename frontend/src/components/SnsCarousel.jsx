@@ -238,15 +238,18 @@ export default function SnsCarousel() {
       api.get('/content/sns'),
       api.get('/instagram/feed'),
       api.get('/youtube/feed'),
-    ]).then(([snsResult, igResult, ytResult]) => {
-      const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
-      const igFeed = igResult.status === 'fulfilled'  ? igResult.value.data  : null
-      const ytFeed = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
+      api.get('/threads/feed'),
+    ]).then(([snsResult, igResult, ytResult, thResult]) => {
+      const sns      = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
+      const igFeed   = igResult.status === 'fulfilled'  ? igResult.value.data  : null
+      const ytFeed   = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
+      const thFeed   = thResult.status === 'fulfilled'  ? thResult.value.data  : null
 
       setSnsData({
         ...sns,
         instagram: igFeed ?? sns.instagram ?? [],
         youtube:   ytFeed ?? sns.youtube   ?? [],
+        threads:   thFeed ?? sns.threads   ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])
