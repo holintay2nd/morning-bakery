@@ -239,17 +239,20 @@ export default function SnsCarousel() {
       api.get('/instagram/feed'),
       api.get('/youtube/feed'),
       api.get('/threads/feed'),
-    ]).then(([snsResult, igResult, ytResult, thResult]) => {
-      const sns      = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
-      const igFeed   = igResult.status === 'fulfilled'  ? igResult.value.data  : null
-      const ytFeed   = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
-      const thFeed   = thResult.status === 'fulfilled'  ? thResult.value.data  : null
+      api.get('/naverblog/feed'),
+    ]).then(([snsResult, igResult, ytResult, thResult, nbResult]) => {
+      const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
+      const igFeed = igResult.status === 'fulfilled'  ? igResult.value.data  : null
+      const ytFeed = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
+      const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
+      const nbFeed = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
       setSnsData({
         ...sns,
         instagram: igFeed ?? sns.instagram ?? [],
         youtube:   ytFeed ?? sns.youtube   ?? [],
         threads:   thFeed ?? sns.threads   ?? [],
+        naverBlog: nbFeed ?? sns.naverBlog ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])

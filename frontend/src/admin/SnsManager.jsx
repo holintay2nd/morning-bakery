@@ -365,9 +365,76 @@ function ThreadsStatusCard() {
   )
 }
 
+// 네이버 블로그 연동 상태 카드
+function NaverBlogStatusCard() {
+  const [status, setStatus] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchStatus = () => {
+    setLoading(true)
+    api.get('/naverblog/status')
+      .then((res) => setStatus(res.data))
+      .catch(() => setStatus({ connected: false }))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { fetchStatus() }, [])
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+      <div className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">📝</span>
+          <span className="font-medium text-brown-800 text-sm">네이버 블로그</span>
+          <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-medium">
+            자동 연동
+          </span>
+        </div>
+        <button
+          onClick={fetchStatus}
+          className="p-1.5 text-brown-400 hover:text-brown-600 transition-colors"
+          title="상태 새로고침"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+      <div className="border-t border-brown-50 px-6 py-4">
+        {loading ? (
+          <p className="text-brown-400 text-xs">확인 중...</p>
+        ) : status?.connected ? (
+          <div className="flex items-center gap-2">
+            <CheckCircle size={15} className="text-green-500 shrink-0" />
+            <div>
+              <p className="text-green-700 text-xs font-medium">
+                {status.blogTitle} 연동됨
+              </p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                최근 포스트가 메인 페이지에 자동으로 표시됩니다. (15분 캐시)
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2">
+            <XCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-600 text-xs font-medium">연동 안 됨</p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                {status?.error || 'NAVER_BLOG_ID가 설정되지 않았습니다.'}
+              </p>
+              <p className="text-brown-400 text-[11px] mt-1">
+                블로그 URL의 아이디를 Heroku에 설정하세요.<br />
+                예) blog.naver.com/<strong>morningbakery</strong> → NAVER_BLOG_ID=morningbakery
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function SnsManager() {
   const [snsData, setSnsData] = useState({
-    naverBlog: [],
     article: [],
   })
 
@@ -410,6 +477,7 @@ export default function SnsManager() {
       <InstagramStatusCard />
       <YoutubeStatusCard />
       <ThreadsStatusCard />
+      <NaverBlogStatusCard />
 
       {/* 나머지 SNS 수동 관리 */}
       {SNS_CONFIG.map((config) => (
