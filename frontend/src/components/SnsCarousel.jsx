@@ -1,0 +1,284 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import api from '../api'
+
+// SNS 타입 설정
+const SNS_CONFIG = [
+  {
+    key: 'instagram',
+    label: '인스타그램',
+    color: 'from-purple-500 via-pink-500 to-orange-400',
+    textColor: 'text-pink-600',
+    bgLight: 'bg-pink-50',
+    borderColor: 'border-pink-200',
+    Icon: () => (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'youtube',
+    label: '유튜브',
+    color: 'from-red-500 to-red-600',
+    textColor: 'text-red-600',
+    bgLight: 'bg-red-50',
+    borderColor: 'border-red-200',
+    Icon: () => (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'naverBlog',
+    label: '네이버 블로그',
+    color: 'from-green-500 to-green-600',
+    textColor: 'text-green-700',
+    bgLight: 'bg-green-50',
+    borderColor: 'border-green-200',
+    Icon: () => (
+      <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white text-xs font-bold rounded-sm leading-none">
+        N
+      </span>
+    ),
+  },
+  {
+    key: 'threads',
+    label: '스레드',
+    color: 'from-gray-700 to-gray-900',
+    textColor: 'text-gray-800',
+    bgLight: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    Icon: () => (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+        <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 9.938C8.33 9.053 9.1 8.29 10.11 7.75 11.175 7.19 12.43 6.944 13.855 6.944c1.994.016 3.659.703 4.818 1.992 1.129 1.256 1.704 2.945 1.89 5.01.336.22.654.455.949.704 1.2 1.008 1.92 2.254 2.044 3.503.144 1.427-.263 3.042-1.195 4.394-.997 1.44-2.471 2.482-4.376 3.098C16.48 23.755 14.434 24 12.186 24zm2.842-12.97c-.507-.03-1.02-.041-1.528-.029-1.079.06-1.909.345-2.42.826-.421.365-.627.828-.597 1.342.058 1.073 1.168 1.618 2.518 1.544 1.237-.068 2.55-.663 2.847-3.032a10.374 10.374 0 0 0-.82-.651z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'article',
+    label: '기사',
+    color: 'from-blue-500 to-blue-700',
+    textColor: 'text-blue-700',
+    bgLight: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    Icon: () => (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-blue-700" aria-hidden="true">
+        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM2 3h20a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h18V5H3z"/>
+      </svg>
+    ),
+  },
+]
+
+// 개별 SNS 캐러셀 섹션
+function SnsSection({ config, items }) {
+  const { label, color, textColor, bgLight, borderColor, Icon } = config
+  const [current, setCurrent] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const timerRef = useRef(null)
+
+  // 화면 크기에 따른 visible count는 CSS로 처리, 이동 단위는 1
+  const total = items.length
+
+  const prev = useCallback(() => {
+    setCurrent((c) => (c <= 0 ? Math.max(0, total - 1) : c - 1))
+  }, [total])
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c >= total - 1 ? 0 : c + 1))
+  }, [total])
+
+  // 자동 슬라이드
+  useEffect(() => {
+    if (paused || total <= 1) return
+    timerRef.current = setInterval(next, 3000)
+    return () => clearInterval(timerRef.current)
+  }, [paused, total, next])
+
+  if (total === 0) {
+    return (
+      <div className="mb-14">
+        <div className="flex items-center gap-2 mb-5">
+          <span className={`${textColor}`}><Icon /></span>
+          <h3 className={`font-bold text-base ${textColor}`}>{label}</h3>
+        </div>
+        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+          <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-14">
+      {/* 섹션 헤더 */}
+      <div className="flex items-center gap-2 mb-5">
+        <span className={`${textColor}`}><Icon /></span>
+        <h3 className={`font-bold text-base ${textColor}`}>{label}</h3>
+        <span className="text-brown-300 text-xs ml-1">({total})</span>
+      </div>
+
+      {/* 캐러셀 */}
+      <div
+        className="relative"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {/* 왼쪽 화살표 */}
+        <button
+          onClick={prev}
+          aria-label="이전"
+          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
+            w-9 h-9 rounded-full bg-white shadow-md border ${borderColor}
+            flex items-center justify-center ${textColor}
+            hover:scale-110 transition-transform duration-200
+            disabled:opacity-30`}
+          disabled={total <= 1}
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        {/* 슬라이드 창 */}
+        <div className="overflow-hidden rounded-2xl">
+          <div
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${current * 100}%)` }}
+          >
+            {/* 아이템을 4개씩 한 슬라이드로 묶기 */}
+            {Array.from({ length: Math.ceil(total / 4) }).map((_, slideIdx) => (
+              <div key={slideIdx} className="flex shrink-0 w-full gap-4 px-1">
+                {items.slice(slideIdx * 4, slideIdx * 4 + 4).map((item, i) => (
+                  <a
+                    key={item._id || i}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex-1 min-w-0 group rounded-xl overflow-hidden bg-white border ${borderColor}
+                      hover:shadow-lg transition-shadow duration-300`}
+                  >
+                    {/* 썸네일 */}
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={item.thumbnail}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      {/* SNS 뱃지 */}
+                      <span
+                        className={`absolute top-2 left-2 inline-flex items-center gap-1
+                          text-white text-[10px] font-semibold px-2 py-0.5 rounded-full
+                          bg-gradient-to-r ${color} shadow-sm`}
+                      >
+                        <Icon />
+                        <span className="hidden sm:inline">{label}</span>
+                      </span>
+                    </div>
+                    {/* 제목 */}
+                    <div className="p-3">
+                      <p className="text-brown-700 text-xs font-medium line-clamp-2 leading-relaxed">
+                        {item.title}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+                {/* 빈 칸 채우기 (마지막 슬라이드가 4개 미만일 때) */}
+                {items.slice(slideIdx * 4, slideIdx * 4 + 4).length < 4 &&
+                  Array.from({ length: 4 - items.slice(slideIdx * 4, slideIdx * 4 + 4).length }).map((_, k) => (
+                    <div key={`empty-${k}`} className="flex-1 min-w-0" />
+                  ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 오른쪽 화살표 */}
+        <button
+          onClick={next}
+          aria-label="다음"
+          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
+            w-9 h-9 rounded-full bg-white shadow-md border ${borderColor}
+            flex items-center justify-center ${textColor}
+            hover:scale-110 transition-transform duration-200
+            disabled:opacity-30`}
+          disabled={total <= 1}
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* 페이지 점 (슬라이드 수 > 1일 때만) */}
+      {Math.ceil(total / 4) > 1 && (
+        <div className="flex justify-center gap-1.5 mt-4">
+          {Array.from({ length: Math.ceil(total / 4) }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              aria-label={`${i + 1}번 슬라이드`}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                current === i ? `bg-gradient-to-r ${color} w-4` : 'bg-brown-200'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 메인 SNS 캐러셀 섹션
+export default function SnsCarousel() {
+  const [snsData, setSnsData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // 일반 SNS 데이터 + 인스타그램 피드를 병렬로 가져옴
+    Promise.allSettled([
+      api.get('/content/sns'),
+      api.get('/instagram/feed'),
+    ]).then(([snsResult, igResult]) => {
+      const sns = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
+      const igFeed = igResult.status === 'fulfilled' ? igResult.value.data : null
+
+      // 인스타그램 API 연동 성공 시 DB 데이터 대신 실시간 피드 사용
+      setSnsData({
+        ...sns,
+        instagram: igFeed ?? sns.instagram ?? [],
+      })
+    }).finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <section id="sns" className="py-24 px-8 bg-white">
+      <div className="max-w-6xl mx-auto">
+        {/* 섹션 헤더 */}
+        <p className="section-subtitle">Follow Us</p>
+        <h2 className="section-title mb-3">SNS에서 만나요</h2>
+        <p className="text-center text-brown-400 text-sm mb-14">
+          인스타그램, 유튜브, 네이버 블로그 등 다양한 채널에서 모닝베이커리의 소식을 전해드립니다.
+        </p>
+
+        {loading ? (
+          <div className="py-20 text-center text-brown-400 text-sm">
+            불러오는 중...
+          </div>
+        ) : !snsData ? (
+          <div className="py-20 text-center text-brown-400 text-sm">
+            SNS 정보를 불러올 수 없습니다.
+          </div>
+        ) : (
+          <div>
+            {SNS_CONFIG.map((config) => (
+              <SnsSection
+                key={config.key}
+                config={config}
+                items={snsData[config.key] || []}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
