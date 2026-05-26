@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
   { label: '홈', href: '#home' },
-  { label: '메뉴', href: '#menu' },
+  { label: 'SNS', href: '#sns' },
   { label: '매장 안내', href: '#store' },
   { label: '케이크 예약', href: '#reservation' },
 ]

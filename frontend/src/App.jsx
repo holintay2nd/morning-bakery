@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import About from './components/About'
-import Menu from './components/Menu'
+import SnsCarousel from './components/SnsCarousel'
 import StoreInfo from './components/StoreInfo'
 import Reservation from './components/Reservation'
 import Footer from './components/Footer'
@@ -17,7 +17,7 @@ function HomePage() {
       <main>
         <Hero />
         <About />
-        <Menu />
+        <SnsCarousel />
         <StoreInfo />
         <Reservation />
       </main>

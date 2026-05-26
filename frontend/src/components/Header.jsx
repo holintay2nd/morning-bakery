@@ -3,7 +3,7 @@ import { Menu, X } from 'lucide-react'
 
 const navItems = [
   { label: '홈', href: '#home' },
-  { label: '메뉴', href: '#menu' },
+  { label: 'SNS', href: '#sns' },
   { label: '매장 안내', href: '#store' },
   { label: '예약 문의', href: '#reservation' },
 ]

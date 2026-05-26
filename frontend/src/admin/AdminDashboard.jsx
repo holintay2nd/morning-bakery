@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import MenuManager from './MenuManager'
 import ContentManager from './ContentManager'
 import ReservationManager from './ReservationManager'
+import SnsManager from './SnsManager'
 
 const tabs = [
   { id: 'menu', label: '메뉴 관리' },
   { id: 'content', label: '콘텐츠 수정' },
+  { id: 'sns', label: 'SNS 관리' },
   { id: 'reservation', label: '예약 관리' },
 ]
 
@@ -55,6 +57,7 @@ export default function AdminDashboard() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {activeTab === 'menu' && <MenuManager />}
         {activeTab === 'content' && <ContentManager />}
+        {activeTab === 'sns' && <SnsManager />}
         {activeTab === 'reservation' && <ReservationManager />}
       </main>
     </div>
