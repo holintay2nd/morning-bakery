@@ -237,14 +237,16 @@ export default function SnsCarousel() {
     Promise.allSettled([
       api.get('/content/sns'),
       api.get('/instagram/feed'),
-    ]).then(([snsResult, igResult]) => {
-      const sns = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
-      const igFeed = igResult.status === 'fulfilled' ? igResult.value.data : null
+      api.get('/youtube/feed'),
+    ]).then(([snsResult, igResult, ytResult]) => {
+      const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
+      const igFeed = igResult.status === 'fulfilled'  ? igResult.value.data  : null
+      const ytFeed = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
 
-      // 인스타그램 API 연동 성공 시 DB 데이터 대신 실시간 피드 사용
       setSnsData({
         ...sns,
         instagram: igFeed ?? sns.instagram ?? [],
+        youtube:   ytFeed ?? sns.youtube   ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])

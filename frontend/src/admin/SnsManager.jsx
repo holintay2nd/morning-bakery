@@ -221,9 +221,80 @@ function InstagramStatusCard() {
   )
 }
 
+// 유튜브 연동 상태 카드
+function YoutubeStatusCard() {
+  const [status, setStatus] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchStatus = () => {
+    setLoading(true)
+    api.get('/youtube/status')
+      .then((res) => setStatus(res.data))
+      .catch(() => setStatus({ connected: false }))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { fetchStatus() }, [])
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+      <div className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">▶️</span>
+          <span className="font-medium text-brown-800 text-sm">유튜브</span>
+          <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full font-medium">
+            자동 연동
+          </span>
+        </div>
+        <button
+          onClick={fetchStatus}
+          className="p-1.5 text-brown-400 hover:text-brown-600 transition-colors"
+          title="상태 새로고침"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+      <div className="border-t border-brown-50 px-6 py-4">
+        {loading ? (
+          <p className="text-brown-400 text-xs">확인 중...</p>
+        ) : status?.connected ? (
+          <div className="flex items-center gap-2">
+            <CheckCircle size={15} className="text-green-500 shrink-0" />
+            <div>
+              <p className="text-green-700 text-xs font-medium">
+                {status.channelName} 채널 연동됨
+              </p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                최근 영상이 메인 페이지에 자동으로 표시됩니다. (15분 캐시)
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2">
+            <XCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-600 text-xs font-medium">연동 안 됨</p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                {status?.error || 'YOUTUBE_API_KEY 또는 YOUTUBE_CHANNEL_ID가 설정되지 않았습니다.'}
+              </p>
+              <a
+                href="https://console.cloud.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-red-500 text-[11px] mt-1.5 hover:underline"
+              >
+                Google Cloud Console에서 API 키 발급 <ExternalLink size={10} />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function SnsManager() {
   const [snsData, setSnsData] = useState({
-    youtube: [],
     naverBlog: [],
     threads: [],
     article: [],
@@ -264,8 +335,9 @@ export default function SnsManager() {
         </p>
       </div>
 
-      {/* 인스타그램 자동 연동 카드 */}
+      {/* 자동 연동 카드 */}
       <InstagramStatusCard />
+      <YoutubeStatusCard />
 
       {/* 나머지 SNS 수동 관리 */}
       {SNS_CONFIG.map((config) => (
