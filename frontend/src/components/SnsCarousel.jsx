@@ -249,10 +249,6 @@ function InstagramSection({ items, username, profilePicture }) {
         {/* 캐러셀 — mask-image로 자연스럽게 페이드 */}
         <div
           className="overflow-hidden"
-          style={shouldScroll ? {
-            maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-          } : undefined}
           onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
           onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
         >
