@@ -37,9 +37,13 @@ const SNS_CONFIG = [
     textColor: 'text-green-700',
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
-    // 네이버 블로그 공식 아이콘 (배지 배경이 녹색이므로 흰색으로 반전)
+    // 네이버 블로그 공식 "b|" 아이콘
     Icon: () => (
-      <img src="/naver-blog-icon.webp" alt="" className="w-5 h-5 object-contain brightness-0 invert" />
+      <svg viewBox="0 0 20 20" className="w-5 h-5 fill-current" aria-hidden="true">
+        <rect x="2.5" y="2" width="3" height="16" rx="1.5"/>
+        <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z"/>
+        <rect x="15.5" y="2" width="2" height="16" rx="1"/>
+      </svg>
     ),
   },
   {
@@ -471,10 +475,14 @@ function formatBlogDate(dateStr) {
   return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`
 }
 
-// 카드 헤더에 쓰는 네이버 블로그 컬러 아이콘
+// 카드 헤더에 쓰는 네이버 블로그 "b|" 컬러 아이콘
 function NaverBlogIcon() {
   return (
-    <img src="/naver-blog-icon.webp" alt="" className="w-4 h-4 flex-shrink-0 object-contain" />
+    <svg viewBox="0 0 20 20" className="w-4 h-4 flex-shrink-0" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
+      <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
+      <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
+    </svg>
   )
 }
 
@@ -575,7 +583,11 @@ function NaverBlogSection({ items, blogTitle }) {
           </div>
         ) : (
           <div className="aspect-square rounded-xl bg-green-50 flex items-center justify-center">
-            <img src="/naver-blog-icon.webp" alt="" className="w-14 h-14 object-contain opacity-20" />
+            <svg viewBox="0 0 20 20" className="w-14 h-14 opacity-15" fill="none" aria-hidden="true">
+              <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
+              <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
+              <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
+            </svg>
           </div>
         )}
       </div>
