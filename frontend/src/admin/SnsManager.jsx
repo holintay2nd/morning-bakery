@@ -7,7 +7,134 @@ const MANUAL_SNS_CONFIG = [
   { key: 'article', label: '기사', emoji: '📰', placeholder: 'https://news.example.com/...' },
 ]
 
-// 자동 연동 상태 카드 설정
+// 유튜브 전용 카드 (채널 ID 직접 입력 가능)
+function YoutubeSettingsCard() {
+  const [channelId, setChannelId] = useState('')   // DB에 저장된 값
+  const [inputValue, setInputValue] = useState('') // 입력창 값
+  const [status, setStatus] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [settingsRes, statusRes] = await Promise.allSettled([
+        api.get('/content/settings'),
+        api.get('/youtube/status'),
+      ])
+      const id = settingsRes.status === 'fulfilled'
+        ? (settingsRes.value.data.youtubeChannelId || '')
+        : ''
+      setChannelId(id)
+      setInputValue(id)
+      setStatus(statusRes.status === 'fulfilled' ? statusRes.value.data : { connected: false })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchAll() }, [fetchAll])
+
+  const handleSave = async () => {
+    const trimmed = inputValue.trim()
+    setSaving(true)
+    try {
+      await api.patch('/content/settings', { youtubeChannelId: trimmed })
+      setChannelId(trimmed)
+      // 저장 후 즉시 연결 상태 다시 확인
+      const res = await api.get('/youtube/status')
+      setStatus(res.data)
+    } catch {
+      alert('저장에 실패했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const changed = inputValue.trim() !== channelId
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+      {/* 헤더 */}
+      <div className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">▶️</span>
+          <span className="font-medium text-brown-800 text-sm">유튜브</span>
+          <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full font-medium">
+            자동 연동
+          </span>
+        </div>
+        <button
+          onClick={fetchAll}
+          className="p-1.5 text-brown-400 hover:text-brown-600 transition-colors"
+          title="상태 새로고침"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      <div className="border-t border-brown-50 px-6 py-4 space-y-4">
+        {/* 채널 ID 입력 */}
+        <div>
+          <label className="block text-brown-500 text-xs font-medium mb-1.5">채널 ID</label>
+          <div className="flex gap-2">
+            <input
+              className="input flex-1 font-mono text-xs"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
+              spellCheck={false}
+            />
+            <button
+              onClick={handleSave}
+              disabled={saving || !changed}
+              className="px-4 py-2 bg-brown-600 text-white text-xs font-medium rounded-lg hover:bg-brown-500 disabled:opacity-40 transition-colors whitespace-nowrap"
+            >
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+          <p className="text-brown-300 text-[11px] mt-1.5">
+            YouTube Studio → 설정 → 채널 → 고급 설정에서 확인
+          </p>
+        </div>
+
+        {/* 연결 상태 */}
+        {loading ? (
+          <p className="text-brown-400 text-xs">확인 중...</p>
+        ) : status?.connected ? (
+          <div className="flex items-center gap-2">
+            <CheckCircle size={15} className="text-green-500 shrink-0" />
+            <div>
+              <p className="text-green-700 text-xs font-medium">
+                {status.channelName || channelId} 연동됨
+              </p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                최근 영상이 메인 페이지에 자동으로 표시됩니다. (15분 캐시)
+              </p>
+            </div>
+          </div>
+        ) : channelId ? (
+          <div className="flex items-start gap-2">
+            <XCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-600 text-xs font-medium">연동 실패</p>
+              <p className="text-brown-400 text-[11px] mt-0.5">
+                {status?.error || '채널 ID를 다시 확인해 주세요.'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2">
+            <XCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+            <p className="text-brown-400 text-xs">채널 ID를 입력하고 저장하세요.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// 자동 연동 상태 카드 설정 (YouTube 제외)
 const AUTO_STATUS_CONFIG = {
   instagram: {
     emoji: '📸',
@@ -19,17 +146,6 @@ const AUTO_STATUS_CONFIG = {
     helpUrl: 'https://developers.facebook.com/docs/instagram-basic-display-api/getting-started',
     helpText: '액세스 토큰 발급 방법',
     helpClass: 'text-purple-500',
-  },
-  youtube: {
-    emoji: '▶️',
-    label: '유튜브',
-    badgeClass: 'text-red-500 bg-red-50',
-    endpoint: '/youtube/status',
-    connectedText: (s) => `${s.channelName || s.channelId} 채널 연동됨`,
-    errorDefault: 'YOUTUBE_CHANNEL_ID가 설정되지 않았습니다.',
-    helpUrl: 'https://www.youtube.com/account_advanced',
-    helpText: 'YouTube Studio에서 채널 ID 확인',
-    helpClass: 'text-red-500',
   },
   threads: {
     emoji: '🔗',
@@ -312,7 +428,7 @@ export default function SnsManager() {
 
       {/* 자동 연동 상태 카드 */}
       <SnsStatusCard type="instagram" />
-      <SnsStatusCard type="youtube" />
+      <YoutubeSettingsCard />
       <SnsStatusCard type="threads" />
       <SnsStatusCard type="naverBlog" />
 
