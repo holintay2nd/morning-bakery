@@ -640,7 +640,182 @@ function NaverBlogSection({ items, blogTitle }) {
   )
 }
 
-// ─── 일반 SNS 섹션 (스레드 · 기사) ───────────────────────────────────────────
+// ─── 스레드 섹션 ─────────────────────────────────────────────────────────────
+// 2장: YouTube와 동일 너비 (2×568 + 16 = 1152px)
+const TH_CARD_W   = 568
+const TH_CARD_GAP = 16
+const TH_VISIBLE  = 2
+const TH_SPEED    = 20  // px/s
+
+function ThreadsSection({ items, username, profilePicture }) {
+  const shouldScroll = items.length > TH_VISIBLE
+  const [avatarError, setAvatarError] = useState(false)
+
+  const trackRef  = useRef(null)
+  const offsetRef = useRef(0)
+  const pausedRef = useRef(false)
+  const lastTsRef = useRef(null)
+  const rafRef    = useRef(null)
+
+  const config = SNS_CONFIG.find(c => c.key === 'threads')
+  const { bgLight, borderColor } = config
+
+  const loopDistance = items.length * (TH_CARD_W + TH_CARD_GAP)
+  const trackItems   = shouldScroll ? [...items, ...items] : items
+
+  useEffect(() => {
+    if (!shouldScroll) return
+    const animate = (ts) => {
+      if (!pausedRef.current) {
+        if (lastTsRef.current != null) {
+          const dt = Math.min(ts - lastTsRef.current, 50)
+          offsetRef.current = (offsetRef.current + TH_SPEED * dt / 1000) % loopDistance
+          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+        }
+        lastTsRef.current = ts
+      } else {
+        lastTsRef.current = null
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [shouldScroll, loopDistance])
+
+  const scrollCard = (dir) => {
+    const slot = TH_CARD_W + TH_CARD_GAP
+    const cur  = offsetRef.current
+    const next = dir > 0
+      ? (Math.floor(cur / slot) + 1) * slot
+      : (Math.ceil(cur / slot)  - 1) * slot
+    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mb-14">
+        <SectionHeader config={config} total={0} />
+        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+          <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const showAvatar = !!(profilePicture && !avatarError)
+  const displayUsername = username || 'threads'
+
+  const renderCard = (item, i) => {
+    const images = item.images?.length > 0 ? item.images : (item.thumbnail ? [item.thumbnail] : [])
+    return (
+      <a
+        key={`th-${item._id ?? i}-${i}`}
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+        style={{ width: `${TH_CARD_W}px`, marginRight: `${TH_CARD_GAP}px` }}
+      >
+        {/* 헤더: 프로필 아바타 + 유저명 + 시간 */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+          {showAvatar ? (
+            <img
+              src={profilePicture}
+              alt={displayUsername}
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              onError={() => setAvatarError(true)}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center flex-shrink-0 p-2">
+              <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 9.938C8.33 9.053 9.1 8.29 10.11 7.75 11.175 7.19 12.43 6.944 13.855 6.944c1.994.016 3.659.703 4.818 1.992 1.129 1.256 1.704 2.945 1.89 5.01.336.22.654.455.949.704 1.2 1.008 1.92 2.254 2.044 3.503.144 1.427-.263 3.042-1.195 4.394-.997 1.44-2.471 2.482-4.376 3.098C16.48 23.755 14.434 24 12.186 24zm2.842-12.97c-.507-.03-1.02-.041-1.528-.029-1.079.06-1.909.345-2.42.826-.421.365-.627.828-.597 1.342.058 1.073 1.168 1.618 2.518 1.544 1.237-.068 2.55-.663 2.847-3.032a10.374 10.374 0 0 0-.82-.651z"/>
+              </svg>
+            </div>
+          )}
+          <span className="flex-1 text-sm font-bold text-gray-900 truncate">@{displayUsername}</span>
+          {item.timestamp && (
+            <span className="text-xs text-gray-400 flex-shrink-0">{formatRelativeDate(item.timestamp)}</span>
+          )}
+        </div>
+
+        {/* 본문 텍스트 (4줄 제한) */}
+        {item.text && (
+          <p className="px-4 pb-3 text-sm text-gray-800 line-clamp-4 leading-relaxed whitespace-pre-line">
+            {item.text}
+          </p>
+        )}
+
+        {/* 이미지 그리드: 1장→전체폭 4:3 | 2장→2열 | 3장→3열 */}
+        {images.length > 0 && (
+          <div className={`px-4 pb-4 grid gap-1.5 ${
+            images.length >= 3 ? 'grid-cols-3' :
+            images.length === 2 ? 'grid-cols-2' :
+            'grid-cols-1'
+          }`}>
+            {images.map((src, idx) => (
+              <div key={idx} className="aspect-[4/3] overflow-hidden rounded-xl bg-gray-100">
+                <img
+                  src={src}
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </a>
+    )
+  }
+
+  return (
+    <div className="mb-14">
+      <SectionHeader config={config} total={items.length} />
+
+      <div className="relative">
+        {shouldScroll && (
+          <>
+            <button
+              onClick={() => scrollCard(-1)}
+              aria-label="이전"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronLeft size={28} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => scrollCard(1)}
+              aria-label="다음"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronRight size={28} strokeWidth={1.5} />
+            </button>
+          </>
+        )}
+
+        <div
+          className="overflow-hidden"
+          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
+          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
+        >
+          {shouldScroll ? (
+            <div ref={trackRef} className="flex">
+              {trackItems.map(renderCard)}
+            </div>
+          ) : (
+            <div className="flex" style={{ gap: `${TH_CARD_GAP}px` }}>
+              {items.map(renderCard)}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 일반 SNS 섹션 (기사) ─────────────────────────────────────────────────────
 function SnsSection({ config, items }) {
   const { textColor, bgLight, borderColor, Icon, color } = config
   const [current, setCurrent] = useState(0)
@@ -776,6 +951,8 @@ export default function SnsCarousel() {
   const [ytChannelName, setYtChannelName] = useState('')
   const [ytChannelAvatar, setYtChannelAvatar] = useState('')
   const [nbBlogTitle, setNbBlogTitle] = useState('')
+  const [thUsername, setThUsername] = useState('')
+  const [thProfilePicture, setThProfilePicture] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -789,7 +966,7 @@ export default function SnsCarousel() {
       const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
       const igData = igResult.status === 'fulfilled'  ? igResult.value.data  : null
       const ytData = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
-      const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
+      const thData = thResult.status === 'fulfilled'  ? thResult.value.data  : null
       const nbData = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
       // { items, username, profilePicture } 형식 + 하위 호환(배열)
@@ -806,11 +983,16 @@ export default function SnsCarousel() {
       const nbItems = Array.isArray(nbData) ? nbData : (nbData?.items ?? null)
       if (nbData?.blogTitle) setNbBlogTitle(nbData.blogTitle)
 
+      // { items, username, profilePicture } 형식 + 하위 호환(배열)
+      const thItems = Array.isArray(thData) ? thData : (thData?.items ?? null)
+      if (thData?.username)        setThUsername(thData.username)
+      if (thData?.profilePicture)  setThProfilePicture(thData.profilePicture)
+
       setSnsData({
         ...sns,
         instagram: igItems ?? sns.instagram ?? [],
         youtube:   ytItems ?? sns.youtube   ?? [],
-        threads:   thFeed  ?? sns.threads   ?? [],
+        threads:   thItems ?? sns.threads   ?? [],
         naverBlog: nbItems ?? sns.naverBlog ?? [],
       })
     }).finally(() => setLoading(false))
@@ -851,9 +1033,16 @@ export default function SnsCarousel() {
               blogTitle={nbBlogTitle}
             />
 
-            {/* 나머지 SNS (스레드·기사): 기존 슬라이드 방식 */}
+            {/* 스레드: Threads 앱 스타일, 컨베이어 벨트 */}
+            <ThreadsSection
+              items={snsData.threads ?? []}
+              username={thUsername}
+              profilePicture={thProfilePicture}
+            />
+
+            {/* 나머지 SNS (기사): 기존 슬라이드 방식 */}
             {SNS_CONFIG
-              .filter(c => !['instagram', 'youtube', 'naverBlog'].includes(c.key))
+              .filter(c => !['instagram', 'youtube', 'naverBlog', 'threads'].includes(c.key))
               .map((config) => (
                 <SnsSection
                   key={config.key}
