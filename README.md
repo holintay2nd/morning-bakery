@@ -26,13 +26,14 @@
 │              Vercel (프론트엔드)                            │
 │         React + Vite   morningbakery.co.kr              │
 │                                                         │
-│  ┌──────────┐  ┌─────────────┐  ┌──────────────────┐   │
-│  │  Header  │  │ SnsCarousel │  │  AdminDashboard  │   │
-│  │  Footer  │  │ (자동 피드)  │  │  SnsManager      │   │
-│  └──────────┘  └──────┬──────┘  └────────┬─────────┘   │
+│  ┌──────────┐  ┌─────────────────┐  ┌───────────────┐  │
+│  │  Header  │  │  SnsCarousel    │  │ AdminDashboard│  │
+│  │  Footer  │  │ InstagramSection│  │ SnsManager    │  │
+│  └──────────┘  │ SnsSection      │  └───────────────┘  │
+│                └────────┬────────┘                      │
 └─────────────────────────────────────────────────────────┘
-                        │ API 요청
-                        ▼
+                          │ API 요청
+                          ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Heroku (백엔드 API)                           │
 │             Node.js + Express   PORT 8000               │
@@ -76,7 +77,7 @@
 | `routes/content.js` | 콘텐츠 조회·수정 + SNS CRUD + 설정(유튜브 채널ID·API키) |
 | `routes/menu.js` | 메뉴 CRUD |
 | `routes/reservations.js` | 예약 CRUD |
-| `routes/instagram.js` | Instagram Graph API 프록시 (15분 캐시) |
+| `routes/instagram.js` | Instagram Graph API 프록시 — 피드·프로필 병렬 조회, `{ items, username, profilePicture }` 반환 |
 | `routes/youtube.js` | YouTube Data API v3 또는 RSS 프록시 (15분 캐시) |
 | `routes/threads.js` | Threads API 프록시 (15분 캐시) |
 | `routes/naverblog.js` | 네이버 블로그 RSS 파싱 + 이미지 프록시 (SSRF 방지) |
@@ -93,9 +94,58 @@
 | `api.js` | Axios 인스턴스 + JWT 자동 첨부 인터셉터 |
 | `components/Header.jsx` | 상단 네비게이션 |
 | `components/Footer.jsx` | 하단 정보 |
-| `components/SnsCarousel.jsx` | SNS 피드 캐러셀 — 반응형 그리드(모바일 2열 / 데스크톱 4열) |
+| `components/SnsCarousel.jsx` | SNS 피드 캐러셀 — 인스타그램(컨베이어 벨트) + 나머지(슬라이드) |
 | `admin/AdminDashboard.jsx` | 어드민 대시보드 레이아웃 |
 | `admin/SnsManager.jsx` | SNS 자동연동 상태 카드 + 유튜브 채널ID·API키 입력 + 수동 기사 등록 |
+
+---
+
+## 📸 인스타그램 섹션 상세
+
+### 카드 디자인
+
+```
+┌──────────────────────────┐
+│                          │
+│     [이미지 3:4 비율]     │  ← 360 × 480px, 2024년 인스타그램 표준 비율
+│                          │
+│                          │
+│▓▓▓ 검정 그라데이션 ▓▓▓▓▓▓│
+│ ◎  @morningbakery_seoul  │  ← 실제 프로필 사진 + 사용자명
+│ 제목 (첫 번째 캡션 줄)    │  ← white bold, 1줄
+│ 본문 (나머지 캡션)        │  ← white/70, 최대 2줄
+└──────────────────────────┘
+```
+
+### 컨베이어 벨트 동작
+
+| 조건 | 동작 |
+|------|------|
+| 게시물 **4개 이상** | 자동 좌측 스크롤 (~30px/s, requestAnimationFrame) |
+| 게시물 **3개 이하** | 고정 그리드 (스크롤 없음) |
+| **마우스 오버** | 즉시 일시정지 |
+| **← → 화살표 클릭** | 1카드 단위로 수동 이동 |
+
+### 백엔드 `/api/instagram/feed` 응답 형식
+
+```json
+{
+  "items": [
+    {
+      "_id": "...",
+      "url": "https://www.instagram.com/p/...",
+      "thumbnail": "https://...",
+      "title": "캡션 전체 텍스트 (해시태그 제거, 줄바꿈 보존)",
+      "mediaType": "IMAGE",
+      "timestamp": "2025-01-01T00:00:00+0000"
+    }
+  ],
+  "username": "morningbakery_seoul",
+  "profilePicture": "https://..."
+}
+```
+
+> 프로필 사진 URL은 Instagram CDN 제공. 로드 실패 시 Instagram 그라데이션 아이콘으로 자동 폴백.
 
 ---
 
@@ -155,6 +205,7 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 | Heroku git push 인증 실패 | 터미널 환경 달라 비밀번호 입력 불가 | 동일 터미널에서 `heroku login` 후 push |
 | SSRF 취약점 | 이미지 프록시가 임의 URL 허용 | 네이버 CDN 도메인 허용 목록으로 제한 |
 | 네이버 블로그 캐시 오염 | 프록시 URL이 캐시에 포함되어 IP 변경 시 깨짐 | raw URL 캐시 후 응답 시점에 프록시 URL 적용 |
+| 인스타그램 캡션 잘림 | 60자 하드컷으로 줄바꿈 구조 파괴 | 백엔드 길이 제한 제거, 프론트 `line-clamp`으로 처리 |
 
 ---
 
@@ -179,7 +230,7 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 ### 🟡 중요
 - [ ] **Meta 앱 검수 제출** — 현재 개발 모드(테스터만 사용 가능)
 - [ ] **Instagram/Threads 토큰 자동 갱신** — 백엔드에 60일 주기 갱신 엔드포인트 추가
-- [ ] **SNS 섹션 디자인 개선** — 진행 예정
+- [ ] **YouTube · 네이버블로그 · 스레드 섹션 디자인 개선** — 인스타그램 섹션과 통일감 있게
 
 ### 🟢 개선
 - [ ] **OG 이미지 추가** — SNS 공유 시 미리보기 이미지
@@ -231,10 +282,12 @@ heroku config:set KEY=VALUE --app morningbakery-api
 - **XML 파싱 유틸 분리** — `lib/xml-parser.js`에 CDATA 처리, HTML 스트립, 이미지 추출 함수 집중
 - **싱글톤 DB 패턴** — `SiteContent` 모델 하나로 히어로/어바웃/SNS/설정 모두 관리. `getOrCreateContent()`로 항상 존재 보장
 - **DB 우선 / env 폴백** — 유튜브 채널ID·API키는 DB값 우선, 없으면 환경변수. 어드민에서 Heroku 없이 변경 가능
+- **캐시 재사용** — Instagram `/status` 엔드포인트는 피드 캐시가 유효하면 재조회 없이 캐시된 username·profilePicture 반환
 
 ### 프론트엔드
 
-- **공통 상태 카드** — `SnsStatusCard` 컴포넌트 하나로 인스타그램·스레드·네이버블로그 상태 표시 (설정 객체로 분기)
-- **전용 설정 카드** — `YoutubeSettingsCard`는 입력 폼이 필요해 별도 컴포넌트
-- **자동/수동 명확히 분리** — 자동 연동(4개 채널)과 수동 등록(기사)을 구분선으로 시각적 분리
-- **반응형 캐러셀** — CSS Grid `grid-cols-2 lg:grid-cols-4`로 모바일 2열 / 데스크톱 4열
+- **인스타그램 전용 컴포넌트** — `InstagramSection`: 3:4 비율, 텍스트 오버레이, `requestAnimationFrame` 컨베이어 벨트, 화살표 수동 탐색
+- **일반 SNS 섹션** — `SnsSection`: YouTube·네이버블로그·스레드·기사, 4열 슬라이드 + 자동 재생
+- **공통 헤더** — `SectionHeader` 헬퍼로 그라데이션 pill 뱃지 통일
+- **RAF 기반 스크롤** — `requestAnimationFrame`으로 60fps GPU 가속 스크롤, state re-render 없이 `ref`로 직접 DOM 제어
+- **반응형 그리드** — 일반 SNS 섹션: `grid-cols-2 lg:grid-cols-4` (모바일 2열 / 데스크톱 4열)
