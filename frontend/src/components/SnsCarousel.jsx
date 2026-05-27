@@ -263,7 +263,7 @@ function InstagramSection({ items, username, profilePicture }) {
 const YT_CARD_W   = 568
 const YT_CARD_GAP = 16
 const YT_VISIBLE  = 2
-const YT_SPEED    = 45  // px/s
+const YT_SPEED    = 30  // px/s — 인스타그램과 동일 속도
 
 function formatViewCount(count) {
   if (!count) return ''
@@ -354,16 +354,17 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+      className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block rounded-2xl"
       style={{ width: `${YT_CARD_W}px`, marginRight: `${YT_CARD_GAP}px` }}
     >
-      {/* 16:9 썸네일 */}
-      <div className="relative aspect-video overflow-hidden bg-gray-200">
+      {/* 16:9 썸네일 — 독립적으로 전체 둥글게 */}
+      <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-2xl">
         <img
           src={item.thumbnail}
           alt={item.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           loading="lazy"
+          onError={e => { e.target.src = `https://i.ytimg.com/vi/${item._id}/hqdefault.jpg` }}
         />
       </div>
 
