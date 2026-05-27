@@ -86,9 +86,10 @@ function SectionHeader({ config, total }) {
 }
 
 // ─── 인스타그램 컨베이어 벨트 섹션 ───────────────────────────────────────────
-const IG_CARD_W = 360   // px — 3장 기준: 3×360 + 2×16 = 1112px (max-w-6xl 1152px 이내)
-const IG_CARD_GAP = 16  // px (gap-4)
-const IG_VISIBLE = 3    // 최대 동시 표시 개수
+const IG_CARD_W   = 360  // px — 3장: 3×360 + 2×16 = 1112px (max-w-6xl 1152px 이내)
+const IG_CARD_GAP = 16   // px
+const IG_VISIBLE  = 3
+const IG_SPEED    = 30   // px/s
 
 // 캡션 파싱: 첫 줄 → 제목, 나머지 → 본문 (구분자 줄 제외)
 function parseCaption(caption = '') {
@@ -96,24 +97,21 @@ function parseCaption(caption = '') {
   const title = lines[0] || ''
   const body = lines
     .slice(1)
-    .filter(l => !/^[.·•\-=_~]+$/.test(l)) // 점/구분자 줄 제외
+    .filter(l => !/^[.·•\-=_~]+$/.test(l))
     .join(' ')
     .trim()
   return { title, body }
 }
 
-const IG_SPEED = 30 // px/s
-
 function InstagramSection({ items, username, profilePicture }) {
   const shouldScroll = items.length > IG_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
-  // RAF refs — state 없이 직접 DOM 조작으로 최고 성능
-  const trackRef   = useRef(null)
-  const offsetRef  = useRef(0)
-  const pausedRef  = useRef(false)
-  const lastTsRef  = useRef(null)
-  const rafRef     = useRef(null)
+  const trackRef  = useRef(null)
+  const offsetRef = useRef(0)
+  const pausedRef = useRef(false)
+  const lastTsRef = useRef(null)
+  const rafRef    = useRef(null)
 
   const config = SNS_CONFIG.find(c => c.key === 'instagram')
   const { bgLight, borderColor, color } = config
@@ -121,13 +119,12 @@ function InstagramSection({ items, username, profilePicture }) {
   const loopDistance = items.length * (IG_CARD_W + IG_CARD_GAP)
   const trackItems   = shouldScroll ? [...items, ...items] : items
 
-  // 자동 스크롤 — requestAnimationFrame
   useEffect(() => {
     if (!shouldScroll) return
     const animate = (ts) => {
       if (!pausedRef.current) {
         if (lastTsRef.current != null) {
-          const dt = Math.min(ts - lastTsRef.current, 50) // 탭 전환 급격한 점프 방지
+          const dt = Math.min(ts - lastTsRef.current, 50)
           offsetRef.current = (offsetRef.current + IG_SPEED * dt / 1000) % loopDistance
           if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
         }
@@ -141,7 +138,6 @@ function InstagramSection({ items, username, profilePicture }) {
     return () => cancelAnimationFrame(rafRef.current)
   }, [shouldScroll, loopDistance])
 
-  // 화살표 클릭 — 한 카드 단위로 스냅
   const scrollCard = (dir) => {
     const slot = IG_CARD_W + IG_CARD_GAP
     const cur  = offsetRef.current
@@ -165,7 +161,6 @@ function InstagramSection({ items, username, profilePicture }) {
 
   const showAvatar = !!(profilePicture && !avatarError)
 
-  // 카드 공통 렌더
   const renderCard = (item, i) => {
     const { title, body } = parseCaption(item.title)
     return (
@@ -184,9 +179,7 @@ function InstagramSection({ items, username, profilePicture }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             loading="lazy"
           />
-          {/* 하단 검정 그라데이션 오버레이 */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-          {/* 텍스트 오버레이 */}
           <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
             <div className="flex items-center gap-2">
               {showAvatar ? (
@@ -224,7 +217,6 @@ function InstagramSection({ items, username, profilePicture }) {
       <SectionHeader config={config} total={items.length} />
 
       <div className="relative">
-        {/* ← → 화살표 (원 없이, 심플) */}
         {shouldScroll && (
           <>
             <button
@@ -246,23 +238,17 @@ function InstagramSection({ items, username, profilePicture }) {
           </>
         )}
 
-        {/* 캐러셀 — mask-image로 자연스럽게 페이드 */}
         <div
           className="overflow-hidden"
           onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
           onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
         >
           {shouldScroll ? (
-            // 컨베이어: ref로 직접 transform 제어
             <div ref={trackRef} className="flex">
               {trackItems.map(renderCard)}
             </div>
           ) : (
-            // 정적 그리드 (≤3장)
-            <div
-              className="flex justify-center"
-              style={{ gap: `${IG_CARD_GAP}px` }}
-            >
+            <div className="flex justify-center" style={{ gap: `${IG_CARD_GAP}px` }}>
               {items.map(renderCard)}
             </div>
           )}
@@ -272,7 +258,207 @@ function InstagramSection({ items, username, profilePicture }) {
   )
 }
 
-// ─── 일반 SNS 섹션 (YouTube · 네이버블로그 · 스레드 · 기사) ──────────────────
+// ─── 유튜브 컨베이어 벨트 섹션 ───────────────────────────────────────────────
+// 2장이 정확히 꽉 참: 2×568 + 16 = 1152px (max-w-6xl)
+const YT_CARD_W   = 568
+const YT_CARD_GAP = 16
+const YT_VISIBLE  = 2
+const YT_SPEED    = 45  // px/s
+
+function formatViewCount(count) {
+  if (!count) return ''
+  const n = parseInt(count, 10)
+  if (Number.isNaN(n)) return ''
+  if (n >= 100_000_000) return `조회수 ${(n / 100_000_000).toFixed(1)}억회`
+  if (n >= 10_000)      return `조회수 ${(n / 10_000).toFixed(1)}만회`
+  if (n >= 1_000)       return `조회수 ${(n / 1_000).toFixed(1)}천회`
+  return `조회수 ${n}회`
+}
+
+function formatRelativeDate(iso) {
+  if (!iso) return ''
+  const diff = Date.now() - new Date(iso).getTime()
+  const h  = Math.floor(diff / 3_600_000)
+  const d  = Math.floor(diff / 86_400_000)
+  const mo = Math.floor(d / 30)
+  const y  = Math.floor(d / 365)
+  if (y  >= 1) return `${y}년 전`
+  if (mo >= 1) return `${mo}개월 전`
+  if (d  >= 1) return `${d}일 전`
+  if (h  >= 1) return `${h}시간 전`
+  return '방금 전'
+}
+
+function YoutubeSection({ items, channelName, channelAvatar }) {
+  const shouldScroll = items.length > YT_VISIBLE
+  const [avatarError, setAvatarError] = useState(false)
+
+  const trackRef  = useRef(null)
+  const offsetRef = useRef(0)
+  const pausedRef = useRef(false)
+  const lastTsRef = useRef(null)
+  const rafRef    = useRef(null)
+
+  const config = SNS_CONFIG.find(c => c.key === 'youtube')
+  const { bgLight, borderColor, color } = config
+
+  const loopDistance = items.length * (YT_CARD_W + YT_CARD_GAP)
+  const trackItems   = shouldScroll ? [...items, ...items] : items
+
+  useEffect(() => {
+    if (!shouldScroll) return
+    const animate = (ts) => {
+      if (!pausedRef.current) {
+        if (lastTsRef.current != null) {
+          const dt = Math.min(ts - lastTsRef.current, 50)
+          offsetRef.current = (offsetRef.current + YT_SPEED * dt / 1000) % loopDistance
+          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+        }
+        lastTsRef.current = ts
+      } else {
+        lastTsRef.current = null
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [shouldScroll, loopDistance])
+
+  const scrollCard = (dir) => {
+    const slot = YT_CARD_W + YT_CARD_GAP
+    const cur  = offsetRef.current
+    const next = dir > 0
+      ? (Math.floor(cur / slot) + 1) * slot
+      : (Math.ceil(cur / slot)  - 1) * slot
+    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mb-14">
+        <SectionHeader config={config} total={0} />
+        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+          <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const showAvatar = !!(channelAvatar && !avatarError)
+  const displayChannel = channelName || 'YouTube'
+
+  const renderCard = (item, i) => (
+    <a
+      key={`yt-${item._id ?? i}-${i}`}
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+      style={{ width: `${YT_CARD_W}px`, marginRight: `${YT_CARD_GAP}px` }}
+    >
+      {/* 16:9 썸네일 */}
+      <div className="relative aspect-video overflow-hidden bg-gray-200">
+        <img
+          src={item.thumbnail}
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          loading="lazy"
+        />
+      </div>
+
+      {/* 카드 하단 정보 */}
+      <div className="p-4 flex gap-3 items-start">
+        {/* 채널 아바타 */}
+        <div className="flex-shrink-0 mt-0.5">
+          {showAvatar ? (
+            <img
+              src={channelAvatar}
+              alt={displayChannel}
+              className="w-9 h-9 rounded-full object-cover"
+              onError={() => setAvatarError(true)}
+            />
+          ) : (
+            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2`}>
+              <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* 제목 + 메타 정보 */}
+        <div className="flex-1 min-w-0">
+          <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1.5">
+            {item.title}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-brown-400 text-xs">
+            <span>{displayChannel}</span>
+            {item.viewCount && (
+              <>
+                <span>·</span>
+                <span>{formatViewCount(item.viewCount)}</span>
+              </>
+            )}
+            {item.timestamp && (
+              <>
+                <span>·</span>
+                <span>{formatRelativeDate(item.timestamp)}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </a>
+  )
+
+  return (
+    <div className="mb-14">
+      <SectionHeader config={config} total={items.length} />
+
+      <div className="relative">
+        {shouldScroll && (
+          <>
+            <button
+              onClick={() => scrollCard(-1)}
+              aria-label="이전"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronLeft size={28} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => scrollCard(1)}
+              aria-label="다음"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronRight size={28} strokeWidth={1.5} />
+            </button>
+          </>
+        )}
+
+        <div
+          className="overflow-hidden"
+          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
+          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
+        >
+          {shouldScroll ? (
+            <div ref={trackRef} className="flex">
+              {trackItems.map(renderCard)}
+            </div>
+          ) : (
+            <div className="flex" style={{ gap: `${YT_CARD_GAP}px` }}>
+              {items.map(renderCard)}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 일반 SNS 섹션 (네이버블로그 · 스레드 · 기사) ────────────────────────────
 function SnsSection({ config, items }) {
   const { textColor, bgLight, borderColor, Icon, color } = config
   const [current, setCurrent] = useState(0)
@@ -311,7 +497,6 @@ function SnsSection({ config, items }) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* 왼쪽 화살표 */}
         <button
           onClick={prev}
           aria-label="이전"
@@ -325,7 +510,6 @@ function SnsSection({ config, items }) {
           <ChevronLeft size={18} />
         </button>
 
-        {/* 슬라이드 창 */}
         <div className="overflow-hidden rounded-2xl">
           <div
             className="flex transition-transform duration-500 ease-in-out"
@@ -370,7 +554,6 @@ function SnsSection({ config, items }) {
           </div>
         </div>
 
-        {/* 오른쪽 화살표 */}
         <button
           onClick={next}
           aria-label="다음"
@@ -385,7 +568,6 @@ function SnsSection({ config, items }) {
         </button>
       </div>
 
-      {/* 페이지 점 */}
       {slideCount > 1 && (
         <div className="flex justify-center gap-1.5 mt-4">
           {Array.from({ length: slideCount }).map((_, i) => (
@@ -409,6 +591,8 @@ export default function SnsCarousel() {
   const [snsData, setSnsData] = useState(null)
   const [igUsername, setIgUsername] = useState('')
   const [igProfilePicture, setIgProfilePicture] = useState('')
+  const [ytChannelName, setYtChannelName] = useState('')
+  const [ytChannelAvatar, setYtChannelAvatar] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -421,21 +605,26 @@ export default function SnsCarousel() {
     ]).then(([snsResult, igResult, ytResult, thResult, nbResult]) => {
       const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
       const igData = igResult.status === 'fulfilled'  ? igResult.value.data  : null
-      const ytFeed = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
+      const ytData = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
       const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
       const nbFeed = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
       // { items, username, profilePicture } 형식 + 하위 호환(배열 형식)
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
-      if (igData?.username) setIgUsername(igData.username)
-      if (igData?.profilePicture) setIgProfilePicture(igData.profilePicture)
+      if (igData?.username)        setIgUsername(igData.username)
+      if (igData?.profilePicture)  setIgProfilePicture(igData.profilePicture)
+
+      // { items, channelName, channelAvatar } 형식 + 하위 호환(배열 형식)
+      const ytItems = Array.isArray(ytData) ? ytData : (ytData?.items ?? null)
+      if (ytData?.channelName)   setYtChannelName(ytData.channelName)
+      if (ytData?.channelAvatar) setYtChannelAvatar(ytData.channelAvatar)
 
       setSnsData({
         ...sns,
-        instagram: igItems    ?? sns.instagram ?? [],
-        youtube:   ytFeed     ?? sns.youtube   ?? [],
-        threads:   thFeed     ?? sns.threads   ?? [],
-        naverBlog: nbFeed     ?? sns.naverBlog ?? [],
+        instagram: igItems ?? sns.instagram ?? [],
+        youtube:   ytItems ?? sns.youtube   ?? [],
+        threads:   thFeed  ?? sns.threads   ?? [],
+        naverBlog: nbFeed  ?? sns.naverBlog ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])
@@ -455,11 +644,22 @@ export default function SnsCarousel() {
           <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
         ) : (
           <div>
-            {/* 인스타그램: 컨베이어 벨트 방식 */}
-            <InstagramSection items={snsData.instagram ?? []} username={igUsername} profilePicture={igProfilePicture} />
+            {/* 인스타그램: 3:4 카드, 컨베이어 벨트 */}
+            <InstagramSection
+              items={snsData.instagram ?? []}
+              username={igUsername}
+              profilePicture={igProfilePicture}
+            />
+
+            {/* 유튜브: 16:9 카드, 컨베이어 벨트 */}
+            <YoutubeSection
+              items={snsData.youtube ?? []}
+              channelName={ytChannelName}
+              channelAvatar={ytChannelAvatar}
+            />
 
             {/* 나머지 SNS: 기존 슬라이드 방식 */}
-            {SNS_CONFIG.filter(c => c.key !== 'instagram').map((config) => (
+            {SNS_CONFIG.filter(c => c.key !== 'instagram' && c.key !== 'youtube').map((config) => (
               <SnsSection
                 key={config.key}
                 config={config}
