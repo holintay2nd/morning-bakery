@@ -37,13 +37,9 @@ const SNS_CONFIG = [
     textColor: 'text-green-700',
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
-    // 네이버 블로그 공식 "b|" 아이콘
+    // 네이버 블로그 공식 아이콘 (배지 배경이 녹색이므로 흰색으로 반전)
     Icon: () => (
-      <svg viewBox="0 0 20 20" className="w-5 h-5 fill-current" aria-hidden="true">
-        <rect x="2.5" y="2" width="3" height="16" rx="1.5"/>
-        <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z"/>
-        <rect x="15.5" y="2" width="2" height="16" rx="1"/>
-      </svg>
+      <img src="/naver-blog-icon.webp" alt="" className="w-5 h-5 object-contain brightness-0 invert" />
     ),
   },
   {
@@ -475,14 +471,10 @@ function formatBlogDate(dateStr) {
   return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`
 }
 
-// 카드 헤더에 쓰는 네이버 블로그 "b|" 컬러 아이콘
+// 카드 헤더에 쓰는 네이버 블로그 컬러 아이콘
 function NaverBlogIcon() {
   return (
-    <svg viewBox="0 0 20 20" className="w-4 h-4 flex-shrink-0" fill="none" aria-hidden="true">
-      <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
-      <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
-      <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
-    </svg>
+    <img src="/naver-blog-icon.webp" alt="" className="w-4 h-4 flex-shrink-0 object-contain" />
   )
 }
 
@@ -566,32 +558,27 @@ function NaverBlogSection({ items, blogTitle }) {
         </div>
         {/* 행 2: 제목 (볼드) */}
         <p className="text-sm font-bold text-gray-900 line-clamp-1 mb-1.5 leading-snug">{item.title}</p>
-        {/* 행 3: 내용 미리보기 (2줄) */}
-        {item.summary && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.summary}</p>
-        )}
+        {/* 행 3: 내용 미리보기 (2줄) — 텍스트 없어도 높이 유지 */}
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">{item.summary || ''}</p>
       </div>
 
-      {/* 1:1 정방형 썸네일 이미지 */}
-      {item.thumbnail ? (
-        <div className="aspect-square overflow-hidden bg-gray-100">
-          <img
-            src={item.thumbnail}
-            alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        /* 이미지 없을 때 플레이스홀더 */
-        <div className="aspect-square bg-green-50 flex items-center justify-center">
-          <svg viewBox="0 0 20 20" className="w-14 h-14 opacity-15" fill="none" aria-hidden="true">
-            <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
-            <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
-            <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
-          </svg>
-        </div>
-      )}
+      {/* 1:1 정방형 썸네일 이미지 — 텍스트와 동일한 좌우 패딩, 모서리 둥글게 */}
+      <div className="px-3.5 pb-3.5">
+        {item.thumbnail ? (
+          <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
+            <img
+              src={item.thumbnail}
+              alt={item.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="aspect-square rounded-xl bg-green-50 flex items-center justify-center">
+            <img src="/naver-blog-icon.webp" alt="" className="w-14 h-14 object-contain opacity-20" />
+          </div>
+        )}
+      </div>
     </a>
   )
 
