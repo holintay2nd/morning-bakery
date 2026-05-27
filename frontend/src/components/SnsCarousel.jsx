@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import api from '../api'
 
-// SNS 타입 설정
+// ─── SNS 설정 ─────────────────────────────────────────────────────────────────
 const SNS_CONFIG = [
   {
     key: 'instagram',
@@ -71,40 +71,185 @@ const SNS_CONFIG = [
   },
 ]
 
-// 개별 SNS 캐러셀 섹션
+// ─── 공통 섹션 헤더 ───────────────────────────────────────────────────────────
+function SectionHeader({ config, total }) {
+  const { label, color, Icon } = config
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      <span className={`inline-flex items-center gap-1.5 text-white font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${color} shadow-sm text-sm`}>
+        <Icon />
+        {label}
+      </span>
+      {total > 0 && <span className="text-brown-300 text-xs">({total})</span>}
+    </div>
+  )
+}
+
+// ─── 인스타그램 컨베이어 벨트 섹션 ───────────────────────────────────────────
+const IG_CARD_W = 200   // px (카드 너비)
+const IG_CARD_GAP = 16  // px (카드 간격, gap-4)
+const IG_VISIBLE = 5    // 최대 동시 표시 개수
+
+// 캡션 파싱: 첫 줄 → 제목, 나머지 → 본문 (구분자 줄 제외)
+function parseCaption(caption = '') {
+  const lines = caption.split('\n').map(l => l.trim()).filter(Boolean)
+  const title = lines[0] || ''
+  const body = lines
+    .slice(1)
+    .filter(l => !/^[.·•\-=_~]+$/.test(l)) // 점/구분자 줄 제외
+    .join(' ')
+    .trim()
+  return { title, body }
+}
+
+function InstagramSection({ items, username }) {
+  const shouldScroll = items.length > IG_VISIBLE
+  const [paused, setPaused] = useState(false)
+
+  const config = SNS_CONFIG.find(c => c.key === 'instagram')
+  const { bgLight, borderColor, color } = config
+
+  if (items.length === 0) {
+    return (
+      <div className="mb-14">
+        <SectionHeader config={config} total={0} />
+        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+          <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 컨베이어 벨트: 아이템 2배 복제 → 끊김 없는 순환
+  const trackItems = shouldScroll ? [...items, ...items] : items
+
+  // 1회 순환 거리 = 원본 아이템 수 × (카드 너비 + 간격)
+  const translatePx = items.length * (IG_CARD_W + IG_CARD_GAP)
+
+  // 속도 기준: 약 25px/s 유지 → 10개 기준 80초
+  const duration = items.length * 8
+
+  return (
+    <div className="mb-14">
+      <SectionHeader config={config} total={items.length} />
+
+      {/* 컨베이어 keyframe - 아이템 수에 따라 동적 생성 */}
+      {shouldScroll && (
+        <style>{`@keyframes igConveyor { to { transform: translateX(-${translatePx}px); } }`}</style>
+      )}
+
+      <div
+        className={shouldScroll ? 'overflow-hidden relative' : ''}
+        onMouseEnter={shouldScroll ? () => setPaused(true) : undefined}
+        onMouseLeave={shouldScroll ? () => setPaused(false) : undefined}
+      >
+        {/* 양쪽 페이드 엣지 */}
+        {shouldScroll && (
+          <>
+            <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          </>
+        )}
+
+        <div
+          className="flex"
+          style={
+            shouldScroll
+              ? {
+                  animation: `igConveyor ${duration}s linear infinite`,
+                  animationPlayState: paused ? 'paused' : 'running',
+                }
+              : {
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${items.length}, ${IG_CARD_W}px)`,
+                  gap: `${IG_CARD_GAP}px`,
+                  justifyContent: 'center',
+                }
+          }
+        >
+          {trackItems.map((item, i) => {
+            const { title, body } = parseCaption(item.title)
+            return (
+              <a
+                key={`ig-${item._id ?? i}-${i}`}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group bg-white rounded-xl overflow-hidden border ${borderColor} shadow-sm hover:shadow-md transition-shadow duration-300 flex-shrink-0`}
+                style={shouldScroll ? { width: `${IG_CARD_W}px`, marginRight: `${IG_CARD_GAP}px` } : {}}
+              >
+                {/* 1:1 정사각형 썸네일 */}
+                <div className="aspect-square overflow-hidden bg-gray-100">
+                  <img
+                    src={item.thumbnail}
+                    alt={title || '인스타그램 게시물'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* 캡션 영역 */}
+                <div className="p-3 space-y-1">
+                  {/* 프로필 행: 아이콘 + 사용자명 */}
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`w-[18px] h-[18px] rounded-full bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0 p-[3px]`}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                    </div>
+                    <span className="text-[11px] text-gray-400 truncate">
+                      @{username || 'morningbakery_seoul'}
+                    </span>
+                  </div>
+
+                  {/* 제목: 첫 번째 줄 */}
+                  {title && (
+                    <p className="text-[13px] font-semibold text-gray-800 line-clamp-1 leading-snug">
+                      {title}
+                    </p>
+                  )}
+
+                  {/* 본문: 두 번째 줄부터 (최대 2줄) */}
+                  {body && (
+                    <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
+                      {body}
+                    </p>
+                  )}
+                </div>
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 일반 SNS 섹션 (YouTube · 네이버블로그 · 스레드 · 기사) ──────────────────
 function SnsSection({ config, items }) {
-  const { label, color, textColor, bgLight, borderColor, Icon } = config
+  const { textColor, bgLight, borderColor, Icon, color } = config
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const timerRef = useRef(null)
 
-  // 화면 크기에 따른 visible count는 CSS로 처리, 이동 단위는 1
   const total = items.length
+  const slideCount = Math.ceil(total / 4)
 
-  const prev = useCallback(() => {
-    setCurrent((c) => (c <= 0 ? Math.max(0, total - 1) : c - 1))
-  }, [total])
+  const prev = useCallback(() => setCurrent(c => (c <= 0 ? slideCount - 1 : c - 1)), [slideCount])
+  const next = useCallback(() => setCurrent(c => (c >= slideCount - 1 ? 0 : c + 1)), [slideCount])
 
-  const next = useCallback(() => {
-    setCurrent((c) => (c >= total - 1 ? 0 : c + 1))
-  }, [total])
-
-  // 자동 슬라이드
   useEffect(() => {
-    if (paused || total <= 1) return
+    if (paused || slideCount <= 1) return
     timerRef.current = setInterval(next, 3000)
     return () => clearInterval(timerRef.current)
-  }, [paused, total, next])
+  }, [paused, slideCount, next])
 
   if (total === 0) {
     return (
       <div className="mb-14">
-        <div className="flex items-center gap-2 mb-5">
-          <span className={`inline-flex items-center gap-1.5 text-white font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${color} shadow-sm text-sm`}>
-            <Icon />
-            {label}
-          </span>
-        </div>
+        <SectionHeader config={config} total={0} />
         <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
           <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
         </div>
@@ -114,16 +259,8 @@ function SnsSection({ config, items }) {
 
   return (
     <div className="mb-14">
-      {/* 섹션 헤더 */}
-      <div className="flex items-center gap-2 mb-5">
-        <span className={`inline-flex items-center gap-1.5 text-white font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${color} shadow-sm text-sm`}>
-          <Icon />
-          {label}
-        </span>
-        <span className="text-brown-300 text-xs">({total})</span>
-      </div>
+      <SectionHeader config={config} total={total} />
 
-      {/* 캐러셀 */}
       <div
         className="relative"
         onMouseEnter={() => setPaused(true)}
@@ -149,8 +286,7 @@ function SnsSection({ config, items }) {
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${current * 100}%)` }}
           >
-            {/* 아이템을 4개씩 한 슬라이드로 묶기 */}
-            {Array.from({ length: Math.ceil(total / 4) }).map((_, slideIdx) => (
+            {Array.from({ length: slideCount }).map((_, slideIdx) => (
               <div key={slideIdx} className="grid grid-cols-2 lg:grid-cols-4 shrink-0 w-full gap-4 px-1">
                 {items.slice(slideIdx * 4, slideIdx * 4 + 4).map((item, i) => (
                   <a
@@ -161,7 +297,6 @@ function SnsSection({ config, items }) {
                     className={`group rounded-xl overflow-hidden bg-white border ${borderColor}
                       hover:shadow-lg transition-shadow duration-300`}
                   >
-                    {/* 썸네일 */}
                     <div className="relative h-40 overflow-hidden">
                       <img
                         src={item.thumbnail}
@@ -169,17 +304,15 @@ function SnsSection({ config, items }) {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
-                      {/* SNS 뱃지 */}
                       <span
                         className={`absolute top-2 left-2 inline-flex items-center gap-1
                           text-white text-[10px] font-semibold px-2 py-0.5 rounded-full
                           bg-gradient-to-r ${color} shadow-sm`}
                       >
                         <Icon />
-                        <span className="hidden sm:inline">{label}</span>
+                        <span className="hidden sm:inline">{config.label}</span>
                       </span>
                     </div>
-                    {/* 제목 */}
                     <div className="p-3">
                       <p className="text-brown-700 text-xs font-medium line-clamp-2 leading-relaxed">
                         {item.title}
@@ -207,16 +340,16 @@ function SnsSection({ config, items }) {
         </button>
       </div>
 
-      {/* 페이지 점 (슬라이드 수 > 1일 때만) */}
-      {Math.ceil(total / 4) > 1 && (
+      {/* 페이지 점 */}
+      {slideCount > 1 && (
         <div className="flex justify-center gap-1.5 mt-4">
-          {Array.from({ length: Math.ceil(total / 4) }).map((_, i) => (
+          {Array.from({ length: slideCount }).map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               aria-label={`${i + 1}번 슬라이드`}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                current === i ? `bg-gradient-to-r ${color} w-4` : 'bg-brown-200'
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                current === i ? `bg-gradient-to-r ${color} w-4` : 'bg-brown-200 w-1.5'
               }`}
             />
           ))}
@@ -226,13 +359,13 @@ function SnsSection({ config, items }) {
   )
 }
 
-// 메인 SNS 캐러셀 섹션
+// ─── 메인 SNS 캐러셀 섹션 ────────────────────────────────────────────────────
 export default function SnsCarousel() {
   const [snsData, setSnsData] = useState(null)
+  const [igUsername, setIgUsername] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 일반 SNS 데이터 + 인스타그램 피드를 병렬로 가져옴
     Promise.allSettled([
       api.get('/content/sns'),
       api.get('/instagram/feed'),
@@ -241,17 +374,21 @@ export default function SnsCarousel() {
       api.get('/naverblog/feed'),
     ]).then(([snsResult, igResult, ytResult, thResult, nbResult]) => {
       const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
-      const igFeed = igResult.status === 'fulfilled'  ? igResult.value.data  : null
+      const igData = igResult.status === 'fulfilled'  ? igResult.value.data  : null
       const ytFeed = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
       const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
       const nbFeed = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
+      // { items, username } 형식 + 하위 호환(배열 형식)
+      const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
+      if (igData?.username) setIgUsername(igData.username)
+
       setSnsData({
         ...sns,
-        instagram: igFeed ?? sns.instagram ?? [],
-        youtube:   ytFeed ?? sns.youtube   ?? [],
-        threads:   thFeed ?? sns.threads   ?? [],
-        naverBlog: nbFeed ?? sns.naverBlog ?? [],
+        instagram: igItems    ?? sns.instagram ?? [],
+        youtube:   ytFeed     ?? sns.youtube   ?? [],
+        threads:   thFeed     ?? sns.threads   ?? [],
+        naverBlog: nbFeed     ?? sns.naverBlog ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])
@@ -259,7 +396,6 @@ export default function SnsCarousel() {
   return (
     <section id="sns" className="py-24 px-8 bg-white">
       <div className="max-w-6xl mx-auto">
-        {/* 섹션 헤더 */}
         <p className="section-subtitle">Follow Us</p>
         <h2 className="section-title mb-3">SNS에서 만나요</h2>
         <p className="text-center text-brown-400 text-sm mb-14">
@@ -267,16 +403,16 @@ export default function SnsCarousel() {
         </p>
 
         {loading ? (
-          <div className="py-20 text-center text-brown-400 text-sm">
-            불러오는 중...
-          </div>
+          <div className="py-20 text-center text-brown-400 text-sm">불러오는 중...</div>
         ) : !snsData ? (
-          <div className="py-20 text-center text-brown-400 text-sm">
-            SNS 정보를 불러올 수 없습니다.
-          </div>
+          <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
         ) : (
           <div>
-            {SNS_CONFIG.map((config) => (
+            {/* 인스타그램: 컨베이어 벨트 방식 */}
+            <InstagramSection items={snsData.instagram ?? []} username={igUsername} />
+
+            {/* 나머지 SNS: 기존 슬라이드 방식 */}
+            {SNS_CONFIG.filter(c => c.key !== 'instagram').map((config) => (
               <SnsSection
                 key={config.key}
                 config={config}
