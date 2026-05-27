@@ -7,10 +7,12 @@ const MANUAL_SNS_CONFIG = [
   { key: 'article', label: '기사', emoji: '📰', placeholder: 'https://news.example.com/...' },
 ]
 
-// 유튜브 전용 카드 (채널 ID 직접 입력 가능)
+// 유튜브 전용 카드 (채널 ID + API 키 직접 입력)
 function YoutubeSettingsCard() {
-  const [channelId, setChannelId] = useState('')   // DB에 저장된 값
-  const [inputValue, setInputValue] = useState('') // 입력창 값
+  const [saved, setSaved] = useState({ channelId: '', hasApiKey: false })
+  const [channelId, setChannelId] = useState('')
+  const [apiKey, setApiKey] = useState('')           // 항상 빈 값으로 시작 (보안)
+  const [showApiKey, setShowApiKey] = useState(false)
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -22,11 +24,11 @@ function YoutubeSettingsCard() {
         api.get('/content/settings'),
         api.get('/youtube/status'),
       ])
-      const id = settingsRes.status === 'fulfilled'
-        ? (settingsRes.value.data.youtubeChannelId || '')
-        : ''
-      setChannelId(id)
-      setInputValue(id)
+      if (settingsRes.status === 'fulfilled') {
+        const { youtubeChannelId, hasYoutubeApiKey } = settingsRes.value.data
+        setSaved({ channelId: youtubeChannelId || '', hasApiKey: !!hasYoutubeApiKey })
+        setChannelId(youtubeChannelId || '')
+      }
       setStatus(statusRes.status === 'fulfilled' ? statusRes.value.data : { connected: false })
     } finally {
       setLoading(false)
@@ -36,14 +38,15 @@ function YoutubeSettingsCard() {
   useEffect(() => { fetchAll() }, [fetchAll])
 
   const handleSave = async () => {
-    const trimmed = inputValue.trim()
     setSaving(true)
     try {
-      await api.patch('/content/settings', { youtubeChannelId: trimmed })
-      setChannelId(trimmed)
-      // 저장 후 즉시 연결 상태 다시 확인
+      const patch = { youtubeChannelId: channelId.trim() }
+      if (apiKey.trim()) patch.youtubeApiKey = apiKey.trim()
+      await api.patch('/content/settings', patch)
+      setApiKey('')         // 저장 후 입력창 초기화
       const res = await api.get('/youtube/status')
       setStatus(res.data)
+      setSaved({ channelId: channelId.trim(), hasApiKey: !!(apiKey.trim() || saved.hasApiKey) })
     } catch {
       alert('저장에 실패했습니다.')
     } finally {
@@ -51,7 +54,7 @@ function YoutubeSettingsCard() {
     }
   }
 
-  const changed = inputValue.trim() !== channelId
+  const changed = channelId.trim() !== saved.channelId || apiKey.trim() !== ''
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
@@ -77,26 +80,58 @@ function YoutubeSettingsCard() {
         {/* 채널 ID 입력 */}
         <div>
           <label className="block text-brown-500 text-xs font-medium mb-1.5">채널 ID</label>
-          <div className="flex gap-2">
-            <input
-              className="input flex-1 font-mono text-xs"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
-              spellCheck={false}
-            />
-            <button
-              onClick={handleSave}
-              disabled={saving || !changed}
-              className="px-4 py-2 bg-brown-600 text-white text-xs font-medium rounded-lg hover:bg-brown-500 disabled:opacity-40 transition-colors whitespace-nowrap"
-            >
-              {saving ? '저장 중...' : '저장'}
-            </button>
-          </div>
-          <p className="text-brown-300 text-[11px] mt-1.5">
+          <input
+            className="input w-full font-mono text-xs"
+            value={channelId}
+            onChange={(e) => setChannelId(e.target.value)}
+            placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
+            spellCheck={false}
+          />
+          <p className="text-brown-300 text-[11px] mt-1">
             YouTube Studio → 설정 → 채널 → 고급 설정에서 확인
           </p>
         </div>
+
+        {/* API 키 입력 */}
+        <div>
+          <label className="block text-brown-500 text-xs font-medium mb-1.5">
+            API 키
+            <span className="ml-1.5 text-brown-300 font-normal">
+              {saved.hasApiKey ? '(설정됨 — 변경하려면 새 키 입력)' : '(선택 — 없으면 RSS 방식 사용)'}
+            </span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="input flex-1 font-mono text-xs"
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={saved.hasApiKey ? '••••••••••••••••••••••••••••••••••••••••' : 'AIzaSy...'}
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey((v) => !v)}
+              className="px-3 py-2 text-brown-400 hover:text-brown-600 text-xs border border-brown-100 rounded-lg transition-colors"
+            >
+              {showApiKey ? '숨김' : '표시'}
+            </button>
+          </div>
+          <p className="text-brown-300 text-[11px] mt-1">
+            <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer"
+              className="underline hover:text-brown-500">Google Cloud Console</a>
+            {' '}→ YouTube Data API v3 → 사용자 인증 정보 → API 키
+          </p>
+        </div>
+
+        {/* 저장 버튼 */}
+        <button
+          onClick={handleSave}
+          disabled={saving || !changed}
+          className="w-full py-2 bg-brown-600 text-white text-xs font-medium rounded-lg hover:bg-brown-500 disabled:opacity-40 transition-colors"
+        >
+          {saving ? '저장 중...' : '저장하고 연결 확인'}
+        </button>
 
         {/* 연결 상태 */}
         {loading ? (
@@ -106,14 +141,17 @@ function YoutubeSettingsCard() {
             <CheckCircle size={15} className="text-green-500 shrink-0" />
             <div>
               <p className="text-green-700 text-xs font-medium">
-                {status.channelName || channelId} 연동됨
+                {status.channelName || saved.channelId} 연동됨
+                <span className="ml-1.5 text-green-500 text-[10px]">
+                  ({status.method === 'api' ? 'Data API' : 'RSS'})
+                </span>
               </p>
               <p className="text-brown-400 text-[11px] mt-0.5">
                 최근 영상이 메인 페이지에 자동으로 표시됩니다. (15분 캐시)
               </p>
             </div>
           </div>
-        ) : channelId ? (
+        ) : saved.channelId ? (
           <div className="flex items-start gap-2">
             <XCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
             <div>
@@ -121,6 +159,11 @@ function YoutubeSettingsCard() {
               <p className="text-brown-400 text-[11px] mt-0.5">
                 {status?.error || '채널 ID를 다시 확인해 주세요.'}
               </p>
+              {!saved.hasApiKey && (
+                <p className="text-amber-600 text-[11px] mt-1">
+                  💡 RSS 방식이 실패했습니다. API 키를 입력하면 더 안정적으로 연동됩니다.
+                </p>
+              )}
             </div>
           </div>
         ) : (
