@@ -741,12 +741,14 @@ function ThreadsSection({ items, username, profilePicture }) {
           )}
         </div>
 
-        {/* 본문 텍스트 (4줄 제한) */}
-        {item.text && (
-          <p className="px-3.5 pb-3 text-sm text-gray-800 line-clamp-4 leading-relaxed whitespace-pre-line">
-            {item.text}
-          </p>
-        )}
+        {/* 본문 텍스트: 이미지 있으면 2줄 고정(min-h), 없으면 최대 12줄 */}
+        <p className={`px-3.5 pb-3 text-sm text-gray-800 leading-relaxed whitespace-pre-line ${
+          images.length > 0
+            ? 'line-clamp-2 min-h-[2.875rem]'
+            : 'line-clamp-[12]'
+        }`}>
+          {item.text || ''}
+        </p>
 
         {/* 이미지 그리드: 1장→전체폭 4:3 | 2장→2열 | 3장→3열 */}
         {images.length > 0 && (
