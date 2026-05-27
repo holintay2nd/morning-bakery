@@ -147,14 +147,14 @@ function SnsSection({ config, items }) {
           >
             {/* 아이템을 4개씩 한 슬라이드로 묶기 */}
             {Array.from({ length: Math.ceil(total / 4) }).map((_, slideIdx) => (
-              <div key={slideIdx} className="flex shrink-0 w-full gap-4 px-1">
+              <div key={slideIdx} className="grid grid-cols-2 lg:grid-cols-4 shrink-0 w-full gap-4 px-1">
                 {items.slice(slideIdx * 4, slideIdx * 4 + 4).map((item, i) => (
                   <a
                     key={item._id || i}
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex-1 min-w-0 group rounded-xl overflow-hidden bg-white border ${borderColor}
+                    className={`group rounded-xl overflow-hidden bg-white border ${borderColor}
                       hover:shadow-lg transition-shadow duration-300`}
                   >
                     {/* 썸네일 */}
@@ -183,11 +183,6 @@ function SnsSection({ config, items }) {
                     </div>
                   </a>
                 ))}
-                {/* 빈 칸 채우기 (마지막 슬라이드가 4개 미만일 때) */}
-                {items.slice(slideIdx * 4, slideIdx * 4 + 4).length < 4 &&
-                  Array.from({ length: 4 - items.slice(slideIdx * 4, slideIdx * 4 + 4).length }).map((_, k) => (
-                    <div key={`empty-${k}`} className="flex-1 min-w-0" />
-                  ))}
               </div>
             ))}
           </div>
