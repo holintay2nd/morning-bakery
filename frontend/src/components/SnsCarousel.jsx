@@ -100,8 +100,10 @@ function SnsSection({ config, items }) {
     return (
       <div className="mb-14">
         <div className="flex items-center gap-2 mb-5">
-          <span className={`${textColor}`}><Icon /></span>
-          <h3 className={`font-bold text-base ${textColor}`}>{label}</h3>
+          <span className={`inline-flex items-center gap-1.5 text-white font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${color} shadow-sm text-sm`}>
+            <Icon />
+            {label}
+          </span>
         </div>
         <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
           <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
@@ -114,9 +116,11 @@ function SnsSection({ config, items }) {
     <div className="mb-14">
       {/* 섹션 헤더 */}
       <div className="flex items-center gap-2 mb-5">
-        <span className={`${textColor}`}><Icon /></span>
-        <h3 className={`font-bold text-base ${textColor}`}>{label}</h3>
-        <span className="text-brown-300 text-xs ml-1">({total})</span>
+        <span className={`inline-flex items-center gap-1.5 text-white font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${color} shadow-sm text-sm`}>
+          <Icon />
+          {label}
+        </span>
+        <span className="text-brown-300 text-xs">({total})</span>
       </div>
 
       {/* 캐러셀 */}
