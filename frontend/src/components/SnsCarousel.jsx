@@ -37,10 +37,13 @@ const SNS_CONFIG = [
     textColor: 'text-green-700',
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
+    // 네이버 블로그 공식 "b|" 아이콘
     Icon: () => (
-      <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white text-xs font-bold rounded-sm leading-none">
-        N
-      </span>
+      <svg viewBox="0 0 20 20" className="w-5 h-5 fill-current" aria-hidden="true">
+        <rect x="2.5" y="2" width="3" height="16" rx="1.5"/>
+        <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z"/>
+        <rect x="15.5" y="2" width="2" height="16" rx="1"/>
+      </svg>
     ),
   },
   {
@@ -86,8 +89,8 @@ function SectionHeader({ config, total }) {
 }
 
 // ─── 인스타그램 컨베이어 벨트 섹션 ───────────────────────────────────────────
-const IG_CARD_W   = 360  // px — 3장: 3×360 + 2×16 = 1112px (max-w-6xl 1152px 이내)
-const IG_CARD_GAP = 16   // px
+const IG_CARD_W   = 360  // px — 3장: 3×360 + 2×16 = 1112px (max-w-6xl 이내)
+const IG_CARD_GAP = 16
 const IG_VISIBLE  = 3
 const IG_SPEED    = 20   // px/s
 
@@ -263,7 +266,7 @@ function InstagramSection({ items, username, profilePicture }) {
 const YT_CARD_W   = 568
 const YT_CARD_GAP = 16
 const YT_VISIBLE  = 2
-const YT_SPEED    = 20  // px/s — 인스타그램과 동일 속도
+const YT_SPEED    = 20  // px/s
 
 function formatViewCount(count) {
   if (!count) return ''
@@ -370,7 +373,6 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
 
       {/* 카드 하단 정보 */}
       <div className="p-4 flex gap-3 items-start">
-        {/* 채널 아바타 */}
         <div className="flex-shrink-0 mt-0.5">
           {showAvatar ? (
             <img
@@ -388,7 +390,6 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
           )}
         </div>
 
-        {/* 제목 + 메타 정보 */}
         <div className="flex-1 min-w-0">
           <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1.5">
             {item.title}
@@ -459,7 +460,188 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
   )
 }
 
-// ─── 일반 SNS 섹션 (네이버블로그 · 스레드 · 기사) ────────────────────────────
+// ─── 네이버 블로그 컨베이어 벨트 섹션 ────────────────────────────────────────
+// 3장 고정: 3×360 + 2×16 = 1112px | 4장부터 순환
+const NB_CARD_W   = 360
+const NB_CARD_GAP = 16
+const NB_VISIBLE  = 3
+const NB_SPEED    = 20  // px/s
+
+// "YYYY. M. D." 형식 (네이버 블로그 날짜 표기)
+function formatBlogDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d)) return ''
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`
+}
+
+// 카드 헤더에 쓰는 네이버 블로그 "b|" 컬러 아이콘
+function NaverBlogIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="w-4 h-4 flex-shrink-0" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
+      <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
+      <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
+    </svg>
+  )
+}
+
+function NaverBlogSection({ items, blogTitle }) {
+  const shouldScroll = items.length > NB_VISIBLE
+
+  const trackRef  = useRef(null)
+  const offsetRef = useRef(0)
+  const pausedRef = useRef(false)
+  const lastTsRef = useRef(null)
+  const rafRef    = useRef(null)
+
+  const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
+  const { bgLight, borderColor } = config
+
+  const loopDistance = items.length * (NB_CARD_W + NB_CARD_GAP)
+  const trackItems   = shouldScroll ? [...items, ...items] : items
+
+  useEffect(() => {
+    if (!shouldScroll) return
+    const animate = (ts) => {
+      if (!pausedRef.current) {
+        if (lastTsRef.current != null) {
+          const dt = Math.min(ts - lastTsRef.current, 50)
+          offsetRef.current = (offsetRef.current + NB_SPEED * dt / 1000) % loopDistance
+          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+        }
+        lastTsRef.current = ts
+      } else {
+        lastTsRef.current = null
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [shouldScroll, loopDistance])
+
+  const scrollCard = (dir) => {
+    const slot = NB_CARD_W + NB_CARD_GAP
+    const cur  = offsetRef.current
+    const next = dir > 0
+      ? (Math.floor(cur / slot) + 1) * slot
+      : (Math.ceil(cur / slot)  - 1) * slot
+    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mb-14">
+        <SectionHeader config={config} total={0} />
+        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+          <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const displayBlogTitle = blogTitle || '네이버 블로그'
+
+  const renderCard = (item, i) => (
+    <a
+      key={`nb-${item._id ?? i}-${i}`}
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+      style={{ width: `${NB_CARD_W}px`, marginRight: `${NB_CARD_GAP}px` }}
+    >
+      {/* 텍스트 섹션 (상단) */}
+      <div className="p-3.5">
+        {/* 행 1: 블로그 아이콘 + 이름 (좌) · 날짜 (우) */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <NaverBlogIcon />
+            <span className="text-xs text-gray-600 font-medium truncate">{displayBlogTitle}</span>
+          </div>
+          {item.timestamp && (
+            <span className="text-[11px] text-gray-400 flex-shrink-0 ml-2">{formatBlogDate(item.timestamp)}</span>
+          )}
+        </div>
+        {/* 행 2: 제목 (볼드) */}
+        <p className="text-sm font-bold text-gray-900 line-clamp-1 mb-1.5 leading-snug">{item.title}</p>
+        {/* 행 3: 내용 미리보기 (2줄) */}
+        {item.summary && (
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.summary}</p>
+        )}
+      </div>
+
+      {/* 1:1 정방형 썸네일 이미지 */}
+      {item.thumbnail ? (
+        <div className="aspect-square overflow-hidden bg-gray-100">
+          <img
+            src={item.thumbnail}
+            alt={item.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        /* 이미지 없을 때 플레이스홀더 */
+        <div className="aspect-square bg-green-50 flex items-center justify-center">
+          <svg viewBox="0 0 20 20" className="w-14 h-14 opacity-15" fill="none" aria-hidden="true">
+            <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
+            <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
+            <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
+          </svg>
+        </div>
+      )}
+    </a>
+  )
+
+  return (
+    <div className="mb-14">
+      <SectionHeader config={config} total={items.length} />
+
+      <div className="relative">
+        {shouldScroll && (
+          <>
+            <button
+              onClick={() => scrollCard(-1)}
+              aria-label="이전"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronLeft size={28} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => scrollCard(1)}
+              aria-label="다음"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronRight size={28} strokeWidth={1.5} />
+            </button>
+          </>
+        )}
+
+        <div
+          className="overflow-hidden"
+          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
+          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
+        >
+          {shouldScroll ? (
+            <div ref={trackRef} className="flex">
+              {trackItems.map(renderCard)}
+            </div>
+          ) : (
+            <div className="flex justify-center" style={{ gap: `${NB_CARD_GAP}px` }}>
+              {items.map(renderCard)}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 일반 SNS 섹션 (스레드 · 기사) ───────────────────────────────────────────
 function SnsSection({ config, items }) {
   const { textColor, bgLight, borderColor, Icon, color } = config
   const [current, setCurrent] = useState(0)
@@ -594,6 +776,7 @@ export default function SnsCarousel() {
   const [igProfilePicture, setIgProfilePicture] = useState('')
   const [ytChannelName, setYtChannelName] = useState('')
   const [ytChannelAvatar, setYtChannelAvatar] = useState('')
+  const [nbBlogTitle, setNbBlogTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -608,24 +791,28 @@ export default function SnsCarousel() {
       const igData = igResult.status === 'fulfilled'  ? igResult.value.data  : null
       const ytData = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
       const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
-      const nbFeed = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
+      const nbData = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
-      // { items, username, profilePicture } 형식 + 하위 호환(배열 형식)
+      // { items, username, profilePicture } 형식 + 하위 호환(배열)
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
       if (igData?.username)        setIgUsername(igData.username)
       if (igData?.profilePicture)  setIgProfilePicture(igData.profilePicture)
 
-      // { items, channelName, channelAvatar } 형식 + 하위 호환(배열 형식)
+      // { items, channelName, channelAvatar } 형식 + 하위 호환(배열)
       const ytItems = Array.isArray(ytData) ? ytData : (ytData?.items ?? null)
       if (ytData?.channelName)   setYtChannelName(ytData.channelName)
       if (ytData?.channelAvatar) setYtChannelAvatar(ytData.channelAvatar)
+
+      // { items, blogTitle } 형식 + 하위 호환(배열)
+      const nbItems = Array.isArray(nbData) ? nbData : (nbData?.items ?? null)
+      if (nbData?.blogTitle) setNbBlogTitle(nbData.blogTitle)
 
       setSnsData({
         ...sns,
         instagram: igItems ?? sns.instagram ?? [],
         youtube:   ytItems ?? sns.youtube   ?? [],
         threads:   thFeed  ?? sns.threads   ?? [],
-        naverBlog: nbFeed  ?? sns.naverBlog ?? [],
+        naverBlog: nbItems ?? sns.naverBlog ?? [],
       })
     }).finally(() => setLoading(false))
   }, [])
@@ -659,14 +846,22 @@ export default function SnsCarousel() {
               channelAvatar={ytChannelAvatar}
             />
 
-            {/* 나머지 SNS: 기존 슬라이드 방식 */}
-            {SNS_CONFIG.filter(c => c.key !== 'instagram' && c.key !== 'youtube').map((config) => (
-              <SnsSection
-                key={config.key}
-                config={config}
-                items={snsData[config.key] || []}
-              />
-            ))}
+            {/* 네이버 블로그: 텍스트+1:1 이미지 카드, 컨베이어 벨트 */}
+            <NaverBlogSection
+              items={snsData.naverBlog ?? []}
+              blogTitle={nbBlogTitle}
+            />
+
+            {/* 나머지 SNS (스레드·기사): 기존 슬라이드 방식 */}
+            {SNS_CONFIG
+              .filter(c => !['instagram', 'youtube', 'naverBlog'].includes(c.key))
+              .map((config) => (
+                <SnsSection
+                  key={config.key}
+                  config={config}
+                  items={snsData[config.key] || []}
+                />
+              ))}
           </div>
         )}
       </div>
