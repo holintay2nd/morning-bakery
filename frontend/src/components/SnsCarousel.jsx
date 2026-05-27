@@ -89,7 +89,7 @@ function SectionHeader({ config, total }) {
 const IG_CARD_W   = 360  // px — 3장: 3×360 + 2×16 = 1112px (max-w-6xl 1152px 이내)
 const IG_CARD_GAP = 16   // px
 const IG_VISIBLE  = 3
-const IG_SPEED    = 30   // px/s
+const IG_SPEED    = 20   // px/s
 
 // 캡션 파싱: 첫 줄 → 제목, 나머지 → 본문 (구분자 줄 제외)
 function parseCaption(caption = '') {
@@ -263,7 +263,7 @@ function InstagramSection({ items, username, profilePicture }) {
 const YT_CARD_W   = 568
 const YT_CARD_GAP = 16
 const YT_VISIBLE  = 2
-const YT_SPEED    = 30  // px/s — 인스타그램과 동일 속도
+const YT_SPEED    = 20  // px/s — 인스타그램과 동일 속도
 
 function formatViewCount(count) {
   if (!count) return ''
