@@ -86,9 +86,9 @@ function SectionHeader({ config, total }) {
 }
 
 // ─── 인스타그램 컨베이어 벨트 섹션 ───────────────────────────────────────────
-const IG_CARD_W = 200   // px (카드 너비)
-const IG_CARD_GAP = 16  // px (카드 간격, gap-4)
-const IG_VISIBLE = 5    // 최대 동시 표시 개수
+const IG_CARD_W = 360   // px — 3장 기준: 3×360 + 2×16 = 1112px (max-w-6xl 1152px 이내)
+const IG_CARD_GAP = 16  // px (gap-4)
+const IG_VISIBLE = 3    // 최대 동시 표시 개수
 
 // 캡션 파싱: 첫 줄 → 제목, 나머지 → 본문 (구분자 줄 제외)
 function parseCaption(caption = '') {
@@ -102,9 +102,10 @@ function parseCaption(caption = '') {
   return { title, body }
 }
 
-function InstagramSection({ items, username }) {
+function InstagramSection({ items, username, profilePicture }) {
   const shouldScroll = items.length > IG_VISIBLE
   const [paused, setPaused] = useState(false)
+  const [avatarError, setAvatarError] = useState(false)
 
   const config = SNS_CONFIG.find(c => c.key === 'instagram')
   const { bgLight, borderColor, color } = config
@@ -126,8 +127,11 @@ function InstagramSection({ items, username }) {
   // 1회 순환 거리 = 원본 아이템 수 × (카드 너비 + 간격)
   const translatePx = items.length * (IG_CARD_W + IG_CARD_GAP)
 
-  // 속도 기준: 약 25px/s 유지 → 10개 기준 80초
-  const duration = items.length * 8
+  // 속도 기준: 약 30px/s — 10개 기준 120초
+  const duration = items.length * 12
+
+  // 프로필 이미지: 로드 성공 시 실제 사진, 실패 시 Instagram 아이콘으로 폴백
+  const showAvatar = !!(profilePicture && !avatarError)
 
   return (
     <div className="mb-14">
@@ -146,8 +150,8 @@ function InstagramSection({ items, username }) {
         {/* 양쪽 페이드 엣지 */}
         {shouldScroll && (
           <>
-            <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
           </>
         )}
 
@@ -175,48 +179,60 @@ function InstagramSection({ items, username }) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`group bg-white rounded-xl overflow-hidden border ${borderColor} shadow-sm hover:shadow-md transition-shadow duration-300 flex-shrink-0`}
+                className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
                 style={shouldScroll ? { width: `${IG_CARD_W}px`, marginRight: `${IG_CARD_GAP}px` } : {}}
               >
-                {/* 1:1 정사각형 썸네일 */}
-                <div className="aspect-square overflow-hidden bg-gray-100">
+                {/* 3:4 비율 이미지 + 텍스트 오버레이 */}
+                <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
                   <img
                     src={item.thumbnail}
                     alt={title || '인스타그램 게시물'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"
                   />
-                </div>
 
-                {/* 캡션 영역 */}
-                <div className="p-3 space-y-1">
-                  {/* 프로필 행: 아이콘 + 사용자명 */}
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className={`w-[18px] h-[18px] rounded-full bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0 p-[3px]`}
-                    >
-                      <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                      </svg>
+                  {/* 하단 검정 그라데이션 오버레이 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                  {/* 텍스트 오버레이 — 하단 */}
+                  <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
+                    {/* 프로필 행: 동그란 로고 + 사용자명 */}
+                    <div className="flex items-center gap-2">
+                      {showAvatar ? (
+                        <img
+                          src={profilePicture}
+                          alt={username}
+                          className="w-7 h-7 rounded-full object-cover flex-shrink-0 ring-2 ring-white/40"
+                          onError={() => setAvatarError(true)}
+                        />
+                      ) : (
+                        <div
+                          className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0 ring-2 ring-white/40 p-[5px]`}
+                        >
+                          <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                          </svg>
+                        </div>
+                      )}
+                      <span className="text-[12px] text-white/80 font-medium truncate">
+                        @{username || 'morningbakery_seoul'}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-gray-400 truncate">
-                      @{username || 'morningbakery_seoul'}
-                    </span>
+
+                    {/* 제목: 첫 번째 캡션 줄 */}
+                    {title && (
+                      <p className="text-[15px] font-bold text-white line-clamp-1 leading-snug">
+                        {title}
+                      </p>
+                    )}
+
+                    {/* 본문: 두 번째 줄부터 (최대 2줄) */}
+                    {body && (
+                      <p className="text-[12px] text-white/70 line-clamp-2 leading-relaxed">
+                        {body}
+                      </p>
+                    )}
                   </div>
-
-                  {/* 제목: 첫 번째 줄 */}
-                  {title && (
-                    <p className="text-[13px] font-semibold text-gray-800 line-clamp-1 leading-snug">
-                      {title}
-                    </p>
-                  )}
-
-                  {/* 본문: 두 번째 줄부터 (최대 2줄) */}
-                  {body && (
-                    <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
-                      {body}
-                    </p>
-                  )}
                 </div>
               </a>
             )
@@ -363,6 +379,7 @@ function SnsSection({ config, items }) {
 export default function SnsCarousel() {
   const [snsData, setSnsData] = useState(null)
   const [igUsername, setIgUsername] = useState('')
+  const [igProfilePicture, setIgProfilePicture] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -379,9 +396,10 @@ export default function SnsCarousel() {
       const thFeed = thResult.status === 'fulfilled'  ? thResult.value.data  : null
       const nbFeed = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
-      // { items, username } 형식 + 하위 호환(배열 형식)
+      // { items, username, profilePicture } 형식 + 하위 호환(배열 형식)
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
       if (igData?.username) setIgUsername(igData.username)
+      if (igData?.profilePicture) setIgProfilePicture(igData.profilePicture)
 
       setSnsData({
         ...sns,
@@ -409,7 +427,7 @@ export default function SnsCarousel() {
         ) : (
           <div>
             {/* 인스타그램: 컨베이어 벨트 방식 */}
-            <InstagramSection items={snsData.instagram ?? []} username={igUsername} />
+            <InstagramSection items={snsData.instagram ?? []} username={igUsername} profilePicture={igProfilePicture} />
 
             {/* 나머지 SNS: 기존 슬라이드 방식 */}
             {SNS_CONFIG.filter(c => c.key !== 'instagram').map((config) => (
