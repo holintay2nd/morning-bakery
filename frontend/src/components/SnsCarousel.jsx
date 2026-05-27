@@ -102,13 +102,55 @@ function parseCaption(caption = '') {
   return { title, body }
 }
 
+const IG_SPEED = 30 // px/s
+
 function InstagramSection({ items, username, profilePicture }) {
   const shouldScroll = items.length > IG_VISIBLE
-  const [paused, setPaused] = useState(false)
   const [avatarError, setAvatarError] = useState(false)
+
+  // RAF refs — state 없이 직접 DOM 조작으로 최고 성능
+  const trackRef   = useRef(null)
+  const offsetRef  = useRef(0)
+  const pausedRef  = useRef(false)
+  const lastTsRef  = useRef(null)
+  const rafRef     = useRef(null)
 
   const config = SNS_CONFIG.find(c => c.key === 'instagram')
   const { bgLight, borderColor, color } = config
+
+  const loopDistance = items.length * (IG_CARD_W + IG_CARD_GAP)
+  const trackItems   = shouldScroll ? [...items, ...items] : items
+
+  // 자동 스크롤 — requestAnimationFrame
+  useEffect(() => {
+    if (!shouldScroll) return
+    const animate = (ts) => {
+      if (!pausedRef.current) {
+        if (lastTsRef.current != null) {
+          const dt = Math.min(ts - lastTsRef.current, 50) // 탭 전환 급격한 점프 방지
+          offsetRef.current = (offsetRef.current + IG_SPEED * dt / 1000) % loopDistance
+          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+        }
+        lastTsRef.current = ts
+      } else {
+        lastTsRef.current = null
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [shouldScroll, loopDistance])
+
+  // 화살표 클릭 — 한 카드 단위로 스냅
+  const scrollCard = (dir) => {
+    const slot = IG_CARD_W + IG_CARD_GAP
+    const cur  = offsetRef.current
+    const next = dir > 0
+      ? (Math.floor(cur / slot) + 1) * slot
+      : (Math.ceil(cur / slot)  - 1) * slot
+    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+  }
 
   if (items.length === 0) {
     return (
@@ -121,122 +163,113 @@ function InstagramSection({ items, username, profilePicture }) {
     )
   }
 
-  // 컨베이어 벨트: 아이템 2배 복제 → 끊김 없는 순환
-  const trackItems = shouldScroll ? [...items, ...items] : items
-
-  // 1회 순환 거리 = 원본 아이템 수 × (카드 너비 + 간격)
-  const translatePx = items.length * (IG_CARD_W + IG_CARD_GAP)
-
-  // 속도 기준: 약 30px/s — 10개 기준 120초
-  const duration = items.length * 12
-
-  // 프로필 이미지: 로드 성공 시 실제 사진, 실패 시 Instagram 아이콘으로 폴백
   const showAvatar = !!(profilePicture && !avatarError)
+
+  // 카드 공통 렌더
+  const renderCard = (item, i) => {
+    const { title, body } = parseCaption(item.title)
+    return (
+      <a
+        key={`ig-${item._id ?? i}-${i}`}
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+        style={{ width: `${IG_CARD_W}px`, marginRight: `${IG_CARD_GAP}px` }}
+      >
+        <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
+          <img
+            src={item.thumbnail}
+            alt={title || '인스타그램 게시물'}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+          />
+          {/* 하단 검정 그라데이션 오버레이 */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+          {/* 텍스트 오버레이 */}
+          <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
+            <div className="flex items-center gap-2">
+              {showAvatar ? (
+                <img
+                  src={profilePicture}
+                  alt={username}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0 ring-2 ring-white/40"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0 ring-2 ring-white/40 p-[5px]`}>
+                  <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </div>
+              )}
+              <span className="text-[12px] text-white/80 font-medium truncate">
+                @{username || 'morningbakery_seoul'}
+              </span>
+            </div>
+            {title && (
+              <p className="text-[15px] font-bold text-white line-clamp-1 leading-snug">{title}</p>
+            )}
+            {body && (
+              <p className="text-[12px] text-white/70 line-clamp-2 leading-relaxed">{body}</p>
+            )}
+          </div>
+        </div>
+      </a>
+    )
+  }
 
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
 
-      {/* 컨베이어 keyframe - 아이템 수에 따라 동적 생성 */}
-      {shouldScroll && (
-        <style>{`@keyframes igConveyor { to { transform: translateX(-${translatePx}px); } }`}</style>
-      )}
-
-      <div
-        className={shouldScroll ? 'overflow-hidden relative' : ''}
-        onMouseEnter={shouldScroll ? () => setPaused(true) : undefined}
-        onMouseLeave={shouldScroll ? () => setPaused(false) : undefined}
-      >
-        {/* 양쪽 페이드 엣지 */}
+      <div className="relative">
+        {/* ← → 화살표 (원 없이, 심플) */}
         {shouldScroll && (
           <>
-            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+            <button
+              onClick={() => scrollCard(-1)}
+              aria-label="이전"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronLeft size={28} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => scrollCard(1)}
+              aria-label="다음"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
+                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            >
+              <ChevronRight size={28} strokeWidth={1.5} />
+            </button>
           </>
         )}
 
+        {/* 캐러셀 — mask-image로 자연스럽게 페이드 */}
         <div
-          className="flex"
-          style={
-            shouldScroll
-              ? {
-                  animation: `igConveyor ${duration}s linear infinite`,
-                  animationPlayState: paused ? 'paused' : 'running',
-                }
-              : {
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${items.length}, ${IG_CARD_W}px)`,
-                  gap: `${IG_CARD_GAP}px`,
-                  justifyContent: 'center',
-                }
-          }
+          className="overflow-hidden"
+          style={shouldScroll ? {
+            maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+          } : undefined}
+          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
+          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
         >
-          {trackItems.map((item, i) => {
-            const { title, body } = parseCaption(item.title)
-            return (
-              <a
-                key={`ig-${item._id ?? i}-${i}`}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-                style={shouldScroll ? { width: `${IG_CARD_W}px`, marginRight: `${IG_CARD_GAP}px` } : {}}
-              >
-                {/* 3:4 비율 이미지 + 텍스트 오버레이 */}
-                <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
-                  <img
-                    src={item.thumbnail}
-                    alt={title || '인스타그램 게시물'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
-                  />
-
-                  {/* 하단 검정 그라데이션 오버레이 */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                  {/* 텍스트 오버레이 — 하단 */}
-                  <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
-                    {/* 프로필 행: 동그란 로고 + 사용자명 */}
-                    <div className="flex items-center gap-2">
-                      {showAvatar ? (
-                        <img
-                          src={profilePicture}
-                          alt={username}
-                          className="w-7 h-7 rounded-full object-cover flex-shrink-0 ring-2 ring-white/40"
-                          onError={() => setAvatarError(true)}
-                        />
-                      ) : (
-                        <div
-                          className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0 ring-2 ring-white/40 p-[5px]`}
-                        >
-                          <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                          </svg>
-                        </div>
-                      )}
-                      <span className="text-[12px] text-white/80 font-medium truncate">
-                        @{username || 'morningbakery_seoul'}
-                      </span>
-                    </div>
-
-                    {/* 제목: 첫 번째 캡션 줄 */}
-                    {title && (
-                      <p className="text-[15px] font-bold text-white line-clamp-1 leading-snug">
-                        {title}
-                      </p>
-                    )}
-
-                    {/* 본문: 두 번째 줄부터 (최대 2줄) */}
-                    {body && (
-                      <p className="text-[12px] text-white/70 line-clamp-2 leading-relaxed">
-                        {body}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </a>
-            )
-          })}
+          {shouldScroll ? (
+            // 컨베이어: ref로 직접 transform 제어
+            <div ref={trackRef} className="flex">
+              {trackItems.map(renderCard)}
+            </div>
+          ) : (
+            // 정적 그리드 (≤3장)
+            <div
+              className="flex justify-center"
+              style={{ gap: `${IG_CARD_GAP}px` }}
+            >
+              {items.map(renderCard)}
+            </div>
+          )}
         </div>
       </div>
     </div>
