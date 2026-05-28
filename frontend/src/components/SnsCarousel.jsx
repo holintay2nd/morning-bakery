@@ -290,12 +290,12 @@ function InstagramSection({ items, username, profilePicture }) {
   )
 }
 
-// ─── 유튜브 교체형 슬라이드 섹션 ─────────────────────────────────────────────
-// 2장이 정확히 꽉 참: 2×568 + 16 = 1152px (max-w-6xl)
-// 한 장씩 교대로 페이드 교체: A|B → C|B → C|D → E|D → …
-const YT_CARD_W    = 568
-const YT_CYCLE_MS  = 4000  // 한 장 교체 주기 (ms)
-const YT_FADE_MS   = 350   // 페이드 전환 시간 (ms)
+// ─── 유튜브 크로스페이드 섹션 ────────────────────────────────────────────────
+// 2장 고정: 2×568 + 16 = 1152px (max-w-6xl)
+// 크로스페이드: 이전 카드(페이드 아웃) + 새 카드(페이드 인)를 동시에 전환
+const YT_CARD_W   = 568
+const YT_CYCLE_MS = 5000   // 교체 주기 (ms)
+const YT_FADE_MS  = 1200   // 크로스페이드 시간 (ms) — 화면보호기 같은 부드러운 전환
 
 function formatViewCount(count) {
   if (!count) return ''
@@ -309,46 +309,48 @@ function formatViewCount(count) {
 
 function YoutubeSection({ items, channelName, channelAvatar }) {
   const [avatarError, setAvatarError] = useState(false)
-  // 각 슬롯에 표시할 아이템 인덱스
-  const [leftIdx,  setLeftIdx]  = useState(0)
-  const [rightIdx, setRightIdx] = useState(Math.min(1, items.length - 1))
-  // 각 슬롯의 가시성 (false = 페이드 아웃 중)
-  const [leftVis,  setLeftVis]  = useState(true)
-  const [rightVis, setRightVis] = useState(true)
-  const pausedRef = useRef(false)
-  const cursorRef = useRef(Math.min(2, items.length)) // 다음에 보여줄 아이템 커서
-  const turnRef   = useRef(0) // 0 = 왼쪽 교체, 1 = 오른쪽 교체
-  const timerRef  = useRef(null)
-  const fadeRef   = useRef(null)
+
+  // 각 슬롯: cur = 현재 보이는 카드, next = 교체될 카드, fade = 전환 중 여부
+  const [leftCur,  setLeftCur]  = useState(0)
+  const [leftNext, setLeftNext] = useState(0)
+  const [leftFade, setLeftFade] = useState(false)
+
+  const [rightCur,  setRightCur]  = useState(Math.min(1, items.length - 1))
+  const [rightNext, setRightNext] = useState(Math.min(1, items.length - 1))
+  const [rightFade, setRightFade] = useState(false)
+
+  const pausedRef    = useRef(false)
+  const cursorRef    = useRef(Math.min(2, items.length))
+  const turnRef      = useRef(0)  // 0 = 왼쪽, 1 = 오른쪽
+  const fadeTimerRef = useRef(null)
 
   const config = SNS_CONFIG.find(c => c.key === 'youtube')
   const { bgLight, borderColor, color } = config
 
   useEffect(() => {
-    // 2장 이하면 모두 항상 표시되므로 순환 불필요
     if (items.length <= 2) return
 
-    timerRef.current = setInterval(() => {
+    const cycle = setInterval(() => {
       if (pausedRef.current) return
 
-      const nextIdx = cursorRef.current % items.length
+      const idx = cursorRef.current % items.length
       cursorRef.current++
 
       if (turnRef.current === 0) {
-        setLeftVis(false)
-        fadeRef.current = setTimeout(() => { setLeftIdx(nextIdx); setLeftVis(true) }, YT_FADE_MS)
+        // 왼쪽 슬롯: next에 새 카드 세팅 → fade 시작 → 완료 후 cur 업데이트
+        setLeftNext(idx)
+        setLeftFade(true)
+        fadeTimerRef.current = setTimeout(() => { setLeftCur(idx); setLeftFade(false) }, YT_FADE_MS)
         turnRef.current = 1
       } else {
-        setRightVis(false)
-        fadeRef.current = setTimeout(() => { setRightIdx(nextIdx); setRightVis(true) }, YT_FADE_MS)
+        setRightNext(idx)
+        setRightFade(true)
+        fadeTimerRef.current = setTimeout(() => { setRightCur(idx); setRightFade(false) }, YT_FADE_MS)
         turnRef.current = 0
       }
     }, YT_CYCLE_MS)
 
-    return () => {
-      clearInterval(timerRef.current)
-      clearTimeout(fadeRef.current)
-    }
+    return () => { clearInterval(cycle); clearTimeout(fadeTimerRef.current) }
   }, [items.length])
 
   if (items.length === 0) {
@@ -365,21 +367,13 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
   const showAvatar     = !!(channelAvatar && !avatarError)
   const displayChannel = channelName || 'YouTube'
 
-  // slotKey: 슬롯 DOM을 유지한 채 내용만 교체하기 위해 key를 슬롯명으로 고정
-  const renderCard = (item, visible, slotKey) => (
+  const renderCardInner = (item) => (
     <a
-      key={slotKey}
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
       className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 block rounded-2xl"
-      style={{
-        width: `${YT_CARD_W}px`,
-        opacity: visible ? 1 : 0,
-        transition: `opacity ${YT_FADE_MS}ms ease`,
-      }}
     >
-      {/* 16:9 썸네일 */}
       <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-2xl">
         <img
           src={item.thumbnail}
@@ -389,17 +383,10 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
           onError={e => { e.target.src = `https://i.ytimg.com/vi/${item._id}/hqdefault.jpg` }}
         />
       </div>
-
-      {/* 카드 하단 정보 */}
       <div className="p-4 flex gap-3 items-start">
         <div className="flex-shrink-0 mt-0.5">
           {showAvatar ? (
-            <img
-              src={channelAvatar}
-              alt={displayChannel}
-              className="w-9 h-9 rounded-full object-cover"
-              onError={() => setAvatarError(true)}
-            />
+            <img src={channelAvatar} alt={displayChannel} className="w-9 h-9 rounded-full object-cover" onError={() => setAvatarError(true)} />
           ) : (
             <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2`}>
               <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
@@ -408,43 +395,46 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
             </div>
           )}
         </div>
-
         <div className="flex-1 min-w-0">
-          <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1.5">
-            {item.title}
-          </p>
+          <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1.5">{item.title}</p>
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-brown-400 text-xs">
             <span>{displayChannel}</span>
-            {item.viewCount && (
-              <>
-                <span>·</span>
-                <span>{formatViewCount(item.viewCount)}</span>
-              </>
-            )}
-            {item.timestamp && (
-              <>
-                <span>·</span>
-                <span>{formatRelativeDate(item.timestamp)}</span>
-              </>
-            )}
+            {item.viewCount && <><span>·</span><span>{formatViewCount(item.viewCount)}</span></>}
+            {item.timestamp && <><span>·</span><span>{formatRelativeDate(item.timestamp)}</span></>}
           </div>
         </div>
       </div>
     </a>
   )
 
+  // 두 카드를 겹쳐서 동시에 크로스페이드
+  // · 앞(cur): 일반 흐름 → 슬롯 높이 결정, fade 시작 시 opacity 0으로 전환
+  // · 뒤(next): absolute로 동일 공간 차지, fade 시작 시 opacity 1로 전환
+  // → 흰 화면 없이 이미지끼리 직접 교차 전환
+  const renderSlot = (curIdx, nextIdx, isFading, slotKey) => (
+    <div key={slotKey} className="relative" style={{ width: YT_CARD_W, flexShrink: 0 }}>
+      {/* 앞 레이어: 현재 카드, 페이드 아웃 */}
+      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: `opacity ${YT_FADE_MS}ms ease-in-out` }}>
+        {renderCardInner(items[curIdx])}
+      </div>
+      {/* 뒤 레이어: 다음 카드, 페이드 인 */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: `opacity ${YT_FADE_MS}ms ease-in-out` }}>
+        {renderCardInner(items[nextIdx])}
+      </div>
+    </div>
+  )
+
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-      {/* overflow-hidden 없이 렌더링 → hover 그림자가 아래쪽에도 온전히 표시됨 */}
       <div
         className="flex pb-6"
         style={{ gap: `${CARD_GAP}px` }}
         onMouseEnter={() => { pausedRef.current = true  }}
         onMouseLeave={() => { pausedRef.current = false }}
       >
-        {renderCard(items[leftIdx], leftVis, 'yt-left')}
-        {items.length > 1 && renderCard(items[rightIdx], rightVis, 'yt-right')}
+        {renderSlot(leftCur, leftNext, leftFade, 'yt-left')}
+        {items.length > 1 && renderSlot(rightCur, rightNext, rightFade, 'yt-right')}
       </div>
     </div>
   )
