@@ -407,19 +407,24 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
     </a>
   )
 
-  // 두 카드를 겹쳐서 동시에 크로스페이드
-  // · 앞(cur): 일반 흐름 → 슬롯 높이 결정, fade 시작 시 opacity 0으로 전환
-  // · 뒤(next): absolute로 동일 공간 차지, fade 시작 시 opacity 1로 전환
-  // → 흰 화면 없이 이미지끼리 직접 교차 전환
+  // 크로스페이드 원리:
+  // · 뒤(next): absolute, opacity 항상 1 고정 → 목적지 영상이 항상 완전히 준비돼 있음
+  // · 앞(cur): isFading 시 1→0 페이드 아웃 → 뒤를 드러냄, 완료 후 transition:none으로 즉시 1 복원
+  // → 두 레이어가 동시에 반투명해지는 구간 없음 = 흰 화면 노출 없음
   const renderSlot = (curIdx, nextIdx, isFading, slotKey) => (
     <div key={slotKey} className="relative" style={{ width: YT_CARD_W, flexShrink: 0 }}>
-      {/* 앞 레이어: 현재 카드, 페이드 아웃 */}
-      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: `opacity ${YT_FADE_MS}ms ease-in-out` }}>
-        {renderCardInner(items[curIdx])}
-      </div>
-      {/* 뒤 레이어: 다음 카드, 페이드 인 */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: `opacity ${YT_FADE_MS}ms ease-in-out` }}>
+      {/* 뒤 레이어: 다음 카드, 항상 완전 불투명 */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
         {renderCardInner(items[nextIdx])}
+      </div>
+      {/* 앞 레이어: 현재 카드, 페이드 아웃 후 내용 교체 → transition:none으로 즉시 복원 */}
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        opacity: isFading ? 0 : 1,
+        transition: isFading ? `opacity ${YT_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCardInner(items[curIdx])}
       </div>
     </div>
   )
