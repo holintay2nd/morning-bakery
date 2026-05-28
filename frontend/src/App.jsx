@@ -4,7 +4,6 @@ import Hero from './components/Hero'
 import About from './components/About'
 import SnsCarousel from './components/SnsCarousel'
 import StoreInfo from './components/StoreInfo'
-import Reservation from './components/Reservation'
 import Footer from './components/Footer'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
@@ -19,7 +18,6 @@ function HomePage() {
         <About />
         <SnsCarousel />
         <StoreInfo />
-        <Reservation />
       </main>
       <Footer />
     </div>
