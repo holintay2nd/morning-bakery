@@ -155,7 +155,7 @@ function ConveyorWrap({ shouldScroll, trackRef, pausedRef, scrollCard, centered 
         </>
       )}
       <div
-        className="overflow-hidden"
+        className="overflow-hidden py-4"
         onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
         onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
       >
@@ -499,7 +499,7 @@ function NaverBlogSection({ items, blogTitle }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+      className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
       style={{ width: `${NB_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
     >
       {/* 텍스트 섹션 (상단) */}
@@ -595,7 +595,7 @@ function ThreadsSection({ items, username, profilePicture }) {
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
+        className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
         style={{ width: `${TH_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
       >
         {/* 헤더: 원형 프로필(좌) + 계정명 + 시간 */}
