@@ -37,7 +37,6 @@ const SNS_CONFIG = [
     textColor: 'text-green-700',
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
-    // 네이버 블로그 공식 "b|" 아이콘
     Icon: () => (
       <svg viewBox="0 0 20 20" className="w-5 h-5 fill-current" aria-hidden="true">
         <rect x="2.5" y="2" width="3" height="16" rx="1.5"/>
@@ -88,11 +87,109 @@ function SectionHeader({ config, total }) {
   )
 }
 
+// ─── 컨베이어 벨트 훅 ─────────────────────────────────────────────────────────
+// RAF 애니메이션 + 수동 스크롤 로직을 공통화. 4개 섹션 모두 이 훅을 사용.
+const CARD_GAP = 16 // px — 모든 섹션 동일
+
+function useConveyorBelt({ shouldScroll, loopDistance, speed, cardSlot }) {
+  const trackRef  = useRef(null)
+  const offsetRef = useRef(0)
+  const pausedRef = useRef(false)
+  const lastTsRef = useRef(null)
+  const rafRef    = useRef(null)
+
+  useEffect(() => {
+    if (!shouldScroll) return
+    const animate = (ts) => {
+      if (!pausedRef.current) {
+        if (lastTsRef.current != null) {
+          const dt = Math.min(ts - lastTsRef.current, 50)
+          offsetRef.current = (offsetRef.current + speed * dt / 1000) % loopDistance
+          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+        }
+        lastTsRef.current = ts
+      } else {
+        lastTsRef.current = null
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [shouldScroll, loopDistance, speed])
+
+  const scrollCard = useCallback((dir) => {
+    const cur  = offsetRef.current
+    const next = dir > 0
+      ? (Math.floor(cur / cardSlot) + 1) * cardSlot
+      : (Math.ceil(cur / cardSlot)  - 1) * cardSlot
+    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
+    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
+  }, [loopDistance, cardSlot])
+
+  return { trackRef, pausedRef, scrollCard }
+}
+
+// ─── 컨베이어 벨트 레이아웃 래퍼 ─────────────────────────────────────────────
+// 화살표 버튼 + overflow-hidden + 자동/고정 트랙 분기 공통화
+function ConveyorWrap({ shouldScroll, trackRef, pausedRef, scrollCard, centered = false, children }) {
+  return (
+    <div className="relative">
+      {shouldScroll && (
+        <>
+          <button
+            onClick={() => scrollCard(-1)}
+            aria-label="이전"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
+                       text-gray-300 hover:text-gray-600 transition-colors duration-200"
+          >
+            <ChevronLeft size={28} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={() => scrollCard(1)}
+            aria-label="다음"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
+                       text-gray-300 hover:text-gray-600 transition-colors duration-200"
+          >
+            <ChevronRight size={28} strokeWidth={1.5} />
+          </button>
+        </>
+      )}
+      <div
+        className="overflow-hidden"
+        onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
+        onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
+      >
+        {shouldScroll ? (
+          <div ref={trackRef} className="flex">{children}</div>
+        ) : (
+          <div className={`flex${centered ? ' justify-center' : ''}`} style={{ gap: `${CARD_GAP}px` }}>
+            {children}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── 공통 유틸 ───────────────────────────────────────────────────────────────
+function formatRelativeDate(iso) {
+  if (!iso) return ''
+  const diff = Date.now() - new Date(iso).getTime()
+  const h  = Math.floor(diff / 3_600_000)
+  const d  = Math.floor(diff / 86_400_000)
+  const mo = Math.floor(d / 30)
+  const y  = Math.floor(d / 365)
+  if (y  >= 1) return `${y}년 전`
+  if (mo >= 1) return `${mo}개월 전`
+  if (d  >= 1) return `${d}일 전`
+  if (h  >= 1) return `${h}시간 전`
+  return '방금 전'
+}
+
 // ─── 인스타그램 컨베이어 벨트 섹션 ───────────────────────────────────────────
-const IG_CARD_W   = 360  // px — 3장: 3×360 + 2×16 = 1112px (max-w-6xl 이내)
-const IG_CARD_GAP = 16
-const IG_VISIBLE  = 3
-const IG_SPEED    = 20   // px/s
+const IG_CARD_W  = 360  // 3장: 3×360 + 2×16 = 1112px (max-w-6xl 이내)
+const IG_VISIBLE = 3
+const IG_SPEED   = 20   // px/s
 
 // 캡션 파싱: 첫 줄 → 제목, 나머지 → 본문 (구분자 줄 제외)
 function parseCaption(caption = '') {
@@ -110,46 +207,14 @@ function InstagramSection({ items, username, profilePicture }) {
   const shouldScroll = items.length > IG_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
-  const trackRef  = useRef(null)
-  const offsetRef = useRef(0)
-  const pausedRef = useRef(false)
-  const lastTsRef = useRef(null)
-  const rafRef    = useRef(null)
-
   const config = SNS_CONFIG.find(c => c.key === 'instagram')
   const { bgLight, borderColor, color } = config
 
-  const loopDistance = items.length * (IG_CARD_W + IG_CARD_GAP)
+  const cardSlot     = IG_CARD_W + CARD_GAP
+  const loopDistance = items.length * cardSlot
   const trackItems   = shouldScroll ? [...items, ...items] : items
 
-  useEffect(() => {
-    if (!shouldScroll) return
-    const animate = (ts) => {
-      if (!pausedRef.current) {
-        if (lastTsRef.current != null) {
-          const dt = Math.min(ts - lastTsRef.current, 50)
-          offsetRef.current = (offsetRef.current + IG_SPEED * dt / 1000) % loopDistance
-          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-        }
-        lastTsRef.current = ts
-      } else {
-        lastTsRef.current = null
-      }
-      rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [shouldScroll, loopDistance])
-
-  const scrollCard = (dir) => {
-    const slot = IG_CARD_W + IG_CARD_GAP
-    const cur  = offsetRef.current
-    const next = dir > 0
-      ? (Math.floor(cur / slot) + 1) * slot
-      : (Math.ceil(cur / slot)  - 1) * slot
-    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-  }
+  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: IG_SPEED, cardSlot })
 
   if (items.length === 0) {
     return (
@@ -173,7 +238,7 @@ function InstagramSection({ items, username, profilePicture }) {
         target="_blank"
         rel="noopener noreferrer"
         className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${IG_CARD_W}px`, marginRight: `${IG_CARD_GAP}px` }}
+        style={{ width: `${IG_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
           <img
@@ -218,55 +283,19 @@ function InstagramSection({ items, username, profilePicture }) {
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-
-      <div className="relative">
-        {shouldScroll && (
-          <>
-            <button
-              onClick={() => scrollCard(-1)}
-              aria-label="이전"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronLeft size={28} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => scrollCard(1)}
-              aria-label="다음"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronRight size={28} strokeWidth={1.5} />
-            </button>
-          </>
-        )}
-
-        <div
-          className="overflow-hidden"
-          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
-          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
-        >
-          {shouldScroll ? (
-            <div ref={trackRef} className="flex">
-              {trackItems.map(renderCard)}
-            </div>
-          ) : (
-            <div className="flex justify-center" style={{ gap: `${IG_CARD_GAP}px` }}>
-              {items.map(renderCard)}
-            </div>
-          )}
-        </div>
-      </div>
+      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
+        {trackItems.map(renderCard)}
+      </ConveyorWrap>
     </div>
   )
 }
 
-// ─── 유튜브 컨베이어 벨트 섹션 ───────────────────────────────────────────────
+// ─── 유튜브 교체형 슬라이드 섹션 ─────────────────────────────────────────────
 // 2장이 정확히 꽉 참: 2×568 + 16 = 1152px (max-w-6xl)
-const YT_CARD_W   = 568
-const YT_CARD_GAP = 16
-const YT_VISIBLE  = 2
-const YT_SPEED    = 20  // px/s
+// 한 장씩 교대로 페이드 교체: A|B → C|B → C|D → E|D → …
+const YT_CARD_W    = 568
+const YT_CYCLE_MS  = 4000  // 한 장 교체 주기 (ms)
+const YT_FADE_MS   = 350   // 페이드 전환 시간 (ms)
 
 function formatViewCount(count) {
   if (!count) return ''
@@ -278,64 +307,49 @@ function formatViewCount(count) {
   return `조회수 ${n}회`
 }
 
-function formatRelativeDate(iso) {
-  if (!iso) return ''
-  const diff = Date.now() - new Date(iso).getTime()
-  const h  = Math.floor(diff / 3_600_000)
-  const d  = Math.floor(diff / 86_400_000)
-  const mo = Math.floor(d / 30)
-  const y  = Math.floor(d / 365)
-  if (y  >= 1) return `${y}년 전`
-  if (mo >= 1) return `${mo}개월 전`
-  if (d  >= 1) return `${d}일 전`
-  if (h  >= 1) return `${h}시간 전`
-  return '방금 전'
-}
-
 function YoutubeSection({ items, channelName, channelAvatar }) {
-  const shouldScroll = items.length > YT_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
-
-  const trackRef  = useRef(null)
-  const offsetRef = useRef(0)
+  // 각 슬롯에 표시할 아이템 인덱스
+  const [leftIdx,  setLeftIdx]  = useState(0)
+  const [rightIdx, setRightIdx] = useState(Math.min(1, items.length - 1))
+  // 각 슬롯의 가시성 (false = 페이드 아웃 중)
+  const [leftVis,  setLeftVis]  = useState(true)
+  const [rightVis, setRightVis] = useState(true)
   const pausedRef = useRef(false)
-  const lastTsRef = useRef(null)
-  const rafRef    = useRef(null)
+  const cursorRef = useRef(Math.min(2, items.length)) // 다음에 보여줄 아이템 커서
+  const turnRef   = useRef(0) // 0 = 왼쪽 교체, 1 = 오른쪽 교체
+  const timerRef  = useRef(null)
+  const fadeRef   = useRef(null)
 
   const config = SNS_CONFIG.find(c => c.key === 'youtube')
   const { bgLight, borderColor, color } = config
 
-  const loopDistance = items.length * (YT_CARD_W + YT_CARD_GAP)
-  const trackItems   = shouldScroll ? [...items, ...items] : items
-
   useEffect(() => {
-    if (!shouldScroll) return
-    const animate = (ts) => {
-      if (!pausedRef.current) {
-        if (lastTsRef.current != null) {
-          const dt = Math.min(ts - lastTsRef.current, 50)
-          offsetRef.current = (offsetRef.current + YT_SPEED * dt / 1000) % loopDistance
-          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-        }
-        lastTsRef.current = ts
-      } else {
-        lastTsRef.current = null
-      }
-      rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [shouldScroll, loopDistance])
+    // 2장 이하면 모두 항상 표시되므로 순환 불필요
+    if (items.length <= 2) return
 
-  const scrollCard = (dir) => {
-    const slot = YT_CARD_W + YT_CARD_GAP
-    const cur  = offsetRef.current
-    const next = dir > 0
-      ? (Math.floor(cur / slot) + 1) * slot
-      : (Math.ceil(cur / slot)  - 1) * slot
-    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-  }
+    timerRef.current = setInterval(() => {
+      if (pausedRef.current) return
+
+      const nextIdx = cursorRef.current % items.length
+      cursorRef.current++
+
+      if (turnRef.current === 0) {
+        setLeftVis(false)
+        fadeRef.current = setTimeout(() => { setLeftIdx(nextIdx); setLeftVis(true) }, YT_FADE_MS)
+        turnRef.current = 1
+      } else {
+        setRightVis(false)
+        fadeRef.current = setTimeout(() => { setRightIdx(nextIdx); setRightVis(true) }, YT_FADE_MS)
+        turnRef.current = 0
+      }
+    }, YT_CYCLE_MS)
+
+    return () => {
+      clearInterval(timerRef.current)
+      clearTimeout(fadeRef.current)
+    }
+  }, [items.length])
 
   if (items.length === 0) {
     return (
@@ -348,19 +362,24 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
     )
   }
 
-  const showAvatar = !!(channelAvatar && !avatarError)
+  const showAvatar     = !!(channelAvatar && !avatarError)
   const displayChannel = channelName || 'YouTube'
 
-  const renderCard = (item, i) => (
+  // slotKey: 슬롯 DOM을 유지한 채 내용만 교체하기 위해 key를 슬롯명으로 고정
+  const renderCard = (item, visible, slotKey) => (
     <a
-      key={`yt-${item._id ?? i}-${i}`}
+      key={slotKey}
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block rounded-2xl"
-      style={{ width: `${YT_CARD_W}px`, marginRight: `${YT_CARD_GAP}px` }}
+      className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 block rounded-2xl"
+      style={{
+        width: `${YT_CARD_W}px`,
+        opacity: visible ? 1 : 0,
+        transition: `opacity ${YT_FADE_MS}ms ease`,
+      }}
     >
-      {/* 16:9 썸네일 — 독립적으로 전체 둥글게 */}
+      {/* 16:9 썸네일 */}
       <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-2xl">
         <img
           src={item.thumbnail}
@@ -417,44 +436,15 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-
-      <div className="relative">
-        {shouldScroll && (
-          <>
-            <button
-              onClick={() => scrollCard(-1)}
-              aria-label="이전"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronLeft size={28} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => scrollCard(1)}
-              aria-label="다음"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronRight size={28} strokeWidth={1.5} />
-            </button>
-          </>
-        )}
-
-        <div
-          className="overflow-hidden"
-          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
-          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
-        >
-          {shouldScroll ? (
-            <div ref={trackRef} className="flex">
-              {trackItems.map(renderCard)}
-            </div>
-          ) : (
-            <div className="flex" style={{ gap: `${YT_CARD_GAP}px` }}>
-              {items.map(renderCard)}
-            </div>
-          )}
-        </div>
+      {/* overflow-hidden 없이 렌더링 → hover 그림자가 아래쪽에도 온전히 표시됨 */}
+      <div
+        className="flex pb-6"
+        style={{ gap: `${CARD_GAP}px` }}
+        onMouseEnter={() => { pausedRef.current = true  }}
+        onMouseLeave={() => { pausedRef.current = false }}
+      >
+        {renderCard(items[leftIdx], leftVis, 'yt-left')}
+        {items.length > 1 && renderCard(items[rightIdx], rightVis, 'yt-right')}
       </div>
     </div>
   )
@@ -462,12 +452,10 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
 
 // ─── 네이버 블로그 컨베이어 벨트 섹션 ────────────────────────────────────────
 // 3장 고정: 3×360 + 2×16 = 1112px | 4장부터 순환
-const NB_CARD_W   = 360
-const NB_CARD_GAP = 16
-const NB_VISIBLE  = 3
-const NB_SPEED    = 20  // px/s
+const NB_CARD_W  = 360
+const NB_VISIBLE = 3
+const NB_SPEED   = 20  // px/s
 
-// "YYYY. M. D." 형식 (네이버 블로그 날짜 표기)
 function formatBlogDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
@@ -475,7 +463,6 @@ function formatBlogDate(dateStr) {
   return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`
 }
 
-// 카드 헤더에 쓰는 네이버 블로그 "b|" 컬러 아이콘
 function NaverBlogIcon() {
   return (
     <svg viewBox="0 0 20 20" className="w-4 h-4 flex-shrink-0" fill="none" aria-hidden="true">
@@ -489,46 +476,14 @@ function NaverBlogIcon() {
 function NaverBlogSection({ items, blogTitle }) {
   const shouldScroll = items.length > NB_VISIBLE
 
-  const trackRef  = useRef(null)
-  const offsetRef = useRef(0)
-  const pausedRef = useRef(false)
-  const lastTsRef = useRef(null)
-  const rafRef    = useRef(null)
-
   const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
   const { bgLight, borderColor } = config
 
-  const loopDistance = items.length * (NB_CARD_W + NB_CARD_GAP)
+  const cardSlot     = NB_CARD_W + CARD_GAP
+  const loopDistance = items.length * cardSlot
   const trackItems   = shouldScroll ? [...items, ...items] : items
 
-  useEffect(() => {
-    if (!shouldScroll) return
-    const animate = (ts) => {
-      if (!pausedRef.current) {
-        if (lastTsRef.current != null) {
-          const dt = Math.min(ts - lastTsRef.current, 50)
-          offsetRef.current = (offsetRef.current + NB_SPEED * dt / 1000) % loopDistance
-          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-        }
-        lastTsRef.current = ts
-      } else {
-        lastTsRef.current = null
-      }
-      rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [shouldScroll, loopDistance])
-
-  const scrollCard = (dir) => {
-    const slot = NB_CARD_W + NB_CARD_GAP
-    const cur  = offsetRef.current
-    const next = dir > 0
-      ? (Math.floor(cur / slot) + 1) * slot
-      : (Math.ceil(cur / slot)  - 1) * slot
-    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-  }
+  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: NB_SPEED, cardSlot })
 
   if (items.length === 0) {
     return (
@@ -550,7 +505,7 @@ function NaverBlogSection({ items, blogTitle }) {
       target="_blank"
       rel="noopener noreferrer"
       className="group rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-      style={{ width: `${NB_CARD_W}px`, marginRight: `${NB_CARD_GAP}px` }}
+      style={{ width: `${NB_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
     >
       {/* 텍스트 섹션 (상단) */}
       <div className="p-3.5">
@@ -566,11 +521,11 @@ function NaverBlogSection({ items, blogTitle }) {
         </div>
         {/* 행 2: 제목 (볼드) */}
         <p className="text-sm font-bold text-gray-900 line-clamp-1 mb-1.5 leading-snug">{item.title}</p>
-        {/* 행 3: 내용 미리보기 (2줄) — 텍스트 없어도 높이 유지 */}
+        {/* 행 3: 내용 미리보기 — 텍스트 없어도 min-h로 높이 유지 */}
         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">{item.summary || ''}</p>
       </div>
 
-      {/* 1:1 정방형 썸네일 이미지 — 텍스트와 동일한 좌우 패딩, 모서리 둥글게 */}
+      {/* 1:1 정방형 썸네일 — 텍스트와 동일한 좌우 패딩, 모서리 둥글게 */}
       <div className="px-3.5 pb-3.5">
         {item.thumbnail ? (
           <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
@@ -597,100 +552,31 @@ function NaverBlogSection({ items, blogTitle }) {
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-
-      <div className="relative">
-        {shouldScroll && (
-          <>
-            <button
-              onClick={() => scrollCard(-1)}
-              aria-label="이전"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronLeft size={28} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => scrollCard(1)}
-              aria-label="다음"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronRight size={28} strokeWidth={1.5} />
-            </button>
-          </>
-        )}
-
-        <div
-          className="overflow-hidden"
-          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
-          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
-        >
-          {shouldScroll ? (
-            <div ref={trackRef} className="flex">
-              {trackItems.map(renderCard)}
-            </div>
-          ) : (
-            <div className="flex justify-center" style={{ gap: `${NB_CARD_GAP}px` }}>
-              {items.map(renderCard)}
-            </div>
-          )}
-        </div>
-      </div>
+      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
+        {trackItems.map(renderCard)}
+      </ConveyorWrap>
     </div>
   )
 }
 
 // ─── 스레드 섹션 ─────────────────────────────────────────────────────────────
 // 3장: Instagram과 동일 너비 (3×360 + 2×16 = 1112px)
-const TH_CARD_W   = 360
-const TH_CARD_GAP = 16
-const TH_VISIBLE  = 3
-const TH_SPEED    = 20  // px/s
+const TH_CARD_W  = 360
+const TH_VISIBLE = 3
+const TH_SPEED   = 20  // px/s
 
 function ThreadsSection({ items, username, profilePicture }) {
   const shouldScroll = items.length > TH_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
-  const trackRef  = useRef(null)
-  const offsetRef = useRef(0)
-  const pausedRef = useRef(false)
-  const lastTsRef = useRef(null)
-  const rafRef    = useRef(null)
-
   const config = SNS_CONFIG.find(c => c.key === 'threads')
   const { bgLight, borderColor } = config
 
-  const loopDistance = items.length * (TH_CARD_W + TH_CARD_GAP)
+  const cardSlot     = TH_CARD_W + CARD_GAP
+  const loopDistance = items.length * cardSlot
   const trackItems   = shouldScroll ? [...items, ...items] : items
 
-  useEffect(() => {
-    if (!shouldScroll) return
-    const animate = (ts) => {
-      if (!pausedRef.current) {
-        if (lastTsRef.current != null) {
-          const dt = Math.min(ts - lastTsRef.current, 50)
-          offsetRef.current = (offsetRef.current + TH_SPEED * dt / 1000) % loopDistance
-          if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-        }
-        lastTsRef.current = ts
-      } else {
-        lastTsRef.current = null
-      }
-      rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [shouldScroll, loopDistance])
-
-  const scrollCard = (dir) => {
-    const slot = TH_CARD_W + TH_CARD_GAP
-    const cur  = offsetRef.current
-    const next = dir > 0
-      ? (Math.floor(cur / slot) + 1) * slot
-      : (Math.ceil(cur / slot)  - 1) * slot
-    offsetRef.current = ((next % loopDistance) + loopDistance) % loopDistance
-    if (trackRef.current) trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`
-  }
+  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: TH_SPEED, cardSlot })
 
   if (items.length === 0) {
     return (
@@ -703,7 +589,7 @@ function ThreadsSection({ items, username, profilePicture }) {
     )
   }
 
-  const showAvatar = !!(profilePicture && !avatarError)
+  const showAvatar      = !!(profilePicture && !avatarError)
   const displayUsername = username || 'threads'
 
   const renderCard = (item, i) => {
@@ -715,11 +601,10 @@ function ThreadsSection({ items, username, profilePicture }) {
         target="_blank"
         rel="noopener noreferrer"
         className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${TH_CARD_W}px`, marginRight: `${TH_CARD_GAP}px` }}
+        style={{ width: `${TH_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
       >
-        {/* 헤더: 원형 프로필(좌) + 계정명 + 시간(우) */}
+        {/* 헤더: 원형 프로필(좌) + 계정명 + 시간 */}
         <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2">
-          {/* 프로필 원형 */}
           {showAvatar ? (
             <img
               src={profilePicture}
@@ -734,18 +619,15 @@ function ThreadsSection({ items, username, profilePicture }) {
               </svg>
             </div>
           )}
-          {/* 계정명 + 시간 */}
           <span className="text-sm font-bold text-gray-900 truncate">{displayUsername}</span>
           {item.timestamp && (
             <span className="text-xs text-gray-400 flex-shrink-0">{formatRelativeDate(item.timestamp)}</span>
           )}
         </div>
 
-        {/* 본문 텍스트: 이미지 있으면 2줄 고정(min-h), 없으면 최대 12줄 */}
+        {/* 본문: 이미지 있으면 2줄 고정(min-h), 없으면 최대 12줄 */}
         <p className={`px-3.5 pb-3 text-sm text-gray-800 leading-relaxed whitespace-pre-line ${
-          images.length > 0
-            ? 'line-clamp-2 min-h-[2.875rem]'
-            : 'line-clamp-[12]'
+          images.length > 0 ? 'line-clamp-2 min-h-[2.875rem]' : 'line-clamp-[12]'
         }`}>
           {item.text || ''}
         </p>
@@ -776,45 +658,9 @@ function ThreadsSection({ items, username, profilePicture }) {
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-
-      <div className="relative">
-        {shouldScroll && (
-          <>
-            <button
-              onClick={() => scrollCard(-1)}
-              aria-label="이전"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronLeft size={28} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => scrollCard(1)}
-              aria-label="다음"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20
-                         text-gray-300 hover:text-gray-600 transition-colors duration-200"
-            >
-              <ChevronRight size={28} strokeWidth={1.5} />
-            </button>
-          </>
-        )}
-
-        <div
-          className="overflow-hidden"
-          onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
-          onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
-        >
-          {shouldScroll ? (
-            <div ref={trackRef} className="flex">
-              {trackItems.map(renderCard)}
-            </div>
-          ) : (
-            <div className="flex" style={{ gap: `${TH_CARD_GAP}px` }}>
-              {items.map(renderCard)}
-            </div>
-          )}
-        </div>
-      </div>
+      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
+        {trackItems.map(renderCard)}
+      </ConveyorWrap>
     </div>
   )
 }
@@ -826,7 +672,7 @@ function SnsSection({ config, items }) {
   const [paused, setPaused] = useState(false)
   const timerRef = useRef(null)
 
-  const total = items.length
+  const total      = items.length
   const slideCount = Math.ceil(total / 4)
 
   const prev = useCallback(() => setCurrent(c => (c <= 0 ? slideCount - 1 : c - 1)), [slideCount])
@@ -949,15 +795,15 @@ function SnsSection({ config, items }) {
 
 // ─── 메인 SNS 캐러셀 섹션 ────────────────────────────────────────────────────
 export default function SnsCarousel() {
-  const [snsData, setSnsData] = useState(null)
-  const [igUsername, setIgUsername] = useState('')
+  const [snsData,          setSnsData]          = useState(null)
+  const [igUsername,       setIgUsername]       = useState('')
   const [igProfilePicture, setIgProfilePicture] = useState('')
-  const [ytChannelName, setYtChannelName] = useState('')
-  const [ytChannelAvatar, setYtChannelAvatar] = useState('')
-  const [nbBlogTitle, setNbBlogTitle] = useState('')
-  const [thUsername, setThUsername] = useState('')
+  const [ytChannelName,    setYtChannelName]    = useState('')
+  const [ytChannelAvatar,  setYtChannelAvatar]  = useState('')
+  const [nbBlogTitle,      setNbBlogTitle]      = useState('')
+  const [thUsername,       setThUsername]       = useState('')
   const [thProfilePicture, setThProfilePicture] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading,          setLoading]          = useState(true)
 
   useEffect(() => {
     Promise.allSettled([
@@ -973,21 +819,18 @@ export default function SnsCarousel() {
       const thData = thResult.status === 'fulfilled'  ? thResult.value.data  : null
       const nbData = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
 
-      // { items, username, profilePicture } 형식 + 하위 호환(배열)
+      // 각 피드: { items, ... } 형식 + 하위 호환(배열)
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
       if (igData?.username)        setIgUsername(igData.username)
       if (igData?.profilePicture)  setIgProfilePicture(igData.profilePicture)
 
-      // { items, channelName, channelAvatar } 형식 + 하위 호환(배열)
       const ytItems = Array.isArray(ytData) ? ytData : (ytData?.items ?? null)
       if (ytData?.channelName)   setYtChannelName(ytData.channelName)
       if (ytData?.channelAvatar) setYtChannelAvatar(ytData.channelAvatar)
 
-      // { items, blogTitle } 형식 + 하위 호환(배열)
       const nbItems = Array.isArray(nbData) ? nbData : (nbData?.items ?? null)
       if (nbData?.blogTitle) setNbBlogTitle(nbData.blogTitle)
 
-      // { items, username, profilePicture } 형식 + 하위 호환(배열)
       const thItems = Array.isArray(thData) ? thData : (thData?.items ?? null)
       if (thData?.username)        setThUsername(thData.username)
       if (thData?.profilePicture)  setThProfilePicture(thData.profilePicture)
@@ -1017,27 +860,20 @@ export default function SnsCarousel() {
           <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
         ) : (
           <div>
-            {/* 인스타그램: 3:4 카드, 컨베이어 벨트 */}
             <InstagramSection
               items={snsData.instagram ?? []}
               username={igUsername}
               profilePicture={igProfilePicture}
             />
-
-            {/* 유튜브: 16:9 카드, 컨베이어 벨트 */}
             <YoutubeSection
               items={snsData.youtube ?? []}
               channelName={ytChannelName}
               channelAvatar={ytChannelAvatar}
             />
-
-            {/* 네이버 블로그: 텍스트+1:1 이미지 카드, 컨베이어 벨트 */}
             <NaverBlogSection
               items={snsData.naverBlog ?? []}
               blogTitle={nbBlogTitle}
             />
-
-            {/* 스레드: Threads 앱 스타일, 컨베이어 벨트 */}
             <ThreadsSection
               items={snsData.threads ?? []}
               username={thUsername}

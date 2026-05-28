@@ -29,7 +29,10 @@
 │  ┌──────────┐  ┌─────────────────┐  ┌───────────────┐  │
 │  │  Header  │  │  SnsCarousel    │  │ AdminDashboard│  │
 │  │  Footer  │  │ InstagramSection│  │ SnsManager    │  │
-│  └──────────┘  │ SnsSection      │  └───────────────┘  │
+│  └──────────┘  │ YoutubeSection  │  └───────────────┘  │
+│                │ NaverBlogSection│                      │
+│                │ ThreadsSection  │                      │
+│                │ SnsSection      │                      │
 │                └────────┬────────┘                      │
 └─────────────────────────────────────────────────────────┘
                           │ API 요청
@@ -78,9 +81,9 @@
 | `routes/menu.js` | 메뉴 CRUD |
 | `routes/reservations.js` | 예약 CRUD |
 | `routes/instagram.js` | Instagram Graph API 프록시 — 피드·프로필 병렬 조회, `{ items, username, profilePicture }` 반환 |
-| `routes/youtube.js` | YouTube Data API v3 또는 RSS 프록시 (15분 캐시) |
-| `routes/threads.js` | Threads API 프록시 (15분 캐시) |
-| `routes/naverblog.js` | 네이버 블로그 RSS 파싱 + 이미지 프록시 (SSRF 방지) |
+| `routes/youtube.js` | YouTube Data API v3 또는 RSS 프록시 (15분 캐시), `{ items, channelName, channelAvatar }` 반환 |
+| `routes/threads.js` | Threads API 프록시 (15분 캐시), `{ items, username, profilePicture }` 반환 |
+| `routes/naverblog.js` | 네이버 블로그 RSS 파싱 + 이미지 프록시 (SSRF 방지), `{ items, blogTitle }` 반환 |
 | `middleware/auth.js` | JWT 검증 미들웨어 |
 | `lib/cache-utils.js` | 15분 인메모리 캐시 팩토리 (`createCacheManager`) |
 | `lib/xml-parser.js` | XML 파싱 유틸 (`extractXmlValue`, `stripHtml`, `extractFirstImage`) |
@@ -94,58 +97,85 @@
 | `api.js` | Axios 인스턴스 + JWT 자동 첨부 인터셉터 |
 | `components/Header.jsx` | 상단 네비게이션 |
 | `components/Footer.jsx` | 하단 정보 |
-| `components/SnsCarousel.jsx` | SNS 피드 캐러셀 — 인스타그램(컨베이어 벨트) + 나머지(슬라이드) |
+| `components/SnsCarousel.jsx` | SNS 피드 캐러셀 — IG·YT·NB·Threads 전용 컨베이어 벨트 섹션 + 기타(슬라이드) |
 | `admin/AdminDashboard.jsx` | 어드민 대시보드 레이아웃 |
 | `admin/SnsManager.jsx` | SNS 자동연동 상태 카드 + 유튜브 채널ID·API키 입력 + 수동 기사 등록 |
 
 ---
 
-## 📸 인스타그램 섹션 상세
+## 📸 SNS 섹션 카드 디자인
 
-### 카드 디자인
+### 인스타그램 (3:4 비율, 3장 고정 / 4장↑ 컨베이어)
 
 ```
 ┌──────────────────────────┐
 │                          │
-│     [이미지 3:4 비율]     │  ← 360 × 480px, 2024년 인스타그램 표준 비율
-│                          │
+│     [이미지 3:4 비율]     │  ← 360px 폭
 │                          │
 │▓▓▓ 검정 그라데이션 ▓▓▓▓▓▓│
-│ ◎  @morningbakery_seoul  │  ← 실제 프로필 사진 + 사용자명
+│ ◎  @morningbakery_seoul  │  ← 프로필 사진(실제) + 사용자명
 │ 제목 (첫 번째 캡션 줄)    │  ← white bold, 1줄
 │ 본문 (나머지 캡션)        │  ← white/70, 최대 2줄
 └──────────────────────────┘
 ```
 
-### 컨베이어 벨트 동작
+### 유튜브 (16:9 비율, 2장 고정 / 3장↑ 컨베이어)
+
+```
+┌───────────────────────────────────────┐
+│                                       │
+│          [썸네일 16:9 비율]            │  ← 568px 폭, rounded-2xl 독립 적용
+│                                       │
+└───────────────────────────────────────┘
+ ◉  영상 제목 (최대 2줄)                 ← 채널 아바타(실제) + 제목
+    채널명 · 조회수 · 업로드 경과일       ← text-xs text-brown-400
+```
+
+### 네이버 블로그 (3장 고정 / 4장↑ 컨베이어)
+
+```
+┌──────────────────────────┐
+│ b| 블로그명      2025.1.1│  ← NaverBlog "b|" SVG + 날짜 우상단
+│ 게시글 제목 (1줄 bold)   │
+│ 내용 미리보기 (2줄)      │  ← min-h 유지로 카드 높이 통일
+├──────────────────────────┤
+│  ┌────────────────────┐  │
+│  │   [이미지 1:1]     │  │  ← 좌우 padding 맞춤, rounded-xl
+│  └────────────────────┘  │
+└──────────────────────────┘
+```
+
+### 스레드 (3장 고정 / 4장↑ 컨베이어, Threads 앱 스타일)
+
+```
+┌──────────────────────────┐
+│ ◎ morningbakery  4시간 전│  ← 실제 프로필 사진 + 계정명 + 경과일
+│                          │
+│ 본문 텍스트               │  ← 이미지 있으면 2줄 고정 / 없으면 최대 12줄
+│ (2줄 min-h 고정)         │
+│ ┌──────┐ ┌──────┐       │
+│ │ 4:3  │ │ 4:3  │       │  ← 이미지 수에 따라 1~3열 그리드, rounded-xl
+│ └──────┘ └──────┘       │
+└──────────────────────────┘
+```
+
+---
+
+## 🎠 컨베이어 벨트 공통 동작
 
 | 조건 | 동작 |
 |------|------|
-| 게시물 **4개 이상** | 자동 좌측 스크롤 (~30px/s, requestAnimationFrame) |
-| 게시물 **3개 이하** | 고정 그리드 (스크롤 없음) |
+| 카드 수 ≤ 표시 수 | 고정 그리드 (스크롤 없음) |
+| 카드 수 > 표시 수 | 자동 좌측 스크롤 (20px/s, `requestAnimationFrame`) |
 | **마우스 오버** | 즉시 일시정지 |
-| **← → 화살표 클릭** | 1카드 단위로 수동 이동 |
+| **← → 화살표 클릭** | 1카드 단위 수동 이동 |
 
-### 백엔드 `/api/instagram/feed` 응답 형식
-
-```json
-{
-  "items": [
-    {
-      "_id": "...",
-      "url": "https://www.instagram.com/p/...",
-      "thumbnail": "https://...",
-      "title": "캡션 전체 텍스트 (해시태그 제거, 줄바꿈 보존)",
-      "mediaType": "IMAGE",
-      "timestamp": "2025-01-01T00:00:00+0000"
-    }
-  ],
-  "username": "morningbakery_seoul",
-  "profilePicture": "https://..."
-}
-```
-
-> 프로필 사진 URL은 Instagram CDN 제공. 로드 실패 시 Instagram 그라데이션 아이콘으로 자동 폴백.
+| 섹션 | 카드 폭 | 표시 수 | 속도 |
+|------|---------|---------|------|
+| 인스타그램 | 360px | 3장 | 20px/s |
+| 유튜브 | 568px | 2장 | 20px/s |
+| 네이버 블로그 | 360px | 3장 | 20px/s |
+| 스레드 | 360px | 3장 | 20px/s |
 
 ---
 
@@ -154,11 +184,53 @@
 | SNS | 방식 | 설정 위치 | 특이사항 |
 |-----|------|-----------|----------|
 | **인스타그램** | Instagram Graph API | Heroku 환경변수 `INSTAGRAM_ACCESS_TOKEN` | 토큰 60일마다 갱신 필요 |
-| **유튜브** | Data API v3 (기본) → RSS (폴백) | **어드민 페이지에서 직접 입력** | API 키 없으면 RSS 시도 (클라우드 환경에서 차단될 수 있음) |
-| **스레드** | Threads API | Heroku 환경변수 `THREADS_ACCESS_TOKEN` | 토큰 60일마다 갱신 필요 |
-| **네이버 블로그** | RSS 파싱 | Heroku 환경변수 `NAVER_BLOG_ID` | API 키 불필요, 완전 무료 |
+| **유튜브** | Data API v3 (기본) → RSS (폴백) | **어드민 페이지에서 직접 입력** | API 키 없으면 RSS 시도 (클라우드에서 차단될 수 있음) |
+| **스레드** | Threads Graph API (`graph.threads.net`) | Heroku 환경변수 `THREADS_ACCESS_TOKEN` | 토큰 60일마다 갱신 필요, `threads_profile_picture_url` 필드 사용 |
+| **네이버 블로그** | RSS 파싱 + 이미지 프록시 | Heroku 환경변수 `NAVER_BLOG_ID` | API 키 불필요, 완전 무료 |
 
 > 모든 SNS 피드는 **15분 인메모리 캐시** 적용 — 외부 API 호출 최소화
+
+---
+
+## 📦 백엔드 API 응답 형식
+
+### `/api/instagram/feed`
+```json
+{
+  "items": [{ "_id": "...", "url": "...", "thumbnail": "...", "title": "캡션(해시태그 제거)", "mediaType": "IMAGE", "timestamp": "..." }],
+  "username": "morningbakery_seoul",
+  "profilePicture": "https://..."
+}
+```
+
+### `/api/youtube/feed`
+```json
+{
+  "items": [{ "_id": "videoId", "url": "...", "thumbnail": "maxresdefault.jpg", "title": "...", "timestamp": "...", "viewCount": "12345" }],
+  "channelName": "모닝베이커리",
+  "channelAvatar": "https://..."
+}
+```
+> API 키 없으면 RSS 폴백 → `channelAvatar: ''`, `viewCount: ''`
+
+### `/api/threads/feed`
+```json
+{
+  "items": [{ "_id": "...", "url": "...", "images": ["url1", "url2"], "thumbnail": "url1", "text": "본문(해시태그 제거)", "mediaType": "CAROUSEL_ALBUM", "timestamp": "..." }],
+  "username": "morningbakery_seoul",
+  "profilePicture": "https://..."
+}
+```
+> `images`: 캐러셀이면 자식 이미지 배열(최대 3장), 단일이면 `[media_url]`
+
+### `/api/naverblog/feed`
+```json
+{
+  "items": [{ "_id": "naver-xxx", "url": "https://blog.naver.com/...", "thumbnail": "/api/naverblog/proxy-image?url=...", "title": "...", "summary": "80자 미리보기", "timestamp": "..." }],
+  "blogTitle": "모닝베이커리 공식 블로그"
+}
+```
+> 썸네일은 응답 시점에 프록시 URL로 변환 (캐시엔 raw URL 저장)
 
 ---
 
@@ -200,12 +272,15 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 | 인스타그램 테스터 권한 오류 | 인스타그램 계정이 앱 테스터로 미등록 | Meta Developer → 앱 역할 → 테스터 추가 |
 | 네이버 블로그 썸네일 안 보임 | 네이버 CDN 외부 핫링크 차단 | 백엔드 이미지 프록시 엔드포인트 추가 |
 | 네이버 블로그 링크 오작동 | RSS `<link>` CDATA 미처리 | 링크 파싱 정규식에 CDATA 처리 추가 |
+| 네이버 블로그 캐시 오염 | 프록시 URL이 캐시에 포함되어 IP 변경 시 깨짐 | raw URL 캐시 후 응답 시점에 프록시 URL 적용 |
 | YouTube API 오류 | Google Cloud 결제 계정 미활성화 | 선불 결제 + API 키 어드민에서 직접 설정 가능하도록 변경 |
 | YouTube RSS 404 | Heroku(AWS) IP 대역을 Google이 차단 | Data API v3 지원 추가, API 키 어드민 입력으로 해결 |
-| Heroku git push 인증 실패 | 터미널 환경 달라 비밀번호 입력 불가 | 동일 터미널에서 `heroku login` 후 push |
-| SSRF 취약점 | 이미지 프록시가 임의 URL 허용 | 네이버 CDN 도메인 허용 목록으로 제한 |
-| 네이버 블로그 캐시 오염 | 프록시 URL이 캐시에 포함되어 IP 변경 시 깨짐 | raw URL 캐시 후 응답 시점에 프록시 URL 적용 |
+| YouTube 썸네일 저화질 | RSS fallback이 `hqdefault` 사용 | `maxresdefault` 우선, 로드 실패 시 `hqdefault` onError 폴백 |
+| YouTube 카드 하단 모서리 각짐 | 외부 `<a>`에 `overflow-hidden`이 있어 썸네일 아래쪽이 잘림 | 썸네일 `<div>`에만 `rounded-2xl overflow-hidden` 적용, 카드는 `rounded-2xl`만 |
+| Threads 계정명이 'threads' 표시 | `/me` 요청에 존재하지 않는 `profile_picture_url` 필드 포함 → API 오류로 `username` undefined | 필드를 `id,username,threads_profile_picture_url`로 수정, /me 오류 시 경고만 출력 |
 | 인스타그램 캡션 잘림 | 60자 하드컷으로 줄바꿈 구조 파괴 | 백엔드 길이 제한 제거, 프론트 `line-clamp`으로 처리 |
+| SSRF 취약점 | 이미지 프록시가 임의 URL 허용 | 네이버 CDN 도메인 허용 목록으로 제한 |
+| Heroku git push 인증 실패 | 터미널 환경 달라 비밀번호 입력 불가 | 동일 터미널에서 `heroku login` 후 push |
 
 ---
 
@@ -230,7 +305,7 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 ### 🟡 중요
 - [ ] **Meta 앱 검수 제출** — 현재 개발 모드(테스터만 사용 가능)
 - [ ] **Instagram/Threads 토큰 자동 갱신** — 백엔드에 60일 주기 갱신 엔드포인트 추가
-- [ ] **YouTube · 네이버블로그 · 스레드 섹션 디자인 개선** — 인스타그램 섹션과 통일감 있게
+- [ ] **Threads 이미지 하단 정렬 개선** — 텍스트 길이가 달라도 이미지가 항상 동일한 Y 위치에 오도록 (카드 고정 높이 방식 검토)
 
 ### 🟢 개선
 - [ ] **OG 이미지 추가** — SNS 공유 시 미리보기 이미지
@@ -282,12 +357,13 @@ heroku config:set KEY=VALUE --app morningbakery-api
 - **XML 파싱 유틸 분리** — `lib/xml-parser.js`에 CDATA 처리, HTML 스트립, 이미지 추출 함수 집중
 - **싱글톤 DB 패턴** — `SiteContent` 모델 하나로 히어로/어바웃/SNS/설정 모두 관리. `getOrCreateContent()`로 항상 존재 보장
 - **DB 우선 / env 폴백** — 유튜브 채널ID·API키는 DB값 우선, 없으면 환경변수. 어드민에서 Heroku 없이 변경 가능
-- **캐시 재사용** — Instagram `/status` 엔드포인트는 피드 캐시가 유효하면 재조회 없이 캐시된 username·profilePicture 반환
+- **캐시 재사용** — `/status` 엔드포인트는 피드 캐시가 유효하면 재조회 없이 캐시 데이터 반환
 
-### 프론트엔드
+### 프론트엔드 (`SnsCarousel.jsx`)
 
-- **인스타그램 전용 컴포넌트** — `InstagramSection`: 3:4 비율, 텍스트 오버레이, `requestAnimationFrame` 컨베이어 벨트, 화살표 수동 탐색
-- **일반 SNS 섹션** — `SnsSection`: YouTube·네이버블로그·스레드·기사, 4열 슬라이드 + 자동 재생
-- **공통 헤더** — `SectionHeader` 헬퍼로 그라데이션 pill 뱃지 통일
-- **RAF 기반 스크롤** — `requestAnimationFrame`으로 60fps GPU 가속 스크롤, state re-render 없이 `ref`로 직접 DOM 제어
-- **반응형 그리드** — 일반 SNS 섹션: `grid-cols-2 lg:grid-cols-4` (모바일 2열 / 데스크톱 4열)
+- **`useConveyorBelt` 훅** — RAF 애니메이션 + 수동 스크롤 로직을 단일 훅으로 추출. 4개 섹션 모두 재사용
+- **`ConveyorWrap` 컴포넌트** — 화살표 버튼 + overflow 래퍼 + 자동/고정 트랙 분기 공통화
+- **카드 폭 상수** — `IG_CARD_W`, `YT_CARD_W` 등 각 섹션 고유 상수 + 공통 `CARD_GAP = 16`
+- **섹션별 전용 컴포넌트** — `InstagramSection`, `YoutubeSection`, `NaverBlogSection`, `ThreadsSection` 각각 독립 컴포넌트
+- **RAF 기반 스크롤** — `requestAnimationFrame` 60fps GPU 가속, state re-render 없이 `ref`로 직접 DOM 제어
+- **반응형 그리드** — 일반 SNS 섹션(`SnsSection`): `grid-cols-2 lg:grid-cols-4`
