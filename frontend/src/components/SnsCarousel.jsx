@@ -433,8 +433,8 @@ function YoutubeSection({ items, channelName, channelAvatar }) {
 }
 
 // ─── 네이버 블로그 컨베이어 벨트 섹션 ────────────────────────────────────────
-// 3장 고정: 3×360 + 2×16 = 1112px | 4장부터 순환
-const NB_CARD_W  = 360
+// 3장 고정: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움, 유튜브와 동일 기준) | 4장부터 순환
+const NB_CARD_W  = (1152 - 2 * CARD_GAP) / 3  // ≈ 373.33px
 const NB_VISIBLE = 3
 const NB_SPEED   = 20  // px/s
 
@@ -534,7 +534,7 @@ function NaverBlogSection({ items, blogTitle }) {
   return (
     <div className="mb-14">
       <SectionHeader config={config} total={items.length} />
-      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
+      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
         {trackItems.map(renderCard)}
       </ConveyorWrap>
     </div>
@@ -542,8 +542,8 @@ function NaverBlogSection({ items, blogTitle }) {
 }
 
 // ─── 스레드 섹션 ─────────────────────────────────────────────────────────────
-// 3장: Instagram과 동일 너비 (3×360 + 2×16 = 1112px)
-const TH_CARD_W  = 360
+// 3장: 블로그와 동일 너비 (3×373.33 + 2×16 = 1152px, max-w-6xl 꽉 채움)
+const TH_CARD_W  = NB_CARD_W
 const TH_VISIBLE = 3
 const TH_SPEED   = 20  // px/s
 
