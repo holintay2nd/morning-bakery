@@ -58,19 +58,6 @@ const SNS_CONFIG = [
       </svg>
     ),
   },
-  {
-    key: 'article',
-    label: '기사',
-    color: 'from-blue-500 to-blue-700',
-    textColor: 'text-blue-700',
-    bgLight: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    Icon: () => (
-      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-blue-700" aria-hidden="true">
-        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM2 3h20a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h18V5H3z"/>
-      </svg>
-    ),
-  },
 ]
 
 // ─── 공통 섹션 헤더 ───────────────────────────────────────────────────────────
@@ -160,7 +147,7 @@ function ConveyorWrap({ shouldScroll, trackRef, pausedRef, scrollCard, centered 
         onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
       >
         {shouldScroll ? (
-          <div ref={trackRef} className="flex">{children}</div>
+          <div ref={trackRef} className="flex" style={{ gap: `${CARD_GAP}px` }}>{children}</div>
         ) : (
           <div className={`flex${centered ? ' justify-center' : ''}`} style={{ gap: `${CARD_GAP}px` }}>
             {children}
@@ -238,7 +225,7 @@ function InstagramSection({ items, username, profilePicture }) {
         target="_blank"
         rel="noopener noreferrer"
         className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${IG_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
+        style={{ width: `${IG_CARD_W}px` }}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
           <img
@@ -500,7 +487,7 @@ function NaverBlogSection({ items, blogTitle }) {
       target="_blank"
       rel="noopener noreferrer"
       className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-      style={{ width: `${NB_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
+      style={{ width: `${NB_CARD_W}px` }}
     >
       {/* 텍스트 섹션 (상단) */}
       <div className="p-3.5">
@@ -596,7 +583,7 @@ function ThreadsSection({ items, username, profilePicture }) {
         target="_blank"
         rel="noopener noreferrer"
         className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${TH_CARD_W}px`, marginRight: `${CARD_GAP}px` }}
+        style={{ width: `${TH_CARD_W}px` }}
       >
         {/* 헤더: 원형 프로필(좌) + 계정명 + 시간 */}
         <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2">
@@ -656,134 +643,6 @@ function ThreadsSection({ items, username, profilePicture }) {
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
         {trackItems.map(renderCard)}
       </ConveyorWrap>
-    </div>
-  )
-}
-
-// ─── 일반 SNS 섹션 (기사) ─────────────────────────────────────────────────────
-function SnsSection({ config, items }) {
-  const { textColor, bgLight, borderColor, Icon, color } = config
-  const [current, setCurrent] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const timerRef = useRef(null)
-
-  const total      = items.length
-  const slideCount = Math.ceil(total / 4)
-
-  const prev = useCallback(() => setCurrent(c => (c <= 0 ? slideCount - 1 : c - 1)), [slideCount])
-  const next = useCallback(() => setCurrent(c => (c >= slideCount - 1 ? 0 : c + 1)), [slideCount])
-
-  useEffect(() => {
-    if (paused || slideCount <= 1) return
-    timerRef.current = setInterval(next, 3000)
-    return () => clearInterval(timerRef.current)
-  }, [paused, slideCount, next])
-
-  if (total === 0) {
-    return (
-      <div className="mb-14">
-        <SectionHeader config={config} total={0} />
-        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-          <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="mb-14">
-      <SectionHeader config={config} total={total} />
-
-      <div
-        className="relative"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-      >
-        <button
-          onClick={prev}
-          aria-label="이전"
-          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
-            w-9 h-9 rounded-full bg-white shadow-md border ${borderColor}
-            flex items-center justify-center ${textColor}
-            hover:scale-110 transition-transform duration-200
-            disabled:opacity-30`}
-          disabled={total <= 1}
-        >
-          <ChevronLeft size={18} />
-        </button>
-
-        <div className="overflow-hidden rounded-2xl">
-          <div
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(-${current * 100}%)` }}
-          >
-            {Array.from({ length: slideCount }).map((_, slideIdx) => (
-              <div key={slideIdx} className="grid grid-cols-2 lg:grid-cols-4 shrink-0 w-full gap-4 px-1">
-                {items.slice(slideIdx * 4, slideIdx * 4 + 4).map((item, i) => (
-                  <a
-                    key={item._id || i}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group rounded-xl overflow-hidden bg-white border ${borderColor}
-                      hover:shadow-lg transition-shadow duration-300`}
-                  >
-                    <div className="relative h-40 overflow-hidden">
-                      <img
-                        src={item.thumbnail}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                      <span
-                        className={`absolute top-2 left-2 inline-flex items-center gap-1
-                          text-white text-[10px] font-semibold px-2 py-0.5 rounded-full
-                          bg-gradient-to-r ${color} shadow-sm`}
-                      >
-                        <Icon />
-                        <span className="hidden sm:inline">{config.label}</span>
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-brown-700 text-xs font-medium line-clamp-2 leading-relaxed">
-                        {item.title}
-                      </p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={next}
-          aria-label="다음"
-          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
-            w-9 h-9 rounded-full bg-white shadow-md border ${borderColor}
-            flex items-center justify-center ${textColor}
-            hover:scale-110 transition-transform duration-200
-            disabled:opacity-30`}
-          disabled={total <= 1}
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
-
-      {slideCount > 1 && (
-        <div className="flex justify-center gap-1.5 mt-4">
-          {Array.from({ length: slideCount }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              aria-label={`${i + 1}번 슬라이드`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                current === i ? `bg-gradient-to-r ${color} w-4` : 'bg-brown-200 w-1.5'
-              }`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -874,17 +733,6 @@ export default function SnsCarousel() {
               username={thUsername}
               profilePicture={thProfilePicture}
             />
-
-            {/* 나머지 SNS (기사): 기존 슬라이드 방식 */}
-            {SNS_CONFIG
-              .filter(c => !['instagram', 'youtube', 'naverBlog', 'threads'].includes(c.key))
-              .map((config) => (
-                <SnsSection
-                  key={config.key}
-                  config={config}
-                  items={snsData[config.key] || []}
-                />
-              ))}
           </div>
         )}
       </div>
