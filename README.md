@@ -1,6 +1,6 @@
 # 🥐 Morning Bakery — 공식 웹사이트
 
-> 모닝베이커리의 브랜드 홈페이지. 메뉴 소개, 예약, SNS 피드 자동 연동을 제공합니다.
+> 모닝베이커리의 브랜드 홈페이지. 메뉴 소개, SNS 피드 자동 연동, 매장 안내를 제공합니다.
 
 ---
 
@@ -32,7 +32,6 @@
 │  └──────────┘  │ YoutubeSection  │  └───────────────┘  │
 │                │ NaverBlogSection│                      │
 │                │ ThreadsSection  │                      │
-│                │ SnsSection      │                      │
 │                └────────┬────────┘                      │
 └─────────────────────────────────────────────────────────┘
                           │ API 요청
@@ -93,13 +92,16 @@
 
 | 파일 | 역할 |
 |------|------|
-| `App.jsx` | 라우팅 설정 |
+| `App.jsx` | 라우팅 설정 (홈 / 어드민 로그인 / 어드민 대시보드) |
 | `api.js` | Axios 인스턴스 + JWT 자동 첨부 인터셉터 |
 | `components/Header.jsx` | 상단 네비게이션 |
 | `components/Footer.jsx` | 하단 정보 |
-| `components/SnsCarousel.jsx` | SNS 피드 캐러셀 — IG·YT·NB·Threads 전용 컨베이어 벨트 섹션 + 기타(슬라이드) |
+| `components/Hero.jsx` | 히어로 섹션 |
+| `components/About.jsx` | 어바웃 섹션 |
+| `components/SnsCarousel.jsx` | SNS 피드 — Instagram(컨베이어) · YouTube(크로스페이드) · NaverBlog(컨베이어) · Threads(컨베이어) |
+| `components/StoreInfo.jsx` | 매장 안내 — 지도·영업시간·연락처, 다크 브라운(`bg-brown-900`) 테마 |
 | `admin/AdminDashboard.jsx` | 어드민 대시보드 레이아웃 |
-| `admin/SnsManager.jsx` | SNS 자동연동 상태 카드 + 유튜브 채널ID·API키 입력 + 수동 기사 등록 |
+| `admin/SnsManager.jsx` | SNS 자동연동 상태 카드 + 유튜브 채널ID·API키 입력 |
 
 ---
 
@@ -119,44 +121,48 @@
 └──────────────────────────┘
 ```
 
-### 유튜브 (16:9 비율, 2장 고정 / 3장↑ 컨베이어)
+### 유튜브 (16:9 비율, 2장 고정 — 크로스페이드 전환)
 
 ```
 ┌───────────────────────────────────────┐
 │                                       │
-│          [썸네일 16:9 비율]            │  ← 568px 폭, rounded-2xl 독립 적용
+│          [썸네일 16:9 비율]            │  ← 568px 폭, rounded-2xl
 │                                       │
 └───────────────────────────────────────┘
  ◉  영상 제목 (최대 2줄)                 ← 채널 아바타(실제) + 제목
     채널명 · 조회수 · 업로드 경과일       ← text-xs text-brown-400
 ```
 
+> **크로스페이드 전환**: A|B → C|B → C|D 순으로 5초마다 한 슬롯씩 교체 (1.2초 페이드)  
+> 뒤 레이어(next) 항상 opacity 1 고정, 앞 레이어(cur)만 1→0 페이드아웃 → 흰 화면 노출 없음  
+> 마우스 오버 시 자동 전환 일시정지
+
 ### 네이버 블로그 (3장 고정 / 4장↑ 컨베이어)
 
 ```
-┌──────────────────────────┐
-│ b| 블로그명      2025.1.1│  ← NaverBlog "b|" SVG + 날짜 우상단
-│ 게시글 제목 (1줄 bold)   │
-│ 내용 미리보기 (2줄)      │  ← min-h 유지로 카드 높이 통일
-├──────────────────────────┤
-│  ┌────────────────────┐  │
-│  │   [이미지 1:1]     │  │  ← 좌우 padding 맞춤, rounded-xl
-│  └────────────────────┘  │
-└──────────────────────────┘
+┌────────────────────────────┐
+│ b| 블로그명      2025.1.1  │  ← NaverBlog "b|" SVG + 날짜 우상단
+│ 게시글 제목 (1줄 bold)     │
+│ 내용 미리보기 (2줄)        │  ← min-h 유지로 카드 높이 통일
+├────────────────────────────┤
+│  ┌──────────────────────┐  │
+│  │     [이미지 1:1]     │  │  ← 좌우 padding 맞춤, rounded-xl
+│  └──────────────────────┘  │
+└────────────────────────────┘
 ```
 
 ### 스레드 (3장 고정 / 4장↑ 컨베이어, Threads 앱 스타일)
 
 ```
-┌──────────────────────────┐
-│ ◎ morningbakery  4시간 전│  ← 실제 프로필 사진 + 계정명 + 경과일
-│                          │
-│ 본문 텍스트               │  ← 이미지 있으면 2줄 고정 / 없으면 최대 12줄
-│ (2줄 min-h 고정)         │
-│ ┌──────┐ ┌──────┐       │
-│ │ 4:3  │ │ 4:3  │       │  ← 이미지 수에 따라 1~3열 그리드, rounded-xl
-│ └──────┘ └──────┘       │
-└──────────────────────────┘
+┌────────────────────────────┐
+│ ◎ morningbakery  4시간 전  │  ← 실제 프로필 사진 + 계정명 + 경과일
+│                            │
+│ 본문 텍스트                 │  ← 이미지 있으면 2줄 고정 / 없으면 최대 12줄
+│ (2줄 min-h 고정)           │
+│ ┌──────┐ ┌──────┐         │
+│ │ 4:3  │ │ 4:3  │         │  ← 이미지 수에 따라 1~3열 그리드, rounded-xl
+│ └──────┘ └──────┘         │
+└────────────────────────────┘
 ```
 
 ---
@@ -170,12 +176,17 @@
 | **마우스 오버** | 즉시 일시정지 |
 | **← → 화살표 클릭** | 1카드 단위 수동 이동 |
 
-| 섹션 | 카드 폭 | 표시 수 | 속도 |
+| 섹션 | 카드 폭 | 표시 수 | 방식 |
 |------|---------|---------|------|
-| 인스타그램 | 360px | 3장 | 20px/s |
-| 유튜브 | 568px | 2장 | 20px/s |
-| 네이버 블로그 | 360px | 3장 | 20px/s |
-| 스레드 | 360px | 3장 | 20px/s |
+| 인스타그램 | 360px | 3장 | 컨베이어 (20px/s) |
+| 유튜브 | 568px | 2장 | **크로스페이드** (5초 주기) |
+| 네이버 블로그 | ≈373px | 3장 | 컨베이어 (20px/s) |
+| 스레드 | ≈373px | 3장 | 컨베이어 (20px/s) |
+
+> **카드 폭 산출 기준**: `max-w-6xl` = 1152px  
+> - 유튜브: `2 × 568 + 16 = 1152px` (꽉 채움)  
+> - 블로그·스레드: `(1152 - 2 × 16) / 3 ≈ 373.33px` (꽉 채움, 유튜브와 좌우 정렬 일치)  
+> - 인스타그램: `3 × 360 + 2 × 16 = 1112px` (컨베이어 특성상 넘쳐 흘러 정렬 자연스러움)
 
 ---
 
@@ -276,11 +287,15 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 | YouTube API 오류 | Google Cloud 결제 계정 미활성화 | 선불 결제 + API 키 어드민에서 직접 설정 가능하도록 변경 |
 | YouTube RSS 404 | Heroku(AWS) IP 대역을 Google이 차단 | Data API v3 지원 추가, API 키 어드민 입력으로 해결 |
 | YouTube 썸네일 저화질 | RSS fallback이 `hqdefault` 사용 | `maxresdefault` 우선, 로드 실패 시 `hqdefault` onError 폴백 |
-| YouTube 카드 하단 모서리 각짐 | 외부 `<a>`에 `overflow-hidden`이 있어 썸네일 아래쪽이 잘림 | 썸네일 `<div>`에만 `rounded-2xl overflow-hidden` 적용, 카드는 `rounded-2xl`만 |
-| Threads 계정명이 'threads' 표시 | `/me` 요청에 존재하지 않는 `profile_picture_url` 필드 포함 → API 오류로 `username` undefined | 필드를 `id,username,threads_profile_picture_url`로 수정, /me 오류 시 경고만 출력 |
+| YouTube 카드 하단 모서리 각짐 | 외부 `<a>`에 `overflow-hidden`이 있어 썸네일 아래쪽이 잘림 | 썸네일 `<div>`에만 `rounded-2xl overflow-hidden` 적용 |
+| **YouTube 전환 시 흰 화면 노출** | 두 레이어 동시 반투명 시 배경 노출 | 뒤 레이어 opacity 항상 1 고정, 앞 레이어만 1→0 페이드 (뒤가 항상 완전 커버) |
+| Threads 계정명이 'threads' 표시 | `/me` 요청에 존재하지 않는 필드 포함 → API 오류 | 필드를 `id,username,threads_profile_picture_url`로 수정 |
 | 인스타그램 캡션 잘림 | 60자 하드컷으로 줄바꿈 구조 파괴 | 백엔드 길이 제한 제거, 프론트 `line-clamp`으로 처리 |
 | SSRF 취약점 | 이미지 프록시가 임의 URL 허용 | 네이버 CDN 도메인 허용 목록으로 제한 |
 | Heroku git push 인증 실패 | 터미널 환경 달라 비밀번호 입력 불가 | 동일 터미널에서 `heroku login` 후 push |
+| **NaverBlog 카드 왼쪽 잘림** | 카드 `marginRight` + flex `gap` 이중 적용 → 3장 합계 1160px > 1152px, `justify-center`가 초과분 분할 → 좌측 4px 클리핑 | `marginRight` 제거, flex `gap`으로 단일화 (이중 간격 제거) |
+| **블로그·스레드 좌우 정렬 불일치** | 카드 폭 360px × 3 = 1112px로 컨테이너(1152px) 미충족, 스레드는 left-align으로 한쪽 치우침 | 카드 폭을 `(1152 - 2×16) / 3 ≈ 373px`로 변경 → 유튜브와 동일하게 컨테이너 꽉 채움 |
+| **카드 하단 box-shadow 잘림** | `ConveyorWrap`의 `overflow-hidden`이 그림자 클리핑 | 래퍼에 `py-4` 추가로 상하 16px 여유 확보 |
 
 ---
 
@@ -305,7 +320,8 @@ VITE_API_URL=https://morningbakery-api-6391c51d5a00.herokuapp.com/api
 ### 🟡 중요
 - [ ] **Meta 앱 검수 제출** — 현재 개발 모드(테스터만 사용 가능)
 - [ ] **Instagram/Threads 토큰 자동 갱신** — 백엔드에 60일 주기 갱신 엔드포인트 추가
-- [ ] **Threads 이미지 하단 정렬 개선** — 텍스트 길이가 달라도 이미지가 항상 동일한 Y 위치에 오도록 (카드 고정 높이 방식 검토)
+- [ ] **Threads 이미지 하단 정렬 개선** — 텍스트 길이가 달라도 이미지가 동일한 Y 위치에 오도록 (카드 고정 높이 방식 검토)
+- [ ] **Header 네비 링크 정리** — 케이크 예약 섹션 삭제 후 남은 링크 업데이트
 
 ### 🟢 개선
 - [ ] **OG 이미지 추가** — SNS 공유 시 미리보기 이미지
@@ -361,9 +377,38 @@ heroku config:set KEY=VALUE --app morningbakery-api
 
 ### 프론트엔드 (`SnsCarousel.jsx`)
 
-- **`useConveyorBelt` 훅** — RAF 애니메이션 + 수동 스크롤 로직을 단일 훅으로 추출. 4개 섹션 모두 재사용
+- **`useConveyorBelt` 훅** — RAF 애니메이션 + 수동 스크롤 로직을 단일 훅으로 추출. 인스타·블로그·스레드 재사용
 - **`ConveyorWrap` 컴포넌트** — 화살표 버튼 + overflow 래퍼 + 자동/고정 트랙 분기 공통화
-- **카드 폭 상수** — `IG_CARD_W`, `YT_CARD_W` 등 각 섹션 고유 상수 + 공통 `CARD_GAP = 16`
+- **단일 gap 원칙** — 모든 섹션 `CARD_GAP = 16`. 카드에 `marginRight` 없음, flex `gap`만 사용 (이중 간격 방지)
+- **카드 폭 상수** — `IG_CARD_W = 360`, `YT_CARD_W = 568`, `NB_CARD_W = TH_CARD_W = (1152-32)/3`. 모두 max-w-6xl 기준으로 산출
+- **YouTube 크로스페이드** — state: `[cur, next, isFading]` 쌍 × 2슬롯. 뒤 레이어 `position:absolute, z:1, opacity:1` 고정. 앞 레이어 `position:relative, z:2`만 페이드. `transition:none`으로 즉시 복원
 - **섹션별 전용 컴포넌트** — `InstagramSection`, `YoutubeSection`, `NaverBlogSection`, `ThreadsSection` 각각 독립 컴포넌트
 - **RAF 기반 스크롤** — `requestAnimationFrame` 60fps GPU 가속, state re-render 없이 `ref`로 직접 DOM 제어
-- **반응형 그리드** — 일반 SNS 섹션(`SnsSection`): `grid-cols-2 lg:grid-cols-4`
+
+---
+
+## 🔔 Claude Code 알림 설정 (개발 환경)
+
+작업 완료·권한 요청 시 macOS 알림이 울리도록 `~/.claude/settings.json` 훅을 설정해뒀음.
+
+### 설치 전제
+```bash
+brew install terminal-notifier   # macOS 알림 배너 도구
+```
+
+### 훅 동작
+
+| 훅 | 트리거 | 소리 | 배너 |
+|----|--------|------|------|
+| `Stop` | 작업 완료 | CC Ring 확장 사운드 | "작업이 완료되었습니다" |
+| `Notification` | 백그라운드 대기 / 입력 필요 | Funk.aiff | "입력 또는 권한 확인이 필요합니다" |
+| `PreToolUse(Bash)` | Bash 명령 실행 직전 (권한 다이얼로그 포함) | Tink.aiff (소음 최소화) | — |
+
+### 배너가 안 뜰 때
+
+`terminal-notifier` 알림은 전달되지만 **Focus 모드(집중 모드)** 가 켜져 있으면 배너로 표시되지 않음.
+
+- 시스템 설정 → 집중 모드 → 활성 프로필 → **앱 허용 목록에 `terminal-notifier` 추가**
+- 또는 Focus 모드 해제
+
+> 소리(`afplay`)는 Focus 모드와 무관하게 항상 재생됨
