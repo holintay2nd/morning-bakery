@@ -142,14 +142,22 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
     )
   }
 
-  // 크로스페이드 원리 (YouTube와 동일):
-  // · 뒤(next) → absolute, opacity 1 — 목적지 카드가 항상 준비돼 있음
-  // · 앞(cur)  → isFading 시 1→0 페이드 아웃 → 뒤를 드러냄, 완료 후 복원
+  // 크로스페이드: cur(앞) 1→0 페이드 아웃 + next(뒤) 0→1 페이드 인 동시 진행
+  // · YouTube와 달리 카드 높이가 가변이라 next를 미리 opacity:1로 깔면 툭 튀어나옴
+  // · 두 레이어 모두 동시에 opacity 전환해 부드럽게 교체
   const renderSlot = (curIdx, nextIdx, isFading, key) => (
     <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+      {/* next: 페이드 중에만 서서히 나타남 (0→1) */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        opacity: isFading ? 1 : 0,
+        transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none',
+      }}>
         {renderCard(items[nextIdx])}
       </div>
+      {/* cur: 페이드 중에 서서히 사라짐 (1→0) */}
       <div style={{
         position: 'relative',
         zIndex: 2,
