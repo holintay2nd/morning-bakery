@@ -4,7 +4,7 @@ export const CARD_GAP = 16 // px — 모든 섹션 공통
 export const SNS_CONFIG = [
   {
     key: 'instagram',
-    label: '인스타그램',
+    label: 'Instagram',
     color: 'from-purple-500 via-pink-500 to-orange-400',
     bgLight: 'bg-pink-50',
     borderColor: 'border-pink-200',
@@ -16,7 +16,7 @@ export const SNS_CONFIG = [
   },
   {
     key: 'youtube',
-    label: '유튜브',
+    label: 'YouTube',
     color: 'from-red-500 to-red-600',
     bgLight: 'bg-red-50',
     borderColor: 'border-red-200',
@@ -28,7 +28,7 @@ export const SNS_CONFIG = [
   },
   {
     key: 'naverBlog',
-    label: '네이버 블로그',
+    label: 'Naver Blog',
     color: 'from-green-500 to-green-600',
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
@@ -42,7 +42,7 @@ export const SNS_CONFIG = [
   },
   {
     key: 'threads',
-    label: '스레드',
+    label: 'Threads',
     color: 'from-gray-700 to-gray-900',
     bgLight: 'bg-gray-50',
     borderColor: 'border-gray-200',
