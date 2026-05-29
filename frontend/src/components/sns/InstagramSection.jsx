@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
-import { parseCaption } from './utils'
+import { parseCaption, formatRelativeDate } from './utils'
 import { useConveyorBelt } from '../../hooks/useConveyorBelt'
 import ConveyorWrap from './ConveyorWrap'
 import SectionHeader from './SectionHeader'
@@ -37,6 +37,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
 
   const renderCard = (item, i) => {
     const { title, body } = parseCaption(item.title)
+    const timeAgo = formatRelativeDate(item.timestamp)
     return (
       <a
         key={`ig-${item._id ?? i}-${i}`}
@@ -73,6 +74,9 @@ export default function InstagramSection({ items, username, profilePicture, tagl
               <span className="text-[12px] text-white/80 font-medium truncate">
                 @{username || 'morningbakery_seoul'}
               </span>
+              {timeAgo && (
+                <span className="text-[12px] text-white/50 flex-shrink-0">· {timeAgo}</span>
+              )}
             </div>
             {title && <p className="text-[15px] font-bold text-white line-clamp-1 leading-snug">{title}</p>}
             {body  && <p className="text-[12px] text-white/70 line-clamp-2 leading-relaxed">{body}</p>}
