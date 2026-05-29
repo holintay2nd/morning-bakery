@@ -11,12 +11,23 @@ const NB_SPEED   = 20 // px/s
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
-function NaverBlogIcon({ size = 'sm' }) {
-  const cls = size === 'lg' ? 'w-14 h-14 opacity-15' : 'w-4 h-4 flex-shrink-0'
+// 빈 썸네일 자리에 표시되는 네이버 로고 플레이스홀더
+function NaverBlogIcon() {
   return (
-    <svg viewBox="0 0 24 24" className={cls} fill="#03C75A" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15" fill="#03C75A" aria-hidden="true">
       <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
     </svg>
+  )
+}
+
+// 프로필 이미지 없을 때 기본 사람 아바타
+function DefaultAvatar() {
+  return (
+    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-gray-400" aria-hidden="true">
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+      </svg>
+    </div>
   )
 }
 
@@ -56,7 +67,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <NaverBlogIcon />
+            <DefaultAvatar />
             <span className="text-xs text-gray-600 font-medium truncate">{displayBlogTitle}</span>
           </div>
           {item.timestamp && (
