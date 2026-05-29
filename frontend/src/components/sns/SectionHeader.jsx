@@ -16,7 +16,7 @@ export default function SectionHeader({ config, profileUrl, tagline }) {
   )
 
   return (
-    <div className="flex items-center gap-4 mb-5">
+    <div className="flex items-center gap-3 mb-5">
       {profileUrl ? (
         <a
           href={profileUrl}
