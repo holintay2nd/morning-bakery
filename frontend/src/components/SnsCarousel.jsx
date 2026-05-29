@@ -4,6 +4,7 @@ import InstagramSection from './sns/InstagramSection'
 import YoutubeSection   from './sns/YoutubeSection'
 import NaverBlogSection from './sns/NaverBlogSection'
 import ThreadsSection   from './sns/ThreadsSection'
+import SnsSkeleton      from './sns/SnsSkeleton'
 
 export default function SnsCarousel() {
   const [snsData,          setSnsData]          = useState(null)
@@ -65,7 +66,7 @@ export default function SnsCarousel() {
         </p>
 
         {loading ? (
-          <div className="py-20 text-center text-brown-400 text-sm">불러오는 중...</div>
+          <SnsSkeleton />
         ) : !snsData ? (
           <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
         ) : (
