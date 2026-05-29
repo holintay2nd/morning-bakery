@@ -132,29 +132,18 @@ export default function Hero() {
         <div className="flex items-center justify-center gap-3">
           {SNS_ICONS.map(({ key, label, viewBox, path }) => {
             const href = snsLinks[key]
-            return href ? (
-              <a
+            const El = href ? 'a' : 'span'
+            return (
+              <El
                 key={key}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {})}
                 aria-label={label}
-                className="w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 border border-white/30 flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm"
+                className="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center opacity-40 hover:opacity-60 transition-opacity duration-300"
               >
                 <svg viewBox={viewBox} className="w-5 h-5 fill-white" aria-hidden="true">
                   <path d={path} />
                 </svg>
-              </a>
-            ) : (
-              <span
-                key={key}
-                aria-label={label}
-                className="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center opacity-40"
-              >
-                <svg viewBox={viewBox} className="w-5 h-5 fill-white" aria-hidden="true">
-                  <path d={path} />
-                </svg>
-              </span>
+              </El>
             )
           })}
         </div>
