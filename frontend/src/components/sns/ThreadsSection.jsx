@@ -9,6 +9,10 @@ const TH_CYCLE_MS = 5000  // 교체 주기 (ms)
 const TH_FADE_MS  = 1200  // 크로스페이드 시간 (ms)
 const TH_VISIBLE  = 3     // 한 번에 보이는 카드 수
 
+// 이미지 포함 카드의 최대 높이 고정
+// 헤더(54) + 본문2줄(58) + 이미지 aspect-[4/3](카드폭-양쪽패딩28 × 0.75) + 하단패딩(14)
+const TH_MIN_CARD_H = Math.ceil(54 + 58 + (TH_CARD_W - 28) * 0.75 + 14)
+
 // 이미지 수 → grid-cols 클래스
 const GRID_COLS = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
 
@@ -146,7 +150,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
   // · YouTube와 달리 카드 높이가 가변이라 next를 미리 opacity:1로 깔면 툭 튀어나옴
   // · 두 레이어 모두 동시에 opacity 전환해 부드럽게 교체
   const renderSlot = (curIdx, nextIdx, isFading, key) => (
-    <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0 }}>
+    <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0, minHeight: TH_MIN_CARD_H }}>
       {/* next: 페이드 중에만 서서히 나타남 (0→1) */}
       <div style={{
         position: 'absolute',
@@ -191,7 +195,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
         ) : (
           // 3개 이하: 모두 고정 표시
           items.map((item, i) => (
-            <div key={`th-static-${i}`} style={{ width: TH_CARD_W, flexShrink: 0 }}>
+            <div key={`th-static-${i}`} style={{ width: TH_CARD_W, flexShrink: 0, minHeight: TH_MIN_CARD_H }}>
               {renderCard(item)}
             </div>
           ))
