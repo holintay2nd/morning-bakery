@@ -1,16 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatRelativeDate } from './utils'
-import { useConveyorBelt } from '../../hooks/useConveyorBelt'
-import ConveyorWrap from './ConveyorWrap'
 import SectionHeader from './SectionHeader'
 
-// 블로그와 동일: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
-const TH_CARD_W  = (1152 - 2 * CARD_GAP) / 3
-const TH_VISIBLE = 3
-const TH_SPEED   = 20 // px/s
+// 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
+const TH_CARD_W   = (1152 - 2 * CARD_GAP) / 3
+const TH_CYCLE_MS = 5000  // 교체 주기 (ms)
+const TH_FADE_MS  = 1200  // 크로스페이드 시간 (ms)
+const TH_VISIBLE  = 3     // 한 번에 보이는 카드 수
 
-// 이미지 수 → grid-cols 클래스 (lookup으로 동적 문자열 조합 회피)
+// 이미지 수 → grid-cols 클래스
 const GRID_COLS = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
 
 const config = SNS_CONFIG.find(c => c.key === 'threads')
@@ -22,15 +21,56 @@ const ThreadsIcon = () => (
 )
 
 export default function ThreadsSection({ items, username, profilePicture, tagline }) {
-  const shouldScroll = items.length > TH_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
-  const { bgLight, borderColor } = config
-  const cardSlot     = TH_CARD_W + CARD_GAP
-  const loopDistance = items.length * cardSlot
-  const trackItems   = shouldScroll ? [...items, ...items] : items
+  // 4개 이상일 때만 교체 (3개 이하는 고정)
+  const shouldRotate = items.length > TH_VISIBLE
 
-  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: TH_SPEED, cardSlot })
+  // 크로스페이드: cur = 현재 카드, next = 교체 대상, fade = 전환 중
+  const [s0Cur,  setS0Cur]  = useState(0)
+  const [s0Next, setS0Next] = useState(0)
+  const [s0Fade, setS0Fade] = useState(false)
+
+  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
+  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
+  const [s1Fade, setS1Fade] = useState(false)
+
+  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
+  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
+  const [s2Fade, setS2Fade] = useState(false)
+
+  const pausedRef = useRef(false)
+  const cursorRef = useRef(TH_VISIBLE) // 다음에 꺼낼 아이템 인덱스
+  const turnRef   = useRef(0)          // 0·1·2 순서로 슬롯 교체
+  const timerRef  = useRef(null)
+
+  const { bgLight, borderColor } = config
+
+  useEffect(() => {
+    if (!shouldRotate) return
+    const interval = setInterval(() => {
+      if (pausedRef.current) return
+      const slot = turnRef.current % TH_VISIBLE
+      const idx  = cursorRef.current % items.length
+      cursorRef.current++
+      turnRef.current++
+
+      // 슬롯별 크로스페이드 — cur·next·fade 6개 state를 슬롯마다 분리해
+      // 다른 슬롯 re-render 없이 해당 슬롯만 갱신
+      if (slot === 0) {
+        setS0Next(idx); setS0Fade(true)
+        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, TH_FADE_MS)
+      } else if (slot === 1) {
+        setS1Next(idx); setS1Fade(true)
+        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, TH_FADE_MS)
+      } else {
+        setS2Next(idx); setS2Fade(true)
+        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, TH_FADE_MS)
+      }
+    }, TH_CYCLE_MS)
+
+    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
+  }, [shouldRotate, items.length])
 
   if (items.length === 0) {
     return (
@@ -46,18 +86,15 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
   const showAvatar      = !!(profilePicture && !avatarError)
   const displayUsername = username || 'threads'
 
-  const renderCard = (item, i) => {
+  const renderCard = (item) => {
     const images   = item.images?.length > 0 ? item.images : (item.thumbnail ? [item.thumbnail] : [])
     const gridCols = GRID_COLS[Math.min(images.length, 3)] ?? 'grid-cols-3'
-
     return (
       <a
-        key={`th-${item._id ?? i}-${i}`}
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${TH_CARD_W}px` }}
+        className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 block"
       >
         {/* 헤더: 프로필 + 이름 + 시간 */}
         <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2">
@@ -105,13 +142,53 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
     )
   }
 
+  // 크로스페이드 원리 (YouTube와 동일):
+  // · 뒤(next) → absolute, opacity 1 — 목적지 카드가 항상 준비돼 있음
+  // · 앞(cur)  → isFading 시 1→0 페이드 아웃 → 뒤를 드러냄, 완료 후 복원
+  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+    <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0 }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+        {renderCard(items[nextIdx])}
+      </div>
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        opacity: isFading ? 0 : 1,
+        transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCard(items[curIdx])}
+      </div>
+    </div>
+  )
+
   return (
     <div id="sns-threads" className="mb-14">
-      <SectionHeader config={config} profileUrl={username ? `https://www.threads.net/@${username}` : null} tagline={tagline} />
-      {/* alignStart: 카드 높이를 콘텐츠에 맞게 auto (align-items: flex-start 인라인 스타일) */}
-      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} alignStart>
-        {trackItems.map(renderCard)}
-      </ConveyorWrap>
+      <SectionHeader
+        config={config}
+        profileUrl={username ? `https://www.threads.net/@${username}` : null}
+        tagline={tagline}
+      />
+      <div
+        className="flex pb-6"
+        style={{ gap: `${CARD_GAP}px` }}
+        onMouseEnter={() => { pausedRef.current = true  }}
+        onMouseLeave={() => { pausedRef.current = false }}
+      >
+        {shouldRotate ? (
+          <>
+            {renderSlot(s0Cur, s0Next, s0Fade, 'th-0')}
+            {renderSlot(s1Cur, s1Next, s1Fade, 'th-1')}
+            {renderSlot(s2Cur, s2Next, s2Fade, 'th-2')}
+          </>
+        ) : (
+          // 3개 이하: 모두 고정 표시
+          items.map((item, i) => (
+            <div key={`th-static-${i}`} style={{ width: TH_CARD_W, flexShrink: 0 }}>
+              {renderCard(item)}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
