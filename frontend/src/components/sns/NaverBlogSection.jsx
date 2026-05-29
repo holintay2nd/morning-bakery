@@ -14,10 +14,8 @@ const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 function NaverBlogIcon({ size = 'sm' }) {
   const cls = size === 'lg' ? 'w-14 h-14 opacity-15' : 'w-4 h-4 flex-shrink-0'
   return (
-    <svg viewBox="0 0 20 20" className={cls} fill="none" aria-hidden="true">
-      <rect x="2.5" y="2" width="3" height="16" rx="1.5" fill="#03C75A"/>
-      <path d="M5.5 7 A4.5 5 0 0 1 5.5 17 Z" fill="#03C75A"/>
-      <rect x="15.5" y="2" width="2" height="16" rx="1" fill="#03C75A"/>
+    <svg viewBox="0 0 24 24" className={cls} fill="#03C75A" aria-hidden="true">
+      <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
     </svg>
   )
 }
