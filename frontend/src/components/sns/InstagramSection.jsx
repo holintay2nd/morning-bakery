@@ -75,7 +75,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
                 @{username || 'morningbakery_seoul'}
               </span>
               {timeAgo && (
-                <span className="text-[12px] text-white/50 flex-shrink-0">· {timeAgo}</span>
+                <span className="text-[12px] text-white/50 font-medium flex-shrink-0">· {timeAgo}</span>
               )}
             </div>
             {title && <p className="text-[15px] font-bold text-white line-clamp-1 leading-snug">{title}</p>}
