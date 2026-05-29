@@ -31,7 +31,7 @@ export default function SectionHeader({ config, profileUrl, tagline }) {
         badge
       )}
       {tagline && (
-        <span className="text-brown-400 text-xs">{tagline}</span>
+        <span className="text-brown-400 text-sm">{tagline}</span>
       )}
     </div>
   )
