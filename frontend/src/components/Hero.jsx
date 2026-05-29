@@ -138,7 +138,7 @@ export default function Hero() {
                 key={key}
                 {...(href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {})}
                 aria-label={label}
-                className="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center opacity-40 hover:opacity-60 transition-opacity duration-300"
+                className="w-11 h-11 rounded-full bg-white/[0.07] border border-white/[0.15] flex items-center justify-center hover:bg-white/[0.14] transition-colors duration-300"
               >
                 <svg viewBox={viewBox} className="w-5 h-5 fill-white" aria-hidden="true">
                   <path d={path} />
