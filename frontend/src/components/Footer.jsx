@@ -2,20 +2,16 @@ import { Instagram, Heart, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
-  { label: '홈', href: '#home' },
-  { label: 'SNS', href: '#sns' },
+  { label: '홈',     href: '#home'  },
+  { label: 'SNS',    href: '#sns'   },
   { label: '매장 안내', href: '#store' },
-  { label: '케이크 예약', href: '#reservation' },
 ]
 
 export default function Footer() {
   const navigate = useNavigate()
+
   const handleScroll = (href) => {
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -24,7 +20,10 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-10 mb-12">
           {/* 브랜드 */}
           <div>
-            <button onClick={scrollToTop} className="text-left mb-4">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="text-left mb-4"
+            >
               <p className="font-serif text-2xl text-cream-100">Morning Bakery</p>
               <p className="text-xs tracking-widest text-brown-500 mt-0.5">모닝베이커리</p>
             </button>
@@ -79,9 +78,7 @@ export default function Footer() {
 
         {/* 구분선 */}
         <div className="border-t border-brown-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-brown-600">
-            © 2024 Morning Bakery. All rights reserved.
-          </p>
+          <p className="text-xs text-brown-600">© 2024 Morning Bakery. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <p className="text-xs text-brown-600 flex items-center gap-1">
               Made with <Heart size={10} className="text-brown-500" /> in Seoul
