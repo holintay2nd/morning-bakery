@@ -125,7 +125,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar }) {
   )
 
   return (
-    <div className="mb-14">
+    <div id="sns-youtube" className="mb-14">
       <SectionHeader config={config} total={items.length} />
       <div
         className="flex pb-6"

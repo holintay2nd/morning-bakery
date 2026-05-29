@@ -83,7 +83,7 @@ export default function InstagramSection({ items, username, profilePicture }) {
   }
 
   return (
-    <div className="mb-14">
+    <div id="sns-instagram" className="mb-14">
       <SectionHeader config={config} total={items.length} />
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
         {trackItems.map(renderCard)}

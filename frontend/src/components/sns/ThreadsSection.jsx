@@ -106,7 +106,7 @@ export default function ThreadsSection({ items, username, profilePicture }) {
   }
 
   return (
-    <div className="mb-14">
+    <div id="sns-threads" className="mb-14">
       <SectionHeader config={config} total={items.length} />
       {/* alignStart: 카드 높이를 콘텐츠에 맞게 auto (align-items: flex-start 인라인 스타일) */}
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} alignStart>
