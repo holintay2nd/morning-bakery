@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
 import api from '../api'
 
 export default function Hero() {
@@ -99,10 +98,13 @@ export default function Hero() {
       {/* 스크롤 유도 */}
       <button
         onClick={scrollDown}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/70 hover:text-white transition-colors animate-bounce"
+        className="absolute bottom-8 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors animate-bounce"
         aria-label="아래로 스크롤"
       >
-        <ChevronDown size={28} />
+        {/* 넓고 납작한 V 화살표 */}
+        <svg width="48" height="24" viewBox="0 0 48 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="2,4 24,20 46,4" />
+        </svg>
       </button>
     </section>
   )
