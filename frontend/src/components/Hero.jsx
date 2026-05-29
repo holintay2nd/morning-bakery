@@ -20,6 +20,7 @@ const SNS_ICONS = [
     label: '네이버 블로그',
     viewBox: '0 0 24 24',
     path: 'M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z',
+    iconClass: 'w-3.5 h-3.5 fill-white',
   },
   {
     key: 'threads',
@@ -129,8 +130,8 @@ export default function Hero() {
         </p>
 
         {/* SNS 아이콘 뱃지 */}
-        <div className="flex items-center justify-center gap-3">
-          {SNS_ICONS.map(({ key, label, viewBox, path }) => {
+        <div className="flex items-center justify-center gap-5">
+          {SNS_ICONS.map(({ key, label, viewBox, path, iconClass }) => {
             const href = snsLinks[key]
             const El = href ? 'a' : 'span'
             return (
@@ -140,7 +141,7 @@ export default function Hero() {
                 aria-label={label}
                 className="w-11 h-11 rounded-full bg-white/[0.07] border border-white/[0.15] flex items-center justify-center hover:bg-white/[0.14] transition-colors duration-300"
               >
-                <svg viewBox={viewBox} className="w-5 h-5 fill-white" aria-hidden="true">
+                <svg viewBox={viewBox} className={iconClass ?? 'w-5 h-5 fill-white'} aria-hidden="true">
                   <path d={path} />
                 </svg>
               </El>
