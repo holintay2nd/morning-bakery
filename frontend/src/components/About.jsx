@@ -54,7 +54,7 @@ export default function About() {
         {/* 상단 텍스트 */}
         <div className="text-center mb-20">
           <p className="reveal section-subtitle" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-            Our Story
+            Introduce
           </p>
           <h2 className="reveal section-title" style={{ opacity: 0, transform: 'translateY(20px)' }}>
             {about.title}

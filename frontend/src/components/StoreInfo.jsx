@@ -12,7 +12,7 @@ export default function StoreInfo() {
       <div className="max-w-6xl mx-auto">
         {/* 섹션 헤더 — 다크 배경에 맞게 색상 오버라이드 */}
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">
-          Find Us
+          Contact
         </p>
         <h2 className="font-sans font-bold text-3xl md:text-4xl text-cream-50 text-center mb-14">
           매장 안내

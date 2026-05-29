@@ -59,7 +59,7 @@ export default function SnsCarousel() {
   return (
     <section id="sns" className="py-24 px-8 bg-white">
       <div className="max-w-6xl mx-auto">
-        <p className="section-subtitle">Follow Us</p>
+        <p className="section-subtitle">SNS</p>
         <h2 className="section-title mb-3">SNS에서 만나요</h2>
         <p className="text-center text-brown-400 text-sm mb-14">
           인스타그램, 유튜브, 네이버 블로그 등 다양한 채널에서 모닝베이커리의 소식을 전해드립니다.
