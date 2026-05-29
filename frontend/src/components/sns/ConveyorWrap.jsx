@@ -38,7 +38,7 @@ export default function ConveyorWrap({
         </>
       )}
       <div
-        className="overflow-hidden py-4"
+        className="overflow-hidden pb-6"
         onMouseEnter={shouldScroll ? () => { pausedRef.current = true  } : undefined}
         onMouseLeave={shouldScroll ? () => { pausedRef.current = false } : undefined}
       >

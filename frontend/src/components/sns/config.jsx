@@ -33,7 +33,7 @@ export const SNS_CONFIG = [
     bgLight: 'bg-green-50',
     borderColor: 'border-green-200',
     Icon: () => (
-      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
         <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
       </svg>
     ),
