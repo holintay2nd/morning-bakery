@@ -12,9 +12,12 @@ export default function SnsCarousel() {
   const [igProfilePicture, setIgProfilePicture] = useState('')
   const [ytChannelName,    setYtChannelName]    = useState('')
   const [ytChannelAvatar,  setYtChannelAvatar]  = useState('')
+  const [ytChannelUrl,     setYtChannelUrl]     = useState('')
   const [nbBlogTitle,      setNbBlogTitle]      = useState('')
+  const [nbBlogUrl,        setNbBlogUrl]        = useState('')
   const [thUsername,       setThUsername]       = useState('')
   const [thProfilePicture, setThProfilePicture] = useState('')
+  const [taglines,         setTaglines]         = useState({})
   const [loading,          setLoading]          = useState(true)
 
   useEffect(() => {
@@ -24,12 +27,14 @@ export default function SnsCarousel() {
       api.get('/youtube/feed'),
       api.get('/threads/feed'),
       api.get('/naverblog/feed'),
-    ]).then(([snsResult, igResult, ytResult, thResult, nbResult]) => {
-      const sns    = snsResult.status === 'fulfilled' ? snsResult.value.data : {}
-      const igData = igResult.status === 'fulfilled'  ? igResult.value.data  : null
-      const ytData = ytResult.status === 'fulfilled'  ? ytResult.value.data  : null
-      const thData = thResult.status === 'fulfilled'  ? thResult.value.data  : null
-      const nbData = nbResult.status === 'fulfilled'  ? nbResult.value.data  : null
+      api.get('/content/sns-taglines'),
+    ]).then(([snsResult, igResult, ytResult, thResult, nbResult, taglineResult]) => {
+      const sns    = snsResult.status     === 'fulfilled' ? snsResult.value.data     : {}
+      const igData = igResult.status      === 'fulfilled' ? igResult.value.data      : null
+      const ytData = ytResult.status      === 'fulfilled' ? ytResult.value.data      : null
+      const thData = thResult.status      === 'fulfilled' ? thResult.value.data      : null
+      const nbData = nbResult.status      === 'fulfilled' ? nbResult.value.data      : null
+      const tlData = taglineResult.status === 'fulfilled' ? taglineResult.value.data : {}
 
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
       if (igData?.username)       setIgUsername(igData.username)
@@ -38,13 +43,17 @@ export default function SnsCarousel() {
       const ytItems = Array.isArray(ytData) ? ytData : (ytData?.items ?? null)
       if (ytData?.channelName)   setYtChannelName(ytData.channelName)
       if (ytData?.channelAvatar) setYtChannelAvatar(ytData.channelAvatar)
+      if (ytData?.channelUrl)    setYtChannelUrl(ytData.channelUrl)
 
       const nbItems = Array.isArray(nbData) ? nbData : (nbData?.items ?? null)
       if (nbData?.blogTitle) setNbBlogTitle(nbData.blogTitle)
+      if (nbData?.blogUrl)   setNbBlogUrl(nbData.blogUrl)
 
       const thItems = Array.isArray(thData) ? thData : (thData?.items ?? null)
       if (thData?.username)       setThUsername(thData.username)
       if (thData?.profilePicture) setThProfilePicture(thData.profilePicture)
+
+      if (tlData) setTaglines(tlData)
 
       setSnsData({
         ...sns,
@@ -75,20 +84,26 @@ export default function SnsCarousel() {
               items={snsData.instagram ?? []}
               username={igUsername}
               profilePicture={igProfilePicture}
+              tagline={taglines.instagram}
             />
             <YoutubeSection
               items={snsData.youtube ?? []}
               channelName={ytChannelName}
               channelAvatar={ytChannelAvatar}
+              channelUrl={ytChannelUrl}
+              tagline={taglines.youtube}
             />
             <NaverBlogSection
               items={snsData.naverBlog ?? []}
               blogTitle={nbBlogTitle}
+              blogUrl={nbBlogUrl}
+              tagline={taglines.naverBlog}
             />
             <ThreadsSection
               items={snsData.threads ?? []}
               username={thUsername}
               profilePicture={thProfilePicture}
+              tagline={taglines.threads}
             />
           </div>
         )}

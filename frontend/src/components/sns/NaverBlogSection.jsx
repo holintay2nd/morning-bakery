@@ -22,7 +22,7 @@ function NaverBlogIcon({ size = 'sm' }) {
   )
 }
 
-export default function NaverBlogSection({ items, blogTitle }) {
+export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline }) {
   const shouldScroll = items.length > NB_VISIBLE
 
   const { bgLight, borderColor } = config
@@ -35,7 +35,7 @@ export default function NaverBlogSection({ items, blogTitle }) {
   if (items.length === 0) {
     return (
       <div className="mb-14">
-        <SectionHeader config={config} total={0} />
+        <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
         <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
           <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
         </div>
@@ -91,7 +91,7 @@ export default function NaverBlogSection({ items, blogTitle }) {
 
   return (
     <div id="sns-naverblog" className="mb-14">
-      <SectionHeader config={config} total={items.length} />
+      <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
         {trackItems.map(renderCard)}
       </ConveyorWrap>

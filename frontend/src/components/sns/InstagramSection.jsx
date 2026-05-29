@@ -11,7 +11,7 @@ const IG_SPEED   = 20   // px/s
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
 
-export default function InstagramSection({ items, username, profilePicture }) {
+export default function InstagramSection({ items, username, profilePicture, tagline }) {
   const shouldScroll = items.length > IG_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
@@ -84,7 +84,11 @@ export default function InstagramSection({ items, username, profilePicture }) {
 
   return (
     <div id="sns-instagram" className="mb-14">
-      <SectionHeader config={config} total={items.length} />
+      <SectionHeader
+        config={config}
+        profileUrl={username ? `https://www.instagram.com/${username}` : null}
+        tagline={tagline}
+      />
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
         {trackItems.map(renderCard)}
       </ConveyorWrap>

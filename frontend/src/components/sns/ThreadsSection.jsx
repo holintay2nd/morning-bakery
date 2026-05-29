@@ -21,7 +21,7 @@ const ThreadsIcon = () => (
   </svg>
 )
 
-export default function ThreadsSection({ items, username, profilePicture }) {
+export default function ThreadsSection({ items, username, profilePicture, tagline }) {
   const shouldScroll = items.length > TH_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
@@ -35,7 +35,7 @@ export default function ThreadsSection({ items, username, profilePicture }) {
   if (items.length === 0) {
     return (
       <div className="mb-14">
-        <SectionHeader config={config} total={0} />
+        <SectionHeader config={config} profileUrl={username ? `https://www.threads.net/@${username}` : null} tagline={tagline} />
         <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
           <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
         </div>
@@ -107,7 +107,7 @@ export default function ThreadsSection({ items, username, profilePicture }) {
 
   return (
     <div id="sns-threads" className="mb-14">
-      <SectionHeader config={config} total={items.length} />
+      <SectionHeader config={config} profileUrl={username ? `https://www.threads.net/@${username}` : null} tagline={tagline} />
       {/* alignStart: 카드 높이를 콘텐츠에 맞게 auto (align-items: flex-start 인라인 스타일) */}
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} alignStart>
         {trackItems.map(renderCard)}

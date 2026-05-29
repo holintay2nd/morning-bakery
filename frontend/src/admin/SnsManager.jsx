@@ -215,6 +215,84 @@ const AUTO_STATUS_CONFIG = {
   },
 }
 
+const TAGLINE_CONFIG = [
+  { key: 'instagram', label: '인스타그램', placeholder: '일상의 순간들을 공유합니다' },
+  { key: 'youtube',   label: '유튜브',     placeholder: '베이킹 영상을 업로드합니다' },
+  { key: 'naverBlog', label: '네이버 블로그', placeholder: '레시피와 이야기를 나눕니다' },
+  { key: 'threads',   label: '스레드',     placeholder: '오늘의 소식을 전합니다' },
+]
+
+const EMPTY_TAGLINES = { instagram: '', youtube: '', naverBlog: '', threads: '' }
+
+// SNS 뱃지 옆 태그라인 설정 패널
+function TaglinesPanel() {
+  const [taglines, setTaglines] = useState(EMPTY_TAGLINES)
+  const [saved,    setSaved]    = useState(EMPTY_TAGLINES)
+  const [saving,   setSaving]   = useState(false)
+  const [loaded,   setLoaded]   = useState(false)
+
+  useEffect(() => {
+    api.get('/content/sns-taglines')
+      .then((res) => {
+        const data = res.data || {}
+        setTaglines({ ...EMPTY_TAGLINES, ...data })
+        setSaved({ ...EMPTY_TAGLINES, ...data })
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await api.patch('/content/sns-taglines', taglines)
+      setSaved({ ...taglines })
+    } catch {
+      alert('저장에 실패했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const changed = JSON.stringify(taglines) !== JSON.stringify(saved)
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+      <div className="px-6 py-4 border-b border-brown-50">
+        <h3 className="font-medium text-brown-800 text-sm">뱃지 태그라인</h3>
+        <p className="text-brown-400 text-xs mt-0.5">각 SNS 뱃지 옆에 표시할 문구를 입력하세요 (비워두면 표시 안 됨)</p>
+      </div>
+      <div className="px-6 py-4 space-y-3">
+        {!loaded ? (
+          <p className="text-brown-400 text-xs">불러오는 중...</p>
+        ) : (
+          <>
+            {TAGLINE_CONFIG.map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label className="block text-brown-500 text-xs font-medium mb-1">{label}</label>
+                <input
+                  className="input"
+                  value={taglines[key] || ''}
+                  onChange={(e) => setTaglines((prev) => ({ ...prev, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  maxLength={60}
+                />
+              </div>
+            ))}
+            <button
+              onClick={handleSave}
+              disabled={saving || !changed}
+              className="w-full py-2 bg-brown-600 text-white text-xs font-medium rounded-lg hover:bg-brown-500 disabled:opacity-40 transition-colors"
+            >
+              {saving ? '저장 중...' : '저장하기'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const EMPTY_FORM = { url: '', thumbnail: '', title: '' }
 
 // 자동 연동 상태 카드 (공통 컴포넌트)
@@ -468,6 +546,9 @@ export default function SnsManager() {
           기사 등 추가 콘텐츠는 아래에서 직접 등록하세요.
         </p>
       </div>
+
+      {/* 태그라인 설정 */}
+      <TaglinesPanel />
 
       {/* 자동 연동 상태 카드 */}
       <SnsStatusCard type="instagram" />

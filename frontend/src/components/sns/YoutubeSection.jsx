@@ -10,7 +10,7 @@ const YT_FADE_MS  = 1200  // 크로스페이드 시간 (ms)
 
 const config = SNS_CONFIG.find(c => c.key === 'youtube')
 
-export default function YoutubeSection({ items, channelName, channelAvatar }) {
+export default function YoutubeSection({ items, channelName, channelAvatar, channelUrl, tagline }) {
   const [avatarError, setAvatarError] = useState(false)
 
   // 크로스페이드: cur = 현재 카드, next = 교체 대상, fade = 전환 중
@@ -53,7 +53,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar }) {
   if (items.length === 0) {
     return (
       <div className="mb-14">
-        <SectionHeader config={config} total={0} />
+        <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
         <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
           <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
         </div>
@@ -126,7 +126,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar }) {
 
   return (
     <div id="sns-youtube" className="mb-14">
-      <SectionHeader config={config} total={items.length} />
+      <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
       <div
         className="flex pb-6"
         style={{ gap: `${CARD_GAP}px` }}
