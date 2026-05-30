@@ -2,9 +2,24 @@ import { useEffect, useRef, useState } from 'react'
 import api from '../api'
 
 const defaultFeatures = [
-  { img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80&auto=format&fit=crop', title: '매일 아침 직접 굽습니다', desc: '새벽 5시부터 오전 내내 매일 신선한 빵을 굽습니다. 전날 남은 빵은 판매하지 않습니다.', badge: 'SIGNATURE' },
-  { img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80&auto=format&fit=crop', title: '좋은 재료만 씁니다', desc: '국내산 밀가루와 유기농 버터, 계절 과일을 사용해 빵 본연의 맛을 살립니다.', badge: 'HOT' },
-  { img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80&auto=format&fit=crop', title: '커피도 직접 로스팅', desc: '매주 소량씩 직접 로스팅한 원두로 드립 커피와 라떼를 내립니다.', badge: 'NEW' },
+  {
+    img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80&auto=format&fit=crop',
+    title: '버터 크루아상',
+    desc: '매일 새벽 직접 구운 겹겹이 쌓인 크루아상. 고소한 버터 향과 바삭한 식감이 모닝베이커리의 대표 메뉴입니다.',
+    badge: 'SIGNATURE',
+  },
+  {
+    img: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=800&q=80&auto=format&fit=crop',
+    title: '소금빵',
+    desc: '겉은 바삭하고 속은 버터 향이 가득한 소금빵. 매일 오전 중 가장 먼저 완판되는 인기 메뉴입니다.',
+    badge: 'HOT',
+  },
+  {
+    img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80&auto=format&fit=crop',
+    title: '딸기 크림 스콘',
+    desc: '이번 시즌 새롭게 선보이는 딸기 크림 스콘. 달콤한 딸기잼과 클로티드 크림이 어우러진 봄의 맛입니다.',
+    badge: 'NEW',
+  },
 ]
 
 export default function About() {
@@ -54,7 +69,7 @@ export default function About() {
       <div className="max-w-6xl mx-auto">
         {/* 상단 레이블 */}
         <div className="text-center mb-10">
-          <p className="reveal text-sm tracking-[0.35em] uppercase text-brown-700 font-semibold" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+          <p className="reveal text-2xl md:text-3xl tracking-[0.2em] uppercase text-brown-800 font-bold" style={{ opacity: 0, transform: 'translateY(20px)' }}>
             Menu
           </p>
         </div>
