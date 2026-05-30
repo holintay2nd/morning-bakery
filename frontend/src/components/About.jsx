@@ -87,7 +87,7 @@ export default function About() {
         {/* 이미지 + 텍스트 카드 */}
         <div className="grid md:grid-cols-3 gap-4">
           {features.map((f, i) => (
-            <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[520px] group" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+            <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[520px] group will-change-transform isolate" style={{ opacity: 0, transform: 'translateY(20px)' }}>
               <img
                 src={f.img}
                 alt={f.title}
