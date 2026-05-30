@@ -120,13 +120,13 @@ export default function Hero() {
         <div className="flex items-center justify-center gap-3 mb-6">
           <button
             onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
-            className="border border-cream-200/60 rounded-full px-6 py-2 text-sm tracking-widest text-cream-100 font-light hover:bg-white/10 transition-colors"
+            className="bg-white/90 text-brown-800 rounded-full px-7 py-2.5 text-sm font-semibold hover:bg-white transition-colors shadow-sm"
           >
             카페 안내
           </button>
           <button
             onClick={() => document.querySelector('#store')?.scrollIntoView({ behavior: 'smooth' })}
-            className="border border-cream-200/60 rounded-full px-6 py-2 text-sm tracking-widest text-cream-100 font-light hover:bg-white/10 transition-colors"
+            className="bg-white/[0.12] border border-white/50 rounded-full px-7 py-2.5 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
           >
             문의하기
           </button>
@@ -166,7 +166,7 @@ export default function Hero() {
         aria-label="아래로 스크롤"
       >
         <div className="flex flex-col items-center gap-2 animate-bounce">
-          <span className="text-[11px] tracking-[0.3em] uppercase text-white/50">둘러보기</span>
+          <span className="text-sm text-white/50">둘러보기</span>
           <svg width="80" height="28" viewBox="0 0 80 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="2,4 40,24 78,4" />
           </svg>
