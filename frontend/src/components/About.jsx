@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import api from '../api'
 
 const defaultFeatures = [
-  { img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80&auto=format&fit=crop', title: '매일 아침 직접 굽습니다', desc: '새벽 5시부터 오전 내내 매일 신선한 빵을 굽습니다. 전날 남은 빵은 판매하지 않습니다.' },
-  { img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80&auto=format&fit=crop', title: '좋은 재료만 씁니다', desc: '국내산 밀가루와 유기농 버터, 계절 과일을 사용해 빵 본연의 맛을 살립니다.' },
-  { img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80&auto=format&fit=crop', title: '커피도 직접 로스팅', desc: '매주 소량씩 직접 로스팅한 원두로 드립 커피와 라떼를 내립니다.' },
+  { img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80&auto=format&fit=crop', title: '매일 아침 직접 굽습니다', desc: '새벽 5시부터 오전 내내 매일 신선한 빵을 굽습니다. 전날 남은 빵은 판매하지 않습니다.', badge: 'SIGNATURE' },
+  { img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80&auto=format&fit=crop', title: '좋은 재료만 씁니다', desc: '국내산 밀가루와 유기농 버터, 계절 과일을 사용해 빵 본연의 맛을 살립니다.', badge: 'HOT' },
+  { img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80&auto=format&fit=crop', title: '커피도 직접 로스팅', desc: '매주 소량씩 직접 로스팅한 원두로 드립 커피와 라떼를 내립니다.', badge: 'NEW' },
 ]
 
 export default function About() {
@@ -44,6 +44,7 @@ export default function About() {
   }, [])
 
   const features = (about.features?.length ? about.features : defaultFeatures).map((f, i) => ({
+    badge: defaultFeatures[i % defaultFeatures.length]?.badge,
     ...f,
     img: f.img || defaultFeatures[i % defaultFeatures.length].img,
   }))
@@ -53,7 +54,7 @@ export default function About() {
       <div className="max-w-6xl mx-auto">
         {/* 상단 레이블 */}
         <div className="text-center mb-10">
-          <p className="reveal section-subtitle" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+          <p className="reveal text-sm tracking-[0.35em] uppercase text-brown-700 font-semibold" style={{ opacity: 0, transform: 'translateY(20px)' }}>
             Menu
           </p>
         </div>
@@ -68,6 +69,14 @@ export default function About() {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              {/* 좌상단 뱃지 */}
+              {f.badge && (
+                <div className="absolute top-4 left-4">
+                  <span className="bg-white/90 backdrop-blur-sm text-brown-800 text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm">
+                    {f.badge}
+                  </span>
+                </div>
+              )}
               <div className="absolute bottom-0 left-0 right-0 p-7 text-white">
                 <h3 className="font-sans font-bold text-xl mb-2">{f.title}</h3>
                 <p className="text-white/75 text-sm leading-relaxed">{f.desc}</p>
