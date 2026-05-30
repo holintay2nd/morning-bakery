@@ -3,7 +3,8 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import About from './components/About'
 import SnsCarousel from './components/SnsCarousel'
-import StoreInfo from './components/StoreInfo'
+import VisitSection from './components/VisitSection'
+import ContactSection from './components/ContactSection'
 import Footer from './components/Footer'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
@@ -17,7 +18,8 @@ function HomePage() {
         <Hero />
         <About />
         <SnsCarousel />
-        <StoreInfo />
+        <VisitSection />
+        <ContactSection />
       </main>
       <Footer />
     </div>
