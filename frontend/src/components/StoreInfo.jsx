@@ -19,18 +19,45 @@ export default function StoreInfo() {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          {/* 지도 */}
-          <div className="rounded-2xl overflow-hidden shadow-sm h-80 md:h-full min-h-[320px] bg-brown-700">
-            <iframe
-              title="모닝베이커리 위치"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3163.5596707088!2d126.9218789!3d37.5519738!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357c98d04048f3b7%3A0xb84f0c7a93e5e1c!2z7Iol6rWs7Ja066qF7ZSE6rCV!5e0!3m2!1sko!2skr!4v1712980000000!5m2!1sko!2skr"
-              width="100%"
-              height="100%"
-              style={{ border: 0, minHeight: '320px' }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+          {/* 지도 — 네이버 지도 플레이스홀더 */}
+          <div className="rounded-2xl overflow-hidden shadow-sm h-80 md:h-full min-h-[320px] bg-brown-800 flex items-center justify-center relative">
+            {/* 배경 격자 */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: [
+                  'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
+                  'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+                ].join(', '),
+                backgroundSize: '36px 36px',
+              }}
             />
+            {/* 중앙 콘텐츠 */}
+            <div className="relative z-10 flex flex-col items-center gap-5 px-8 text-center">
+              {/* 핀 */}
+              <div className="w-16 h-16 rounded-full bg-[#03C75A]/20 border-2 border-[#03C75A]/40 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#03C75A] flex items-center justify-center shadow-lg">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" aria-hidden="true">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <p className="text-cream-200 font-medium text-sm mb-1">서울특별시 마포구 홍익로 00길 00</p>
+                <p className="text-brown-400 text-xs">홍대입구역 2번 출구 도보 5분</p>
+              </div>
+              <a
+                href="https://map.naver.com/v5/search/서울+마포구+홍익로+00길"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#03C75A] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#02b351] transition-colors shadow-md"
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white" aria-hidden="true">
+                  <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
+                </svg>
+                네이버 지도로 보기
+              </a>
+            </div>
           </div>
 
           {/* 정보 카드 */}
@@ -49,12 +76,12 @@ export default function StoreInfo() {
                     (홍대입구역 2번 출구에서 도보 5분)
                   </p>
                   <a
-                    href="https://maps.google.com"
+                    href="https://map.naver.com/v5/search/서울+마포구+홍익로+00길"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block mt-3 text-xs text-brown-400 border border-brown-600 px-4 py-1.5 rounded-full hover:bg-brown-700 hover:text-brown-200 transition-colors"
                   >
-                    지도 앱으로 열기 →
+                    네이버 지도로 열기 →
                   </a>
                 </div>
               </div>
