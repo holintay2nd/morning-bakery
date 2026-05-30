@@ -87,7 +87,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
   }
 
   return (
-    <div id="sns-instagram" className="mb-14">
+    <div id="sns-instagram" className="mb-14 scroll-mt-20">
       <SectionHeader
         config={config}
         profileUrl={username ? `https://www.instagram.com/${username}` : null}
