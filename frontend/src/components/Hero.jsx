@@ -120,13 +120,13 @@ export default function Hero() {
         <div className="flex items-center justify-center gap-3 mb-6">
           <button
             onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-white/90 text-brown-800 rounded-full px-7 py-2.5 text-sm font-semibold hover:bg-white transition-colors shadow-sm"
+            className="bg-white/90 text-brown-800 rounded-full px-7 py-2.5 text-sm font-semibold hover:bg-white hover:scale-105 transition shadow-sm"
           >
             카페 안내
           </button>
           <button
             onClick={() => document.querySelector('#store')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-white/[0.12] border border-white/50 rounded-full px-7 py-2.5 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
+            className="bg-white/[0.12] border border-white/50 rounded-full px-7 py-2.5 text-sm font-semibold text-white hover:bg-white/25 hover:scale-105 transition"
           >
             문의하기
           </button>
@@ -162,14 +162,17 @@ export default function Hero() {
       {/* 스크롤 유도 */}
       <button
         onClick={scrollDown}
-        className="absolute bottom-8 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors"
+        className="absolute bottom-5 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors"
         aria-label="아래로 스크롤"
       >
-        <div className="flex flex-col items-center gap-2 animate-bounce">
-          <span className="text-sm text-white/50">둘러보기</span>
-          <svg width="80" height="28" viewBox="0 0 80 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="2,4 40,24 78,4" />
-          </svg>
+        {/* scale 래퍼 — bounce와 분리해 transform 충돌 방지 */}
+        <div className="transition-transform duration-200 hover:scale-110">
+          <div className="flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-sm text-white/50">둘러보기</span>
+            <svg width="80" height="28" viewBox="0 0 80 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2,4 40,24 78,4" />
+            </svg>
+          </div>
         </div>
       </button>
     </section>
