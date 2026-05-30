@@ -174,7 +174,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
   )
 
   return (
-    <div id="sns-threads" className="mb-14 scroll-mt-20">
+    <div id="sns-threads" className="mb-14 scroll-mt-24">
       <SectionHeader
         config={config}
         profileUrl={username ? `https://www.threads.net/@${username}` : null}

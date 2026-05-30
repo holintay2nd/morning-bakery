@@ -66,7 +66,7 @@ export default function SnsCarousel() {
   }, [])
 
   return (
-    <section id="sns" className="py-24 px-8 bg-white scroll-mt-20">
+    <section id="sns" className="py-24 px-8 bg-white scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         <p className="section-subtitle">SNS</p>
         <h2 className="section-title mb-3">SNS에서 만나요</h2>

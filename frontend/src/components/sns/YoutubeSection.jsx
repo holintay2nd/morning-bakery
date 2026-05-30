@@ -125,7 +125,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
   )
 
   return (
-    <div id="sns-youtube" className="mb-14 scroll-mt-20">
+    <div id="sns-youtube" className="mb-14 scroll-mt-24">
       <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
       <div
         className="flex pb-6"

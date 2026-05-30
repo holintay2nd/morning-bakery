@@ -75,7 +75,7 @@ export default function About() {
   }))
 
   return (
-    <section id="about" ref={sectionRef} className="py-24 px-5 bg-cream-50 scroll-mt-20">
+    <section id="about" ref={sectionRef} className="py-24 px-5 bg-cream-50 scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         {/* 상단 레이블 */}
         <div className="text-center mb-10">

@@ -8,7 +8,7 @@ const hours = [
 
 export default function StoreInfo() {
   return (
-    <section id="store" className="py-24 px-5 bg-brown-900 scroll-mt-20">
+    <section id="store" className="py-24 px-5 bg-brown-900 scroll-mt-24">
       <div className="max-w-6xl mx-auto">
         {/* 섹션 헤더 — 다크 배경에 맞게 색상 오버라이드 */}
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">

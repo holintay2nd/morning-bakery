@@ -99,7 +99,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
   )
 
   return (
-    <div id="sns-naverblog" className="mb-14 scroll-mt-20">
+    <div id="sns-naverblog" className="mb-14 scroll-mt-24">
       <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
       <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
         {trackItems.map(renderCard)}
