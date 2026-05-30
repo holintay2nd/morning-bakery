@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import api from '../api'
 
+const BADGE_STYLES = {
+  SIGNATURE: 'bg-amber-400/90 text-white',
+  HOT:       'bg-red-500/90 text-white',
+  NEW:       'bg-emerald-500/90 text-white',
+}
+
 const defaultFeatures = [
   {
     img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80&auto=format&fit=crop',
@@ -32,7 +38,11 @@ export default function About() {
 
   useEffect(() => {
     api.get('/content').then((res) => {
-      if (res.data.about) setAbout(res.data.about)
+      if (res.data.about) {
+        // features는 코드에서 관리 (DB 구버전 데이터가 덮어쓰지 않도록)
+        const { features: _ignored, ...rest } = res.data.about
+        setAbout(prev => ({ ...prev, ...rest }))
+      }
     }).catch(() => {})
   }, [])
 
@@ -87,7 +97,7 @@ export default function About() {
               {/* 좌상단 뱃지 */}
               {f.badge && (
                 <div className="absolute top-4 left-4">
-                  <span className="bg-white/90 backdrop-blur-sm text-brown-800 text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm">
+                  <span className={`backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm ${BADGE_STYLES[f.badge] ?? 'bg-white/90 text-brown-800'}`}>
                     {f.badge}
                   </span>
                 </div>
