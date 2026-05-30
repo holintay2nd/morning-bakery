@@ -51,18 +51,10 @@ export default function About() {
   return (
     <section id="about" ref={sectionRef} className="py-24 px-5 bg-cream-50">
       <div className="max-w-6xl mx-auto">
-        {/* 상단 텍스트 */}
-        <div className="text-center mb-20">
+        {/* 상단 레이블 */}
+        <div className="text-center mb-10">
           <p className="reveal section-subtitle" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-            Introduce
-          </p>
-          <h2 className="reveal section-title" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-            {about.title}
-          </h2>
-          <p className="reveal text-brown-500 max-w-lg mx-auto leading-relaxed text-sm md:text-base" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-            {about.description.split('\n').map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
+            Menu
           </p>
         </div>
 
