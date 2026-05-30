@@ -43,11 +43,11 @@ export default function StoreInfo() {
                 </div>
               </div>
               <div>
-                <p className="text-cream-200 font-medium text-sm mb-1">서울특별시 마포구 홍익로 00길 00</p>
+                <p className="text-cream-200 font-medium text-sm mb-1">서울특별시 마포구 노고산동 107-17</p>
                 <p className="text-brown-400 text-xs">홍대입구역 2번 출구 도보 5분</p>
               </div>
               <a
-                href="https://map.naver.com/v5/search/서울+마포구+홍익로+00길"
+                href="https://map.naver.com/v5/search/서울특별시+마포구+노고산동+107-17"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-[#03C75A] text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#02b351] transition-colors shadow-md"
@@ -71,12 +71,12 @@ export default function StoreInfo() {
                 <div>
                   <h3 className="font-sans font-bold text-cream-50 text-lg mb-1">위치</h3>
                   <p className="text-brown-300 text-sm leading-relaxed">
-                    서울특별시 마포구 홍익로 00길 00
+                    서울특별시 마포구 노고산동 107-17
                     <br />
                     (홍대입구역 2번 출구에서 도보 5분)
                   </p>
                   <a
-                    href="https://map.naver.com/v5/search/서울+마포구+홍익로+00길"
+                    href="https://map.naver.com/v5/search/서울특별시+마포구+노고산동+107-17"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block mt-3 text-xs text-brown-400 border border-brown-600 px-4 py-1.5 rounded-full hover:bg-brown-700 hover:text-brown-200 transition-colors"
