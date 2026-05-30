@@ -49,10 +49,10 @@ export default function About() {
   }))
 
   return (
-    <section id="about" ref={sectionRef} className="py-14 px-5 bg-cream-50 min-h-screen flex flex-col justify-center">
-      <div className="max-w-6xl mx-auto w-full">
+    <section id="about" ref={sectionRef} className="py-24 px-5 bg-cream-50">
+      <div className="max-w-6xl mx-auto">
         {/* 상단 텍스트 */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-20">
           <p className="reveal section-subtitle" style={{ opacity: 0, transform: 'translateY(20px)' }}>
             Introduce
           </p>
@@ -69,7 +69,7 @@ export default function About() {
         {/* 이미지 + 텍스트 카드 */}
         <div className="grid md:grid-cols-3 gap-4">
           {features.map((f, i) => (
-            <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[40vh] max-h-[460px] min-h-[280px] group" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+            <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[520px] group" style={{ opacity: 0, transform: 'translateY(20px)' }}>
               <img
                 src={f.img}
                 alt={f.title}
