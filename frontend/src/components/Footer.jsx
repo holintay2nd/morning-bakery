@@ -2,9 +2,11 @@ import { Instagram, Heart, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
-  { label: '홈',     href: '#home'  },
-  { label: 'SNS',    href: '#sns'   },
-  { label: '매장 안내', href: '#store' },
+  { label: '홈',      href: '#home'    },
+  { label: '메뉴',    href: '#about'   },
+  { label: 'SNS',    href: '#sns'     },
+  { label: '매장 정보', href: '#visit' },
+  { label: '문의',    href: '#contact' },
 ]
 
 export default function Footer() {
@@ -15,9 +17,10 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-brown-900 text-brown-400 py-16 px-5">
+    <footer className="bg-brown-900 text-brown-400 py-16 px-5 border-t border-brown-800">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-3 gap-10 mb-12">
+
           {/* 브랜드 */}
           <div>
             <button
@@ -28,15 +31,17 @@ export default function Footer() {
               <p className="text-xs tracking-widest text-brown-500 mt-0.5">모닝베이커리</p>
             </button>
             <p className="text-sm leading-relaxed text-brown-500">
-              매일 새벽부터 정성껏 빵을 굽는
+              매일 새벽 5시, 오늘의 빵을 굽기 시작합니다.
               <br />
-              서울의 작은 베이커리 카페입니다.
+              신선함을 가장 중요하게 생각하는
+              <br />
+              서울의 작은 베이커리입니다.
             </p>
           </div>
 
-          {/* 링크 */}
+          {/* 사이트맵 */}
           <div>
-            <h4 className="text-xs tracking-widest text-brown-500 uppercase mb-4">Menu</h4>
+            <h4 className="text-xs tracking-widest text-brown-500 uppercase mb-4">Site</h4>
             <ul className="space-y-2">
               {navLinks.map((link) => (
                 <li key={link.href}>
@@ -54,17 +59,29 @@ export default function Footer() {
           {/* 연락처 */}
           <div>
             <h4 className="text-xs tracking-widest text-brown-500 uppercase mb-4">Contact</h4>
-            <ul className="space-y-2 text-sm text-brown-500">
-              <li>서울특별시 마포구 홍익로 00길 00</li>
+            <ul className="space-y-3 text-sm text-brown-500">
+              <li className="leading-relaxed">
+                서울특별시 마포구 노고산동 107-17
+                <br />
+                <span className="text-xs text-brown-600">홍대입구역 2번 출구 도보 5분</span>
+              </li>
               <li>
                 <a href="tel:02-000-0000" className="hover:text-cream-200 transition-colors">
                   02-000-0000
                 </a>
               </li>
+              <li>
+                <a
+                  href="mailto:hello@morningbakery.kr"
+                  className="hover:text-cream-200 transition-colors"
+                >
+                  hello@morningbakery.kr
+                </a>
+              </li>
               <li className="flex items-center gap-2">
                 <Instagram size={14} />
                 <a
-                  href="https://instagram.com"
+                  href="https://instagram.com/morning_bakery_seoul"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cream-200 transition-colors"
@@ -76,9 +93,9 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 구분선 */}
+        {/* 하단 바 */}
         <div className="border-t border-brown-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-brown-600">© 2024 Morning Bakery. All rights reserved.</p>
+          <p className="text-xs text-brown-600">© 2025 Morning Bakery. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <p className="text-xs text-brown-600 flex items-center gap-1">
               Made with <Heart size={10} className="text-brown-500" /> in Seoul

@@ -97,13 +97,13 @@ export default function Hero() {
 
         <div className="flex items-center justify-center gap-3 mb-6">
           <button
-            onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => document.querySelector('#visit')?.scrollIntoView({ behavior: 'smooth' })}
             className="bg-white/90 text-brown-800 rounded-full px-7 py-2.5 text-sm font-semibold hover:bg-white hover:scale-105 transition will-change-transform shadow-sm"
           >
             카페 안내
           </button>
           <button
-            onClick={() => document.querySelector('#store')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
             className="bg-white/[0.12] border border-white/50 rounded-full px-7 py-2.5 text-sm font-semibold text-white hover:bg-white/25 hover:scale-105 transition will-change-transform"
           >
             문의하기
