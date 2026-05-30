@@ -117,10 +117,19 @@ export default function Hero() {
           ))}
         </h1>
 
-        <div className="inline-block border border-cream-200/60 rounded-full px-6 py-2 mb-6">
-          <p className="text-sm md:text-base tracking-widest text-cream-100 font-light">
-            {hero.subtitle}
-          </p>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <button
+            onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
+            className="border border-cream-200/60 rounded-full px-6 py-2 text-sm tracking-widest text-cream-100 font-light hover:bg-white/10 transition-colors"
+          >
+            카페 안내
+          </button>
+          <button
+            onClick={() => document.querySelector('#store')?.scrollIntoView({ behavior: 'smooth' })}
+            className="border border-cream-200/60 rounded-full px-6 py-2 text-sm tracking-widest text-cream-100 font-light hover:bg-white/10 transition-colors"
+          >
+            문의하기
+          </button>
         </div>
 
         <p className="text-cream-200 text-sm md:text-base leading-relaxed mb-10 font-light">
@@ -153,12 +162,15 @@ export default function Hero() {
       {/* 스크롤 유도 */}
       <button
         onClick={scrollDown}
-        className="absolute bottom-8 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors animate-bounce"
+        className="absolute bottom-8 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors"
         aria-label="아래로 스크롤"
       >
-        <svg width="48" height="24" viewBox="0 0 48 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="2,4 24,20 46,4" />
-        </svg>
+        <div className="flex flex-col items-center gap-2 animate-bounce">
+          <span className="text-[11px] tracking-[0.3em] uppercase text-white/50">둘러보기</span>
+          <svg width="80" height="28" viewBox="0 0 80 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="2,4 40,24 78,4" />
+          </svg>
+        </div>
       </button>
     </section>
   )
