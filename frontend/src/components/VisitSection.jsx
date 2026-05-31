@@ -160,6 +160,39 @@ export default function VisitSection() {
 
           </div>
         </div>
+
+        {/* 이용 가이드 */}
+        <div className="mt-6 grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            {
+              icon: '📸',
+              title: '사진 촬영',
+              desc: '창가 자리에서 자연광과 함께 촬영하면 가장 예쁘게 담을 수 있습니다.',
+            },
+            {
+              icon: '🍰',
+              title: '디저트 추천',
+              desc: '버터 크루아상과 시즌 음료 조합이 가장 인기 있습니다.',
+            },
+            {
+              icon: '💻',
+              title: '작업 이용',
+              desc: '2층 창가 좌석은 콘센트 이용이 가능하며 비교적 조용합니다.',
+            },
+            {
+              icon: '❤️',
+              title: '데이트 방문',
+              desc: '창가 2인석은 미리 방문해 확보하시길 권장드립니다.',
+            },
+          ].map((tip) => (
+            <div key={tip.title} className="bg-brown-800 rounded-2xl p-5">
+              <span className="text-2xl mb-3 block">{tip.icon}</span>
+              <p className="text-cream-100 text-sm font-semibold mb-2">{tip.title}</p>
+              <p className="text-brown-400 text-xs leading-relaxed">{tip.desc}</p>
+            </div>
+          ))}
+        </div>
+
       </div>
     </section>
   )

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import About from './components/About'
+import RecommendSection from './components/RecommendSection'
 import SnsCarousel from './components/SnsCarousel'
 import VisitSection from './components/VisitSection'
 import ContactSection from './components/ContactSection'
@@ -17,6 +18,7 @@ function HomePage() {
       <main>
         <Hero />
         <About />
+        <RecommendSection />
         <SnsCarousel />
         <VisitSection />
         <ContactSection />

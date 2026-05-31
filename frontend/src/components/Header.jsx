@@ -9,11 +9,12 @@ const SNS_SUB = [
 ]
 
 const NAV = [
-  { label: 'HOME',    href: '#home'    },
-  { label: 'MENU',    href: '#about'   },
+  { label: 'HOME',    href: '#home'      },
+  { label: 'MENU',    href: '#about'     },
+  { label: 'GUIDE',   href: '#recommend' },
   { label: 'SNS',     href: '#sns',    sub: SNS_SUB },
-  { label: 'VISIT',   href: '#visit'   },
-  { label: 'CONTACT', href: '#contact' },
+  { label: 'VISIT',   href: '#visit'     },
+  { label: 'CONTACT', href: '#contact'   },
 ]
 
 export default function Header() {

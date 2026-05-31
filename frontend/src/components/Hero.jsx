@@ -103,10 +103,10 @@ export default function Hero() {
             카페 안내
           </button>
           <button
-            onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => document.querySelector('#recommend')?.scrollIntoView({ behavior: 'smooth' })}
             className="bg-white/[0.12] border border-white/50 rounded-full px-7 py-2.5 text-sm font-semibold text-white hover:bg-white/25 hover:scale-105 transition will-change-transform"
           >
-            문의하기
+            이럴 때 추천해요
           </button>
         </div>
 

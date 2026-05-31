@@ -2,11 +2,12 @@ import { Instagram, Heart, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
-  { label: '홈',      href: '#home'    },
-  { label: '메뉴',    href: '#about'   },
-  { label: 'SNS',    href: '#sns'     },
-  { label: '매장 정보', href: '#visit' },
-  { label: '문의',    href: '#contact' },
+  { label: '홈',        href: '#home'      },
+  { label: '메뉴',      href: '#about'     },
+  { label: '방문 가이드', href: '#recommend' },
+  { label: 'SNS',       href: '#sns'       },
+  { label: '매장 정보',  href: '#visit'     },
+  { label: '문의',       href: '#contact'   },
 ]
 
 export default function Footer() {
