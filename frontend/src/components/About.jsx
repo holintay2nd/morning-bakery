@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import api from '../api'
+import MobileCardSlider from './sns/MobileCardSlider'
 
 const BADGE_STYLES = {
   SIGNATURE: 'bg-amber-400/90 text-white',
@@ -39,13 +40,13 @@ export default function About() {
   useEffect(() => {
     api.get('/content').then((res) => {
       if (res.data.about) {
-        // features는 코드에서 관리 (DB 구버전 데이터가 덮어쓰지 않도록)
         const { features: _ignored, ...rest } = res.data.about
         setAbout(prev => ({ ...prev, ...rest }))
       }
     }).catch(() => {})
   }, [])
 
+  // 데스크탑 진입 애니메이션
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -61,9 +62,8 @@ export default function About() {
           }
         })
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     )
-
     if (sectionRef.current) observer.observe(sectionRef.current)
     return () => observer.disconnect()
   }, [])
@@ -74,42 +74,70 @@ export default function About() {
     img: f.img || defaultFeatures[i % defaultFeatures.length].img,
   }))
 
-  return (
-    <section id="about" ref={sectionRef} className="mobile-snap-section py-24 px-5 bg-cream-50 overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
-        {/* 상단 레이블 */}
-        <div className="text-center mb-10">
-          <p className="reveal text-2xl md:text-3xl tracking-[0.2em] uppercase text-brown-800 font-bold" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-            Menu
-          </p>
+  // ── 모바일 카드 (전체폭, aspect-[3/4]) ──
+  const renderMobileCard = (f, i) => (
+    <div key={`menu-mob-${i}`} className="relative rounded-2xl overflow-hidden aspect-[3/4]">
+      <img src={f.img} alt={f.title} className="w-full h-full object-cover" loading="lazy" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      {f.badge && (
+        <div className="absolute top-4 left-4">
+          <span className={`backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm ${BADGE_STYLES[f.badge] ?? 'bg-white/90 text-brown-800'}`}>
+            {f.badge}
+          </span>
         </div>
+      )}
+      <div className="absolute bottom-0 left-0 right-0 p-7 text-white">
+        <h3 className="font-sans font-bold text-xl mb-2">{f.title}</h3>
+        <p className="text-white/75 text-sm leading-relaxed">{f.desc}</p>
+      </div>
+    </div>
+  )
 
-        {/* 이미지 + 텍스트 카드 */}
-        <div className="grid md:grid-cols-3 gap-4">
-          {features.map((f, i) => (
-            <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[520px] group will-change-transform isolate" style={{ opacity: 0, transform: 'translateY(20px)' }}>
-              <img
-                src={f.img}
-                alt={f.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              {/* 좌상단 뱃지 */}
-              {f.badge && (
-                <div className="absolute top-4 left-4">
-                  <span className={`backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm ${BADGE_STYLES[f.badge] ?? 'bg-white/90 text-brown-800'}`}>
-                    {f.badge}
-                  </span>
+  return (
+    <section id="about" ref={sectionRef} className="mobile-snap-section bg-cream-50 overflow-y-auto">
+
+      {/* ── 모바일 레이아웃: 카드 1장씩 스와이프 ── */}
+      <div className="md:hidden pt-20 px-4 pb-6">
+        <p className="text-center text-2xl tracking-[0.2em] uppercase text-brown-800 font-bold mb-4">
+          Menu
+        </p>
+        <MobileCardSlider items={features} renderCard={renderMobileCard} />
+      </div>
+
+      {/* ── 데스크탑 레이아웃: 3열 그리드 ── */}
+      <div className="hidden md:block py-24 px-5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="reveal text-2xl md:text-3xl tracking-[0.2em] uppercase text-brown-800 font-bold" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+              Menu
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {features.map((f, i) => (
+              <div key={i} className="reveal relative rounded-2xl overflow-hidden h-[520px] group will-change-transform isolate" style={{ opacity: 0, transform: 'translateY(20px)' }}>
+                <img
+                  src={f.img}
+                  alt={f.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                {f.badge && (
+                  <div className="absolute top-4 left-4">
+                    <span className={`backdrop-blur-sm text-[11px] font-bold tracking-[0.15em] px-3 py-1.5 rounded-full shadow-sm ${BADGE_STYLES[f.badge] ?? 'bg-white/90 text-brown-800'}`}>
+                      {f.badge}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 p-7 text-white">
+                  <h3 className="font-sans font-bold text-xl mb-2">{f.title}</h3>
+                  <p className="text-white/75 text-sm leading-relaxed">{f.desc}</p>
                 </div>
-              )}
-              <div className="absolute bottom-0 left-0 right-0 p-7 text-white">
-                <h3 className="font-sans font-bold text-xl mb-2">{f.title}</h3>
-                <p className="text-white/75 text-sm leading-relaxed">{f.desc}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+
     </section>
   )
 }

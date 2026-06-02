@@ -1,14 +1,17 @@
+import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatBlogDate } from './utils'
-import { useConveyorBelt } from '../../hooks/useConveyorBelt'
-import ConveyorWrap from './ConveyorWrap'
 import SectionHeader from './SectionHeader'
 import MobileCardSlider from './MobileCardSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
-const NB_CARD_W  = (1152 - 2 * CARD_GAP) / 3
-const NB_VISIBLE = 3
-const NB_SPEED   = 20 // px/s
+const NB_CARD_W   = (1152 - 2 * CARD_GAP) / 3
+const NB_CYCLE_MS = 5000
+const NB_FADE_MS  = 1200
+const NB_VISIBLE  = 3
+// 카드 높이: p-3.5(14) + 헤더(40) + 제목+요약(70) + px-3.5 pb-3.5(14) + 정방형 썸네일
+const NB_THUMB    = Math.round(NB_CARD_W - 28)
+const NB_MIN_H    = 14 + 40 + 70 + 14 + NB_THUMB + 14
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
@@ -31,26 +34,60 @@ function DefaultAvatar() {
 }
 
 export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline }) {
-  const shouldScroll = items.length > NB_VISIBLE
+  const shouldRotate = items.length > NB_VISIBLE
+
+  const [s0Cur,  setS0Cur]  = useState(0)
+  const [s0Next, setS0Next] = useState(0)
+  const [s0Fade, setS0Fade] = useState(false)
+
+  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
+  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
+  const [s1Fade, setS1Fade] = useState(false)
+
+  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
+  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
+  const [s2Fade, setS2Fade] = useState(false)
+
+  const pausedRef = useRef(false)
+  const cursorRef = useRef(NB_VISIBLE)
+  const turnRef   = useRef(0)
+  const timerRef  = useRef(null)
 
   const { bgLight, borderColor } = config
-  const cardSlot     = NB_CARD_W + CARD_GAP
-  const loopDistance = items.length * cardSlot
-  const trackItems   = shouldScroll ? [...items, ...items] : items
 
-  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: NB_SPEED, cardSlot })
+  useEffect(() => {
+    if (!shouldRotate) return
+    const interval = setInterval(() => {
+      if (pausedRef.current) return
+      const slot = turnRef.current % NB_VISIBLE
+      const idx  = cursorRef.current % items.length
+      cursorRef.current++
+      turnRef.current++
+
+      if (slot === 0) {
+        setS0Next(idx); setS0Fade(true)
+        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, NB_FADE_MS)
+      } else if (slot === 1) {
+        setS1Next(idx); setS1Fade(true)
+        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, NB_FADE_MS)
+      } else {
+        setS2Next(idx); setS2Fade(true)
+        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, NB_FADE_MS)
+      }
+    }, NB_CYCLE_MS)
+
+    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
+  }, [shouldRotate, items.length])
 
   const displayBlogTitle = blogTitle || '네이버 블로그'
 
   // ── 데스크탑 카드 ──
-  const renderCard = (item, i) => (
+  const renderCard = (item) => (
     <a
-      key={`nb-${item._id ?? i}-${i}`}
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-      style={{ width: `${NB_CARD_W}px` }}
+      className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 block"
     >
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2">
@@ -111,17 +148,35 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     </a>
   )
 
+  // 데스크탑 크로스페이드 슬롯
+  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+    <div key={key} className="relative" style={{ width: NB_CARD_W, flexShrink: 0, minHeight: NB_MIN_H }}>
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        opacity: isFading ? 1 : 0,
+        transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCard(items[nextIdx])}
+      </div>
+      <div style={{
+        position: 'relative', zIndex: 2,
+        opacity: isFading ? 0 : 1,
+        transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCard(items[curIdx])}
+      </div>
+    </div>
+  )
+
   if (items.length === 0) {
     return (
       <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
-        {/* 모바일 */}
         <div className="md:hidden pt-20 px-4 pb-6">
           <div className="mb-4"><SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} /></div>
           <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
             <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
           </div>
         </div>
-        {/* 데스크탑 */}
         <div className="hidden md:block">
           <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
           <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
@@ -143,12 +198,29 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
         <MobileCardSlider items={items} renderCard={renderMobileCard} />
       </div>
 
-      {/* ── 데스크탑 레이아웃 ── */}
+      {/* ── 데스크탑 레이아웃: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
-        <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
-          {trackItems.map(renderCard)}
-        </ConveyorWrap>
+        <div
+          className="flex pb-6"
+          style={{ gap: `${CARD_GAP}px` }}
+          onMouseEnter={() => { pausedRef.current = true  }}
+          onMouseLeave={() => { pausedRef.current = false }}
+        >
+          {shouldRotate ? (
+            <>
+              {renderSlot(s0Cur, s0Next, s0Fade, 'nb-0')}
+              {renderSlot(s1Cur, s1Next, s1Fade, 'nb-1')}
+              {renderSlot(s2Cur, s2Next, s2Fade, 'nb-2')}
+            </>
+          ) : (
+            items.map((item, i) => (
+              <div key={`nb-static-${i}`} style={{ width: NB_CARD_W, flexShrink: 0, minHeight: NB_MIN_H }}>
+                {renderCard(item)}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
     </div>

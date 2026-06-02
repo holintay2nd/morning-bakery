@@ -1,27 +1,64 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { parseCaption, formatRelativeDate } from './utils'
-import { useConveyorBelt } from '../../hooks/useConveyorBelt'
-import ConveyorWrap from './ConveyorWrap'
 import SectionHeader from './SectionHeader'
 import MobileCardSlider from './MobileCardSlider'
 
-const IG_CARD_W  = 360  // 3장: 3×360 + 2×16 = 1112px
-const IG_VISIBLE = 3
-const IG_SPEED   = 20   // px/s
+const IG_CARD_W   = 360   // 3장: 3×360 + 2×16 = 1112px
+const IG_CYCLE_MS = 5000
+const IG_FADE_MS  = 1200
+const IG_VISIBLE  = 3
+const IG_MIN_H    = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
 
 export default function InstagramSection({ items, username, profilePicture, tagline }) {
-  const shouldScroll = items.length > IG_VISIBLE
   const [avatarError, setAvatarError] = useState(false)
 
-  const { bgLight, borderColor, color } = config
-  const cardSlot     = IG_CARD_W + CARD_GAP
-  const loopDistance = items.length * cardSlot
-  const trackItems   = shouldScroll ? [...items, ...items] : items
+  const shouldRotate = items.length > IG_VISIBLE
 
-  const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: IG_SPEED, cardSlot })
+  const [s0Cur,  setS0Cur]  = useState(0)
+  const [s0Next, setS0Next] = useState(0)
+  const [s0Fade, setS0Fade] = useState(false)
+
+  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
+  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
+  const [s1Fade, setS1Fade] = useState(false)
+
+  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
+  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
+  const [s2Fade, setS2Fade] = useState(false)
+
+  const pausedRef = useRef(false)
+  const cursorRef = useRef(IG_VISIBLE)
+  const turnRef   = useRef(0)
+  const timerRef  = useRef(null)
+
+  const { bgLight, borderColor, color } = config
+
+  useEffect(() => {
+    if (!shouldRotate) return
+    const interval = setInterval(() => {
+      if (pausedRef.current) return
+      const slot = turnRef.current % IG_VISIBLE
+      const idx  = cursorRef.current % items.length
+      cursorRef.current++
+      turnRef.current++
+
+      if (slot === 0) {
+        setS0Next(idx); setS0Fade(true)
+        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, IG_FADE_MS)
+      } else if (slot === 1) {
+        setS1Next(idx); setS1Fade(true)
+        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, IG_FADE_MS)
+      } else {
+        setS2Next(idx); setS2Fade(true)
+        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, IG_FADE_MS)
+      }
+    }, IG_CYCLE_MS)
+
+    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
+  }, [shouldRotate, items.length])
 
   const showAvatar = !!(profilePicture && !avatarError)
 
@@ -40,18 +77,16 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     </div>
   )
 
-  // ── 데스크탑 카드 ──
-  const renderCard = (item, i) => {
+  // 공통 카드 렌더 (desktop + mobile 동일 내용)
+  const renderCardInner = (item) => {
     const { title, body } = parseCaption(item.title)
     const timeAgo = formatRelativeDate(item.timestamp)
     return (
       <a
-        key={`ig-${item._id ?? i}-${i}`}
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
-        style={{ width: `${IG_CARD_W}px` }}
+        className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 block"
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
           <img src={item.thumbnail} alt={title || '인스타그램 게시물'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
@@ -70,48 +105,44 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     )
   }
 
-  // ── 모바일 카드 (전체폭, 고정 width 없음) ──
-  const renderMobileCard = (item, i) => {
-    const { title, body } = parseCaption(item.title)
-    const timeAgo = formatRelativeDate(item.timestamp)
-    return (
-      <a
-        key={`ig-mob-${item._id ?? i}`}
-        href={item.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block rounded-2xl overflow-hidden shadow-md"
-      >
-        <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
-          <img src={item.thumbnail} alt={title || '인스타그램 게시물'} className="w-full h-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
-            <div className="flex items-center gap-2">
-              {avatarEl}
-              <span className="text-[12px] text-white/80 font-medium truncate">@{username || 'morningbakery_seoul'}</span>
-              {timeAgo && <span className="text-[12px] text-white/50 flex-shrink-0">· {timeAgo}</span>}
-            </div>
-            {title && <p className="text-[15px] font-bold text-white line-clamp-1">{title}</p>}
-            {body  && <p className="text-[12px] text-white/70 line-clamp-2">{body}</p>}
-          </div>
-        </div>
-      </a>
-    )
-  }
+  // 모바일 카드 (key 포함 래퍼)
+  const renderMobileCard = (item, i) => (
+    <div key={`ig-mob-${item._id ?? i}`} className="rounded-2xl overflow-hidden shadow-md">
+      {renderCardInner(item)}
+    </div>
+  )
+
+  // 데스크탑 크로스페이드 슬롯
+  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+    <div key={key} className="relative" style={{ width: IG_CARD_W, flexShrink: 0, minHeight: IG_MIN_H }}>
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        opacity: isFading ? 1 : 0,
+        transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCardInner(items[nextIdx])}
+      </div>
+      <div style={{
+        position: 'relative', zIndex: 2,
+        opacity: isFading ? 0 : 1,
+        transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none',
+      }}>
+        {renderCardInner(items[curIdx])}
+      </div>
+    </div>
+  )
 
   const profileUrl = username ? `https://www.instagram.com/${username}` : null
 
   if (items.length === 0) {
     return (
       <div id="sns-instagram" className="md:mb-14 scroll-mt-24">
-        {/* 모바일 */}
         <div className="md:hidden pt-20 px-4 pb-6">
           <div className="mb-4"><SectionHeader config={config} tagline={tagline} /></div>
           <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
             <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
           </div>
         </div>
-        {/* 데스크탑 */}
         <div className="hidden md:block">
           <SectionHeader config={config} tagline={tagline} />
           <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
@@ -133,12 +164,29 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         <MobileCardSlider items={items} renderCard={renderMobileCard} />
       </div>
 
-      {/* ── 데스크탑 레이아웃 ── */}
+      {/* ── 데스크탑 레이아웃: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
-        <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard} centered>
-          {trackItems.map(renderCard)}
-        </ConveyorWrap>
+        <div
+          className="flex pb-6"
+          style={{ gap: `${CARD_GAP}px` }}
+          onMouseEnter={() => { pausedRef.current = true  }}
+          onMouseLeave={() => { pausedRef.current = false }}
+        >
+          {shouldRotate ? (
+            <>
+              {renderSlot(s0Cur, s0Next, s0Fade, 'ig-0')}
+              {renderSlot(s1Cur, s1Next, s1Fade, 'ig-1')}
+              {renderSlot(s2Cur, s2Next, s2Fade, 'ig-2')}
+            </>
+          ) : (
+            items.map((item, i) => (
+              <div key={`ig-static-${i}`} style={{ width: IG_CARD_W, flexShrink: 0, minHeight: IG_MIN_H }}>
+                {renderCardInner(item)}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
     </div>

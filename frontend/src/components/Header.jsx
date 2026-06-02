@@ -24,9 +24,16 @@ export default function Header() {
   const [mobileSnsOpen, setMobileSnsOpen] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    // IntersectionObserver: 히어로 섹션이 뷰포트에서 사라지면 scrolled=true
+    // window.scroll 대신 사용 → 모바일 snap 컨테이너 스크롤에서도 동작
+    const hero = document.getElementById('home')
+    if (!hero) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      { threshold: 0.1 },
+    )
+    observer.observe(hero)
+    return () => observer.disconnect()
   }, [])
 
   const scrollTo = (href) => {
