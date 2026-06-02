@@ -2,19 +2,24 @@ import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatRelativeDate, formatViewCount } from './utils'
 import SectionHeader from './SectionHeader'
-import MobileCardSlider from './MobileCardSlider'
+import MobileSnsSlider from './MobileSnsSlider'
 
 // 2장: 2×568 + 16 = 1152px (max-w-6xl)
 const YT_CARD_W   = 568
-const YT_CYCLE_MS = 5000  // 교체 주기 (ms)
-const YT_FADE_MS  = 1200  // 크로스페이드 시간 (ms)
+const YT_CYCLE_MS = 5000
+const YT_FADE_MS  = 1200
 
 const config = SNS_CONFIG.find(c => c.key === 'youtube')
+
+const YtBigIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-14 h-14 fill-red-500" aria-hidden="true">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+)
 
 export default function YoutubeSection({ items, channelName, channelAvatar, channelUrl, tagline }) {
   const [avatarError, setAvatarError] = useState(false)
 
-  // 크로스페이드: cur = 현재 카드, next = 교체 대상, fade = 전환 중
   const [leftCur,  setLeftCur]  = useState(0)
   const [leftNext, setLeftNext] = useState(0)
   const [leftFade, setLeftFade] = useState(false)
@@ -51,31 +56,10 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     return () => { clearInterval(cycle); clearTimeout(fadeTimerRef.current) }
   }, [items.length])
 
-  if (items.length === 0) {
-    return (
-      <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
-        {/* 모바일 */}
-        <div className="md:hidden pt-20 px-4 pb-6">
-          <div className="mb-4"><SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} /></div>
-          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-            <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
-          </div>
-        </div>
-        {/* 데스크탑 */}
-        <div className="hidden md:block">
-          <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
-          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-            <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   const showAvatar     = !!(channelAvatar && !avatarError)
   const displayChannel = channelName || 'YouTube'
 
-  // 공통 카드 내용 (desktop/mobile 공유)
+  // 공통 카드 내용
   const renderCardInner = (item) => (
     <a
       href={item.url}
@@ -116,7 +100,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     </a>
   )
 
-  // 모바일 카드 (전체폭 단일 카드)
+  // 모바일 카드
   const renderMobileCard = (item, i) => (
     <div key={`yt-mob-${item._id ?? i}`}>
       {renderCardInner(item)}
@@ -129,29 +113,44 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
         {renderCardInner(items[nextIdx])}
       </div>
-      <div style={{
-        position: 'relative',
-        zIndex: 2,
-        opacity: isFading ? 0 : 1,
-        transition: isFading ? `opacity ${YT_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${YT_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCardInner(items[curIdx])}
       </div>
     </div>
   )
 
+  if (items.length === 0) {
+    return (
+      <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
+        <div className="md:hidden">
+          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={channelUrl} iconEl={<YtBigIcon />} name={displayChannel} tagline={tagline} />
+        </div>
+        <div className="hidden md:block">
+          <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
+          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+            <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
 
-      {/* ── 모바일 레이아웃 ── */}
-      <div className="md:hidden pt-20 px-4 pb-6">
-        <div className="mb-4">
-          <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
-        </div>
-        <MobileCardSlider items={items} renderCard={renderMobileCard} />
+      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
+      <div className="md:hidden">
+        <MobileSnsSlider
+          items={items}
+          renderCard={renderMobileCard}
+          profileUrl={channelUrl}
+          iconEl={<YtBigIcon />}
+          name={displayChannel}
+          tagline={tagline}
+        />
       </div>
 
-      {/* ── 데스크탑 레이아웃 ── */}
+      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
         <div

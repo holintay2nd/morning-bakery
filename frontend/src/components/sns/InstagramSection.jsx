@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { parseCaption, formatRelativeDate } from './utils'
 import SectionHeader from './SectionHeader'
-import MobileCardSlider from './MobileCardSlider'
+import MobileSnsSlider from './MobileSnsSlider'
 
 const IG_CARD_W   = 360   // 3장: 3×360 + 2×16 = 1112px
 const IG_CYCLE_MS = 5000
@@ -11,6 +11,14 @@ const IG_VISIBLE  = 3
 const IG_MIN_H    = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
+
+const IgBigIcon = () => (
+  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center p-3">
+    <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+    </svg>
+  </div>
+)
 
 export default function InstagramSection({ items, username, profilePicture, tagline }) {
   const [avatarError, setAvatarError] = useState(false)
@@ -77,7 +85,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     </div>
   )
 
-  // 공통 카드 렌더 (desktop + mobile 동일 내용)
+  // 공통 카드 내용
   const renderCardInner = (item) => {
     const { title, body } = parseCaption(item.title)
     const timeAgo = formatRelativeDate(item.timestamp)
@@ -105,7 +113,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     )
   }
 
-  // 모바일 카드 (key 포함 래퍼)
+  // 모바일 카드
   const renderMobileCard = (item, i) => (
     <div key={`ig-mob-${item._id ?? i}`} className="rounded-2xl overflow-hidden shadow-md">
       {renderCardInner(item)}
@@ -115,18 +123,10 @@ export default function InstagramSection({ items, username, profilePicture, tagl
   // 데스크탑 크로스페이드 슬롯
   const renderSlot = (curIdx, nextIdx, isFading, key) => (
     <div key={key} className="relative" style={{ width: IG_CARD_W, flexShrink: 0, minHeight: IG_MIN_H }}>
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        opacity: isFading ? 1 : 0,
-        transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCardInner(items[nextIdx])}
       </div>
-      <div style={{
-        position: 'relative', zIndex: 2,
-        opacity: isFading ? 0 : 1,
-        transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCardInner(items[curIdx])}
       </div>
     </div>
@@ -137,11 +137,8 @@ export default function InstagramSection({ items, username, profilePicture, tagl
   if (items.length === 0) {
     return (
       <div id="sns-instagram" className="md:mb-14 scroll-mt-24">
-        <div className="md:hidden pt-20 px-4 pb-6">
-          <div className="mb-4"><SectionHeader config={config} tagline={tagline} /></div>
-          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-            <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
-          </div>
+        <div className="md:hidden">
+          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={profileUrl} iconEl={<IgBigIcon />} name="인스타그램" tagline={tagline} />
         </div>
         <div className="hidden md:block">
           <SectionHeader config={config} tagline={tagline} />
@@ -156,15 +153,19 @@ export default function InstagramSection({ items, username, profilePicture, tagl
   return (
     <div id="sns-instagram" className="md:mb-14 scroll-mt-24">
 
-      {/* ── 모바일 레이아웃 ── */}
-      <div className="md:hidden pt-20 px-4 pb-6">
-        <div className="mb-4">
-          <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
-        </div>
-        <MobileCardSlider items={items} renderCard={renderMobileCard} />
+      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
+      <div className="md:hidden">
+        <MobileSnsSlider
+          items={items}
+          renderCard={renderMobileCard}
+          profileUrl={profileUrl}
+          iconEl={<IgBigIcon />}
+          name="인스타그램"
+          tagline={tagline}
+        />
       </div>
 
-      {/* ── 데스크탑 레이아웃: 크로스페이드 자동 전환 ── */}
+      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
         <div

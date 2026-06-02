@@ -2,32 +2,39 @@ import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatBlogDate } from './utils'
 import SectionHeader from './SectionHeader'
-import MobileCardSlider from './MobileCardSlider'
+import MobileSnsSlider from './MobileSnsSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
 const NB_CARD_W   = (1152 - 2 * CARD_GAP) / 3
 const NB_CYCLE_MS = 5000
 const NB_FADE_MS  = 1200
 const NB_VISIBLE  = 3
-// 카드 높이: p-3.5(14) + 헤더(40) + 제목+요약(70) + px-3.5 pb-3.5(14) + 정방형 썸네일
 const NB_THUMB    = Math.round(NB_CARD_W - 28)
 const NB_MIN_H    = 14 + 40 + 70 + 14 + NB_THUMB + 14
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
-function NaverBlogIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15" fill="#03C75A" aria-hidden="true">
-      <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
-    </svg>
-  )
-}
+const NbBigIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-14 h-14 fill-[#03C75A]" aria-hidden="true">
+    <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
+  </svg>
+)
 
 function DefaultAvatar() {
   return (
     <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-gray-400" aria-hidden="true">
         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+      </svg>
+    </div>
+  )
+}
+
+function NaverBlogPlaceholder() {
+  return (
+    <div className="w-full aspect-square rounded-xl bg-green-50 flex items-center justify-center">
+      <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15 fill-[#03C75A]" aria-hidden="true">
+        <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
       </svg>
     </div>
   )
@@ -81,7 +88,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
 
   const displayBlogTitle = blogTitle || '네이버 블로그'
 
-  // ── 데스크탑 카드 ──
+  // 데스크탑 카드
   const renderCard = (item) => (
     <a
       href={item.url}
@@ -108,15 +115,13 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
             <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
           </div>
         ) : (
-          <div className="aspect-square rounded-xl bg-green-50 flex items-center justify-center">
-            <NaverBlogIcon />
-          </div>
+          <NaverBlogPlaceholder />
         )}
       </div>
     </a>
   )
 
-  // ── 모바일 카드 (전체폭, 16:9 썸네일) ──
+  // 모바일 카드 (16:9 썸네일)
   const renderMobileCard = (item, i) => (
     <a
       key={`nb-mob-${item._id ?? i}`}
@@ -131,7 +136,9 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
         </div>
       ) : (
         <div className="aspect-video bg-green-50 flex items-center justify-center">
-          <NaverBlogIcon />
+          <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15 fill-[#03C75A]" aria-hidden="true">
+            <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
+          </svg>
         </div>
       )}
       <div className="p-4">
@@ -151,18 +158,10 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
   // 데스크탑 크로스페이드 슬롯
   const renderSlot = (curIdx, nextIdx, isFading, key) => (
     <div key={key} className="relative" style={{ width: NB_CARD_W, flexShrink: 0, minHeight: NB_MIN_H }}>
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        opacity: isFading ? 1 : 0,
-        transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCard(items[nextIdx])}
       </div>
-      <div style={{
-        position: 'relative', zIndex: 2,
-        opacity: isFading ? 0 : 1,
-        transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCard(items[curIdx])}
       </div>
     </div>
@@ -171,11 +170,8 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
   if (items.length === 0) {
     return (
       <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
-        <div className="md:hidden pt-20 px-4 pb-6">
-          <div className="mb-4"><SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} /></div>
-          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-            <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
-          </div>
+        <div className="md:hidden">
+          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={blogUrl} iconEl={<NbBigIcon />} name={displayBlogTitle} tagline={tagline} />
         </div>
         <div className="hidden md:block">
           <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
@@ -190,15 +186,19 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
   return (
     <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
 
-      {/* ── 모바일 레이아웃 ── */}
-      <div className="md:hidden pt-20 px-4 pb-6">
-        <div className="mb-4">
-          <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
-        </div>
-        <MobileCardSlider items={items} renderCard={renderMobileCard} />
+      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
+      <div className="md:hidden">
+        <MobileSnsSlider
+          items={items}
+          renderCard={renderMobileCard}
+          profileUrl={blogUrl}
+          iconEl={<NbBigIcon />}
+          name={displayBlogTitle}
+          tagline={tagline}
+        />
       </div>
 
-      {/* ── 데스크탑 레이아웃: 크로스페이드 자동 전환 ── */}
+      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
         <div

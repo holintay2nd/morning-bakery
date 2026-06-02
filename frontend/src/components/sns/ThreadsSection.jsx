@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatRelativeDate } from './utils'
 import SectionHeader from './SectionHeader'
-import MobileCardSlider from './MobileCardSlider'
+import MobileSnsSlider from './MobileSnsSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
 const TH_CARD_W   = (1152 - 2 * CARD_GAP) / 3
@@ -15,8 +15,8 @@ const GRID_COLS = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
 
 const config = SNS_CONFIG.find(c => c.key === 'threads')
 
-const ThreadsIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+const ThBigIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-14 h-14 fill-white" aria-hidden="true">
     <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z"/>
   </svg>
 )
@@ -88,7 +88,9 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
             <img src={profilePicture} alt={displayUsername} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
           ) : (
             <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0 p-1.5">
-              <ThreadsIcon />
+              <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+                <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z"/>
+              </svg>
             </div>
           )}
           <span className="text-sm font-bold text-gray-900 truncate">{displayUsername}</span>
@@ -110,7 +112,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
     )
   }
 
-  // 모바일 카드 (전체폭 — renderCard와 동일 내용이나 key 포함)
+  // 모바일 카드 (key 포함)
   const renderMobileCard = (item, i) => (
     <div key={`th-mob-${item._id ?? i}`}>
       {renderCard(item)}
@@ -120,35 +122,23 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
   // 데스크탑 크로스페이드 슬롯
   const renderSlot = (curIdx, nextIdx, isFading, key) => (
     <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0, minHeight: TH_MIN_CARD_H }}>
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        opacity: isFading ? 1 : 0,
-        transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCard(items[nextIdx])}
       </div>
-      <div style={{
-        position: 'relative', zIndex: 2,
-        opacity: isFading ? 0 : 1,
-        transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none',
-      }}>
+      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none' }}>
         {renderCard(items[curIdx])}
       </div>
     </div>
   )
 
+  const profileUrl = username ? `https://www.threads.net/@${username}` : null
+
   if (items.length === 0) {
-    const profileUrl = username ? `https://www.threads.net/@${username}` : null
     return (
       <div id="sns-threads" className="md:mb-14 scroll-mt-24">
-        {/* 모바일 */}
-        <div className="md:hidden pt-20 px-4 pb-6">
-          <div className="mb-4"><SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} /></div>
-          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-            <p className="text-brown-300 text-sm">등록된 게시물이 없습니다.</p>
-          </div>
+        <div className="md:hidden">
+          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={profileUrl} iconEl={<ThBigIcon />} name="Threads" tagline={tagline} bg="bg-black" />
         </div>
-        {/* 데스크탑 */}
         <div className="hidden md:block">
           <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
           <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
@@ -159,20 +149,23 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
     )
   }
 
-  const profileUrl = username ? `https://www.threads.net/@${username}` : null
-
   return (
     <div id="sns-threads" className="md:mb-14 scroll-mt-24">
 
-      {/* ── 모바일 레이아웃 ── */}
-      <div className="md:hidden pt-20 px-4 pb-6">
-        <div className="mb-4">
-          <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
-        </div>
-        <MobileCardSlider items={items} renderCard={renderMobileCard} />
+      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
+      <div className="md:hidden">
+        <MobileSnsSlider
+          items={items}
+          renderCard={renderMobileCard}
+          profileUrl={profileUrl}
+          iconEl={<ThBigIcon />}
+          name="Threads"
+          tagline={tagline}
+          bg="bg-black"
+        />
       </div>
 
-      {/* ── 데스크탑 레이아웃 ── */}
+      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader
           config={config}

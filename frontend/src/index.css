@@ -95,6 +95,15 @@
   border-radius: inherit;
 }
 
+/* ── 가로 스크롤 스크롤바 숨김 ── */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── 모바일 전체화면 섹션 스냅 ── */
 @media (max-width: 767px) {
   .mobile-snap-container {
