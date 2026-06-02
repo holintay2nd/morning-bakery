@@ -65,49 +65,82 @@ export default function SnsCarousel() {
     }).finally(() => setLoading(false))
   }, [])
 
-  return (
-    <section id="sns" className="py-24 px-8 bg-white scroll-mt-24">
-      <div className="max-w-6xl mx-auto">
-        <p className="section-subtitle">SNS</p>
-        <h2 className="section-title mb-3">SNS에서 만나요</h2>
-        <p className="text-center text-brown-400 text-sm mb-14">
-          인스타그램, 유튜브, 네이버 블로그 등 다양한 채널에서 모닝베이커리의 소식을 전해드립니다.
-        </p>
+  // 로딩 / 에러 공통 래퍼
+  const statusContent = loading ? (
+    <div className="py-20 px-8">
+      <div className="max-w-6xl mx-auto"><SnsSkeleton /></div>
+    </div>
+  ) : !snsData ? (
+    <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
+  ) : null
 
-        {loading ? (
-          <SnsSkeleton />
-        ) : !snsData ? (
-          <div className="py-20 text-center text-brown-400 text-sm">SNS 정보를 불러올 수 없습니다.</div>
-        ) : (
-          <div>
-            <InstagramSection
-              items={snsData.instagram ?? []}
-              username={igUsername}
-              profilePicture={igProfilePicture}
-              tagline={taglines.instagram}
-            />
-            <YoutubeSection
-              items={snsData.youtube ?? []}
-              channelName={ytChannelName}
-              channelAvatar={ytChannelAvatar}
-              channelUrl={ytChannelUrl}
-              tagline={taglines.youtube}
-            />
-            <NaverBlogSection
-              items={snsData.naverBlog ?? []}
-              blogTitle={nbBlogTitle}
-              blogUrl={nbBlogUrl}
-              tagline={taglines.naverBlog}
-            />
-            <ThreadsSection
-              items={snsData.threads ?? []}
-              username={thUsername}
-              profilePicture={thProfilePicture}
-              tagline={taglines.threads}
-            />
-          </div>
-        )}
+  return (
+    <section id="sns" className="bg-white scroll-mt-24">
+
+      {/* ── 데스크탑 헤더 (모바일 숨김) ── */}
+      <div className="hidden md:block pt-24 pb-10 px-8">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="section-subtitle">SNS</p>
+          <h2 className="section-title mb-3">SNS에서 만나요</h2>
+          <p className="text-brown-400 text-sm">
+            인스타그램, 유튜브, 네이버 블로그 등 다양한 채널에서 모닝베이커리의 소식을 전해드립니다.
+          </p>
+        </div>
       </div>
+
+      {statusContent ?? (
+        <>
+          {/*
+           * 각 플랫폼을 mobile-snap-section 으로 감싸 모바일에서 독립 전체화면 섹션으로 만듦.
+           * 데스크탑에서는 mobile-snap-section 클래스가 미디어쿼리 밖이라 일반 block 으로만 동작.
+           * 내부 md:max-w-6xl md:mx-auto md:px-8 은 데스크탑 레이아웃 컨테이너.
+           */}
+          <div className="mobile-snap-section">
+            <div className="md:max-w-6xl md:mx-auto md:px-8">
+              <InstagramSection
+                items={snsData.instagram ?? []}
+                username={igUsername}
+                profilePicture={igProfilePicture}
+                tagline={taglines.instagram}
+              />
+            </div>
+          </div>
+
+          <div className="mobile-snap-section">
+            <div className="md:max-w-6xl md:mx-auto md:px-8">
+              <YoutubeSection
+                items={snsData.youtube ?? []}
+                channelName={ytChannelName}
+                channelAvatar={ytChannelAvatar}
+                channelUrl={ytChannelUrl}
+                tagline={taglines.youtube}
+              />
+            </div>
+          </div>
+
+          <div className="mobile-snap-section">
+            <div className="md:max-w-6xl md:mx-auto md:px-8">
+              <NaverBlogSection
+                items={snsData.naverBlog ?? []}
+                blogTitle={nbBlogTitle}
+                blogUrl={nbBlogUrl}
+                tagline={taglines.naverBlog}
+              />
+            </div>
+          </div>
+
+          <div className="mobile-snap-section">
+            <div className="md:max-w-6xl md:mx-auto md:px-8 md:pb-16">
+              <ThreadsSection
+                items={snsData.threads ?? []}
+                username={thUsername}
+                profilePicture={thProfilePicture}
+                tagline={taglines.threads}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </section>
   )
 }

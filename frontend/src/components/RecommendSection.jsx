@@ -67,7 +67,7 @@ export default function RecommendSection() {
   const [active, setActive] = useState(0)
 
   return (
-    <section id="recommend" className="py-24 px-5 bg-brown-900 scroll-mt-24">
+    <section id="recommend" className="mobile-snap-section py-24 px-5 bg-brown-900 scroll-mt-24 overflow-y-auto">
       <div className="max-w-5xl mx-auto">
 
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">Visit Guide</p>

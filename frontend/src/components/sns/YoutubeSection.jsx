@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { SNS_CONFIG, CARD_GAP } from './config'
 import { formatRelativeDate, formatViewCount } from './utils'
 import SectionHeader from './SectionHeader'
+import MobileCardSlider from './MobileCardSlider'
 
 // 2장: 2×568 + 16 = 1152px (max-w-6xl)
 const YT_CARD_W   = 568
@@ -24,7 +25,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
 
   const pausedRef    = useRef(false)
   const cursorRef    = useRef(Math.min(2, items.length))
-  const turnRef      = useRef(0) // 0 = 왼쪽, 1 = 오른쪽
+  const turnRef      = useRef(0)
   const fadeTimerRef = useRef(null)
 
   const { bgLight, borderColor, color } = config
@@ -52,10 +53,20 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
 
   if (items.length === 0) {
     return (
-      <div className="mb-14">
-        <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
-        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-          <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
+      <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
+        {/* 모바일 */}
+        <div className="md:hidden pt-20 px-4 pb-6">
+          <div className="mb-4"><SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} /></div>
+          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+            <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
+          </div>
+        </div>
+        {/* 데스크탑 */}
+        <div className="hidden md:block">
+          <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
+          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+            <p className="text-brown-300 text-sm">등록된 영상이 없습니다.</p>
+          </div>
         </div>
       </div>
     )
@@ -64,6 +75,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
   const showAvatar     = !!(channelAvatar && !avatarError)
   const displayChannel = channelName || 'YouTube'
 
+  // 공통 카드 내용 (desktop/mobile 공유)
   const renderCardInner = (item) => (
     <a
       href={item.url}
@@ -71,7 +83,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       rel="noopener noreferrer"
       className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 block rounded-2xl"
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-2xl">
+      <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-t-2xl">
         <img
           src={item.thumbnail}
           alt={item.title}
@@ -104,10 +116,14 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     </a>
   )
 
-  // 크로스페이드 원리:
-  // · 뒤(next) → absolute, opacity 1 고정 — 목적지 카드가 항상 완전히 준비돼 있음
-  // · 앞(cur)  → isFading 시 1→0 페이드 아웃 → 뒤를 드러냄, 완료 후 즉시 1 복원
-  // → 두 레이어가 동시에 반투명해지는 구간 없음 = 흰 화면 노출 없음
+  // 모바일 카드 (전체폭 단일 카드)
+  const renderMobileCard = (item, i) => (
+    <div key={`yt-mob-${item._id ?? i}`}>
+      {renderCardInner(item)}
+    </div>
+  )
+
+  // 데스크탑 크로스페이드 슬롯
   const renderSlot = (curIdx, nextIdx, isFading, slotKey) => (
     <div key={slotKey} className="relative" style={{ width: YT_CARD_W, flexShrink: 0 }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
@@ -125,17 +141,30 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
   )
 
   return (
-    <div id="sns-youtube" className="mb-14 scroll-mt-24">
-      <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
-      <div
-        className="flex pb-6"
-        style={{ gap: `${CARD_GAP}px` }}
-        onMouseEnter={() => { pausedRef.current = true  }}
-        onMouseLeave={() => { pausedRef.current = false }}
-      >
-        {renderSlot(leftCur, leftNext, leftFade, 'yt-left')}
-        {items.length > 1 && renderSlot(rightCur, rightNext, rightFade, 'yt-right')}
+    <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
+
+      {/* ── 모바일 레이아웃 ── */}
+      <div className="md:hidden pt-20 px-4 pb-6">
+        <div className="mb-4">
+          <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
+        </div>
+        <MobileCardSlider items={items} renderCard={renderMobileCard} />
       </div>
+
+      {/* ── 데스크탑 레이아웃 ── */}
+      <div className="hidden md:block">
+        <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
+        <div
+          className="flex pb-6"
+          style={{ gap: `${CARD_GAP}px` }}
+          onMouseEnter={() => { pausedRef.current = true  }}
+          onMouseLeave={() => { pausedRef.current = false }}
+        >
+          {renderSlot(leftCur, leftNext, leftFade, 'yt-left')}
+          {items.length > 1 && renderSlot(rightCur, rightNext, rightFade, 'yt-right')}
+        </div>
+      </div>
+
     </div>
   )
 }

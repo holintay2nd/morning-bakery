@@ -19,21 +19,32 @@ export default function ConveyorWrap({
 
   return (
     <div className="relative">
+      {/* 양 사이드 오버레이 화살표 */}
       {shouldScroll && (
         <>
           <button
             onClick={() => scrollCard(-1)}
             aria-label="이전"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-20 text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-20
+                       w-9 h-9 flex items-center justify-center
+                       bg-white/80 hover:bg-white backdrop-blur-sm
+                       text-brown-500 hover:text-brown-900
+                       rounded-full shadow-md border border-gray-100
+                       transition-all duration-200"
           >
-            <ChevronLeft size={28} strokeWidth={1.5} />
+            <ChevronLeft size={18} strokeWidth={2} />
           </button>
           <button
             onClick={() => scrollCard(1)}
             aria-label="다음"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-20 text-gray-300 hover:text-gray-600 transition-colors duration-200"
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-20
+                       w-9 h-9 flex items-center justify-center
+                       bg-white/80 hover:bg-white backdrop-blur-sm
+                       text-brown-500 hover:text-brown-900
+                       rounded-full shadow-md border border-gray-100
+                       transition-all duration-200"
           >
-            <ChevronRight size={28} strokeWidth={1.5} />
+            <ChevronRight size={18} strokeWidth={2} />
           </button>
         </>
       )}

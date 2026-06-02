@@ -27,7 +27,7 @@ export default function VisitSection() {
   }
 
   return (
-    <section id="visit" className="py-24 px-5 bg-brown-900">
+    <section id="visit" className="mobile-snap-section py-24 px-5 bg-brown-900 overflow-y-auto">
       <div className="max-w-6xl mx-auto">
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">Visit</p>
         <h2 className="font-sans font-bold text-3xl md:text-4xl text-cream-50 text-center mb-14">매장 정보</h2>

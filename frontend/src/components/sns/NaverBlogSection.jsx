@@ -3,6 +3,7 @@ import { formatBlogDate } from './utils'
 import { useConveyorBelt } from '../../hooks/useConveyorBelt'
 import ConveyorWrap from './ConveyorWrap'
 import SectionHeader from './SectionHeader'
+import MobileCardSlider from './MobileCardSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
 const NB_CARD_W  = (1152 - 2 * CARD_GAP) / 3
@@ -11,7 +12,6 @@ const NB_SPEED   = 20 // px/s
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
-// 빈 썸네일 자리에 표시되는 네이버 로고 플레이스홀더
 function NaverBlogIcon() {
   return (
     <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15" fill="#03C75A" aria-hidden="true">
@@ -20,7 +20,6 @@ function NaverBlogIcon() {
   )
 }
 
-// 프로필 이미지 없을 때 기본 사람 아바타
 function DefaultAvatar() {
   return (
     <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -41,19 +40,9 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
 
   const { trackRef, pausedRef, scrollCard } = useConveyorBelt({ shouldScroll, loopDistance, speed: NB_SPEED, cardSlot })
 
-  if (items.length === 0) {
-    return (
-      <div className="mb-14">
-        <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
-        <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
-          <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
-        </div>
-      </div>
-    )
-  }
-
   const displayBlogTitle = blogTitle || '네이버 블로그'
 
+  // ── 데스크탑 카드 ──
   const renderCard = (item, i) => (
     <a
       key={`nb-${item._id ?? i}-${i}`}
@@ -63,7 +52,6 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex-shrink-0 block"
       style={{ width: `${NB_CARD_W}px` }}
     >
-      {/* 텍스트 섹션 */}
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -77,33 +65,92 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
         <p className="text-sm font-bold text-gray-900 line-clamp-1 mb-1.5 leading-snug">{item.title}</p>
         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">{item.summary || ''}</p>
       </div>
-
-      {/* 정방형 썸네일 */}
       <div className="px-3.5 pb-3.5">
         {item.thumbnail ? (
           <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
-            <img
-              src={item.thumbnail}
-              alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              loading="lazy"
-            />
+            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
           </div>
         ) : (
           <div className="aspect-square rounded-xl bg-green-50 flex items-center justify-center">
-            <NaverBlogIcon size="lg" />
+            <NaverBlogIcon />
           </div>
         )}
       </div>
     </a>
   )
 
+  // ── 모바일 카드 (전체폭, 16:9 썸네일) ──
+  const renderMobileCard = (item, i) => (
+    <a
+      key={`nb-mob-${item._id ?? i}`}
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden"
+    >
+      {item.thumbnail ? (
+        <div className="aspect-video overflow-hidden bg-gray-100">
+          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      ) : (
+        <div className="aspect-video bg-green-50 flex items-center justify-center">
+          <NaverBlogIcon />
+        </div>
+      )}
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <DefaultAvatar />
+            <span className="text-xs text-gray-600 font-medium">{displayBlogTitle}</span>
+          </div>
+          {item.timestamp && <span className="text-[11px] text-gray-400">{formatBlogDate(item.timestamp)}</span>}
+        </div>
+        <p className="text-base font-bold text-gray-900 mb-1.5 leading-snug line-clamp-2">{item.title}</p>
+        <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">{item.summary || ''}</p>
+      </div>
+    </a>
+  )
+
+  if (items.length === 0) {
+    return (
+      <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
+        {/* 모바일 */}
+        <div className="md:hidden pt-20 px-4 pb-6">
+          <div className="mb-4"><SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} /></div>
+          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+            <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
+          </div>
+        </div>
+        {/* 데스크탑 */}
+        <div className="hidden md:block">
+          <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
+          <div className={`${bgLight} border ${borderColor} rounded-2xl py-10 text-center`}>
+            <p className="text-brown-300 text-sm">등록된 포스트가 없습니다.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div id="sns-naverblog" className="mb-14 scroll-mt-24">
-      <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
-      <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
-        {trackItems.map(renderCard)}
-      </ConveyorWrap>
+    <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
+
+      {/* ── 모바일 레이아웃 ── */}
+      <div className="md:hidden pt-20 px-4 pb-6">
+        <div className="mb-4">
+          <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
+        </div>
+        <MobileCardSlider items={items} renderCard={renderMobileCard} />
+      </div>
+
+      {/* ── 데스크탑 레이아웃 ── */}
+      <div className="hidden md:block">
+        <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
+        <ConveyorWrap shouldScroll={shouldScroll} trackRef={trackRef} pausedRef={pausedRef} scrollCard={scrollCard}>
+          {trackItems.map(renderCard)}
+        </ConveyorWrap>
+      </div>
+
     </div>
   )
 }

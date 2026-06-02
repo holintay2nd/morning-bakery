@@ -13,9 +13,13 @@ import PrivateRoute from './admin/PrivateRoute'
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="bg-cream-50">
       <Header />
-      <main>
+      {/*
+       * 모바일: mobile-snap-container → 100svh 스크롤 컨테이너 + y 스냅
+       * 데스크탑: 클래스 미적용 → 기존 자연스러운 페이지 스크롤
+       */}
+      <main className="mobile-snap-container min-h-screen">
         <Hero />
         <About />
         <RecommendSection />
@@ -23,7 +27,10 @@ function HomePage() {
         <VisitSection />
         <ContactSection />
       </main>
-      <Footer />
+      {/* Footer: 데스크탑에서만 표시 (모바일은 snap 컨테이너 밖에 있어 노출 안 됨) */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   )
 }

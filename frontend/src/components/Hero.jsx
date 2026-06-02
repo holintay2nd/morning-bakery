@@ -68,7 +68,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
+      className="mobile-snap-section relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
     >
       {/* 배경 이미지 */}
       <div className="absolute inset-0">
