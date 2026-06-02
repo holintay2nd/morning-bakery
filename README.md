@@ -1,6 +1,6 @@
 # 🥐 Morning Bakery
 
-> 모닝베이커리 브랜드 홈페이지 — 메뉴 소개, SNS 피드 자동 연동, 매장 안내
+> 모닝베이커리 브랜드 홈페이지 — Brand Hub 개념 적용: 고객의 방문 결정을 돕는 온라인 공간
 
 ## 🌐 URL
 
@@ -29,8 +29,9 @@
 |--|--|
 | HOME | `#home` |
 | MENU | `#about` |
+| GUIDE | `#recommend` — 방문 목적별 추천 |
 | SNS ▾ | `#sns` (드롭다운: instagram / youtube / naverblog / threads) |
-| VISIT | `#visit` — 구글지도·운영시간·주차·공지 |
+| VISIT | `#visit` — 구글지도·운영시간·주차·공지·이용 가이드 |
 | CONTACT | `#contact` — 전화·카카오채널·이메일 |
 
 ---
@@ -62,20 +63,49 @@
 |--|--|
 | `App.jsx` | 라우팅 (홈 / 어드민 로그인 / 어드민 대시보드) |
 | `api.js` | Axios 인스턴스 + JWT 인터셉터 |
-| `components/Header.jsx` | 네비게이션 (HOME · MENU · SNS · VISIT · CONTACT) |
-| `components/Footer.jsx` | 하단 정보 (주소·연락처·사이트맵) |
-| `components/Hero.jsx` | 히어로 섹션, SNS 아이콘 (클릭 시 해당 섹션으로 스크롤) |
+| `index.css` | Tailwind + 커스텀 유틸 (mobile-snap-container 등) |
+| `components/Header.jsx` | 네비게이션 (HOME · MENU · GUIDE · SNS · VISIT · CONTACT) |
+| `components/Footer.jsx` | 하단 정보 (주소·연락처·사이트맵) — 데스크탑 전용 |
+| `components/Hero.jsx` | 히어로 섹션, CTA (카페 안내 / 이럴 때 추천해요) |
 | `components/About.jsx` | MENU 섹션 — 시그니처·인기·신메뉴 카드 |
-| `components/SnsCarousel.jsx` | SNS 피드 오케스트레이터 |
-| `components/VisitSection.jsx` | VISIT 섹션 — 구글지도·위치·운영시간·주차·공지 |
+| `components/RecommendSection.jsx` | GUIDE 섹션 — 방문 목적별 맞춤 추천 카드 (5종) |
+| `components/SnsCarousel.jsx` | SNS 피드 오케스트레이터 (모바일: 플랫폼별 독립 스냅 섹션) |
+| `components/VisitSection.jsx` | VISIT 섹션 — 구글지도·위치·운영시간·주차·이용 가이드 |
 | `components/ContactSection.jsx` | CONTACT 섹션 — 전화·카카오채널·이메일 |
-| `components/sns/InstagramSection.jsx` | IG 카드 컨베이어 (`id="sns-instagram"`) |
-| `components/sns/YoutubeSection.jsx` | YT 카드 크로스페이드 (`id="sns-youtube"`) |
-| `components/sns/NaverBlogSection.jsx` | 블로그 카드 컨베이어 (`id="sns-naverblog"`) |
-| `components/sns/ThreadsSection.jsx` | 스레드 카드 크로스페이드 (`id="sns-threads"`) |
-| `hooks/useConveyorBelt.js` | 컨베이어 RAF 스크롤 훅 (인스타·블로그 공유) |
+| `components/sns/InstagramSection.jsx` | IG 카드 컨베이어 (데스크탑) / 페이드 슬라이더 (모바일) |
+| `components/sns/YoutubeSection.jsx` | YT 크로스페이드 (데스크탑) / 페이드 슬라이더 (모바일) |
+| `components/sns/NaverBlogSection.jsx` | 블로그 카드 컨베이어 (데스크탑) / 페이드 슬라이더 (모바일) |
+| `components/sns/ThreadsSection.jsx` | 스레드 크로스페이드 (데스크탑) / 페이드 슬라이더 (모바일) |
+| `components/sns/MobileCardSlider.jsx` | 모바일 전용 페이드 슬라이더 (화살표 + 인디케이터) |
+| `components/sns/ConveyorWrap.jsx` | 컨베이어 래퍼 (오버레이 화살표 포함) |
+| `hooks/useConveyorBelt.js` | 컨베이어 RAF 스크롤 훅 |
 | `admin/AdminDashboard.jsx` | 어드민 대시보드 |
 | `admin/SnsManager.jsx` | SNS 관리 — 태그라인·유튜브 채널ID·API키 설정 |
+
+---
+
+## 📱 모바일 UX
+
+### 전체화면 섹션 스냅
+
+모바일(< 768px)에서는 `scroll-snap-type: y mandatory` 기반의 전체화면 스냅 스크롤 적용.
+
+```
+HOME → MENU → GUIDE → Instagram → YouTube → NaverBlog → Threads → VISIT → CONTACT
+```
+
+- 각 섹션이 `100svh` 전체화면을 채우며 스와이프로 전환
+- `scroll-snap-stop: always` 로 섹션 건너뜀 방지
+- 데스크탑은 기존 일반 스크롤 유지
+
+### 모바일 SNS 카드
+
+| 항목 | 데스크탑 | 모바일 |
+|--|--|--|
+| 표시 방식 | 컨베이어 / 크로스페이드 (멀티 카드) | 1장씩 페이드 전환 |
+| 카드 너비 | 고정 px | 전체폭 (꽉 채움) |
+| 탐색 | 자동 스크롤 + 화살표 | 좌우 화살표 버튼 |
+| 인디케이터 | — | 점 (≤10개) / 카운터 (>10개) |
 
 ---
 
@@ -115,8 +145,8 @@ FRONTEND_URL=https://morningbakery.co.kr
 INSTAGRAM_ACCESS_TOKEN=...
 THREADS_ACCESS_TOKEN=...
 NAVER_BLOG_ID=morningbakery
-YOUTUBE_CHANNEL_ID=UCn8qYoiJBSbzKj6KBBv136Q   # DB 설정값 없을 때 폴백
-YOUTUBE_API_KEY=...                              # DB 설정값 없을 때 폴백
+YOUTUBE_CHANNEL_ID=UCn8qYoiJBSbzKj6KBBv136Q
+YOUTUBE_API_KEY=...
 ```
 
 ### 프론트엔드 (`frontend/.env`)
@@ -136,12 +166,8 @@ cd backend && git push heroku main
 ### 프론트엔드 (Vercel — GitHub 연동 자동 배포)
 ```bash
 git add -A && git commit -m "..." && git push origin main
-# 또는 수동: cd frontend && npx vercel --prod  (루트 폴더에서 실행)
-```
-
-### Heroku 환경 변수 설정
-```bash
-heroku config:set KEY=VALUE --app morningbakery-api
+# 수동: Morning Bakery/ 루트에서 실행 (frontend/ 내부 ❌)
+npx vercel --prod
 ```
 
 ---
