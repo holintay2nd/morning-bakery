@@ -15,7 +15,7 @@ const NB_MIN_H    = 14 + 40 + 70 + 14 + NB_THUMB + 14
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
 const NbBigIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-14 h-14 fill-[#03C75A]" aria-hidden="true">
+  <svg viewBox="0 0 24 24" className="w-full h-full fill-[#03C75A]" aria-hidden="true">
     <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
   </svg>
 )
