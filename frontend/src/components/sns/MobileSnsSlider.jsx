@@ -76,7 +76,7 @@ export default function MobileSnsSlider({
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex gap-3 overflow-x-scroll no-scrollbar"
+          className="flex items-center gap-3 overflow-x-scroll no-scrollbar"
           style={{
             scrollSnapType:    'x mandatory',
             scrollPaddingLeft: '11vw',
@@ -91,33 +91,53 @@ export default function MobileSnsSlider({
               className="flex-shrink-0"
               style={{ width: '78vw', scrollSnapAlign: 'start' }}
             >
-              {renderCard(item, i)}
+              <div
+                className="transition-transform duration-300 ease-out"
+                style={{
+                  transform: i === activeIdx ? 'scale(1)' : 'scale(0.92)',
+                  transformOrigin: 'center center',
+                }}
+              >
+                {renderCard(item, i)}
+              </div>
             </div>
           ))}
 
           {/* 더보기 카드 */}
           {profileUrl && (
-            <a
-              href={profileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex-shrink-0 flex flex-col items-center justify-center gap-3
-                          rounded-2xl border active:opacity-70 transition-opacity ${t.moreBg}`}
-              style={{ width: '78vw', scrollSnapAlign: 'start' }}
+            <div
+              className="flex-shrink-0"
+              style={{ width: '78vw', scrollSnapAlign: 'start', alignSelf: 'stretch' }}
             >
-              <div className={`w-10 h-10 rounded-full border flex items-center justify-center ${t.moreIcon}`}>
-                <ChevronRight size={20} strokeWidth={2.5} className={`${t.chevron} ml-0.5`} />
+              <div
+                className="h-full transition-transform duration-300 ease-out"
+                style={{
+                  transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.92)',
+                  transformOrigin: 'center center',
+                }}
+              >
+                <a
+                  href={profileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`h-full flex flex-col items-center justify-center gap-3
+                              rounded-2xl border active:opacity-70 transition-opacity ${t.moreBg}`}
+                >
+                  <div className={`w-10 h-10 rounded-full border flex items-center justify-center ${t.moreIcon}`}>
+                    <ChevronRight size={20} strokeWidth={2.5} className={`${t.chevron} ml-0.5`} />
+                  </div>
+                  <p className={`font-semibold text-[17px] ${t.moreTitle}`}>더보기</p>
+                  <p className={`text-xs ${t.moreSub}`}>{name} 방문하기</p>
+                </a>
               </div>
-              <p className={`font-semibold text-[17px] ${t.moreTitle}`}>더보기</p>
-              <p className={`text-xs ${t.moreSub}`}>{name} 방문하기</p>
-            </a>
+            </div>
           )}
         </div>
       </div>
 
       {/* ── 인디케이터 ── */}
       {total > 1 && (
-        <div className="flex-shrink-0 flex justify-center gap-1.5 pb-7 pt-4">
+        <div className="flex-shrink-0 flex justify-center gap-1.5 pb-20 pt-4">
           {Array.from({ length: total }).map((_, i) => (
             <div
               key={i}

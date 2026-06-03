@@ -136,7 +136,7 @@ export default function Hero() {
       {/* 스크롤 유도 */}
       <button
         onClick={scrollDown}
-        className="absolute bottom-5 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors"
+        className="absolute bottom-20 md:bottom-5 inset-x-0 flex justify-center text-white/60 hover:text-white transition-colors"
         aria-label="아래로 스크롤"
       >
         {/* scale 래퍼 — bounce와 분리해 transform 충돌 방지 */}

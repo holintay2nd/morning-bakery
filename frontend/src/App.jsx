@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
+import BottomNav from './components/BottomNav'
 import Hero from './components/Hero'
 import About from './components/About'
 import RecommendSection from './components/RecommendSection'
@@ -14,6 +15,7 @@ import PrivateRoute from './admin/PrivateRoute'
 function HomePage() {
   return (
     <div className="bg-cream-50">
+      {/* 데스크탑 전용 상단 헤더 (Header.jsx 내부에서도 hidden md:block 처리) */}
       <Header />
       {/*
        * 모바일: mobile-snap-container → 100svh 스크롤 컨테이너 + y 스냅
@@ -31,6 +33,8 @@ function HomePage() {
       <div className="hidden md:block">
         <Footer />
       </div>
+      {/* 모바일 전용 하단 네비게이션 바 */}
+      <BottomNav />
     </div>
   )
 }
