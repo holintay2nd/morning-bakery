@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
-import { SNS_CONFIG, CARD_GAP } from './config'
+import { SNS_CONFIG, CARD_GAP, CAROUSEL_CYCLE_MS, CAROUSEL_FADE_MS } from './config'
 import { formatBlogDate } from './utils'
+import { useCarouselFade } from '../../hooks/useCarouselFade'
 import SectionHeader from './SectionHeader'
 import MobileSnsSlider from './MobileSnsSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
-const NB_CARD_W   = (1152 - 2 * CARD_GAP) / 3
-const NB_CYCLE_MS = 5000
-const NB_FADE_MS  = 1200
-const NB_VISIBLE  = 3
-const NB_THUMB    = Math.round(NB_CARD_W - 28)
-const NB_MIN_H    = 14 + 40 + 70 + 14 + NB_THUMB + 14
+const NB_CARD_W  = (1152 - 2 * CARD_GAP) / 3
+const NB_VISIBLE = 3
+const NB_THUMB   = Math.round(NB_CARD_W - 28)
+const NB_MIN_H   = 14 + 40 + 70 + 14 + NB_THUMB + 14
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
@@ -42,54 +40,16 @@ function NaverBlogPlaceholder() {
 }
 
 export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline }) {
-  const shouldRotate = items.length > NB_VISIBLE
-
-  const [s0Cur,  setS0Cur]  = useState(0)
-  const [s0Next, setS0Next] = useState(0)
-  const [s0Fade, setS0Fade] = useState(false)
-
-  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
-  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
-  const [s1Fade, setS1Fade] = useState(false)
-
-  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
-  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
-  const [s2Fade, setS2Fade] = useState(false)
-
-  const pausedRef = useRef(false)
-  const cursorRef = useRef(NB_VISIBLE)
-  const turnRef   = useRef(0)
-  const timerRef  = useRef(null)
+  const { slots: [s0, s1, s2], pausedRef, shouldRotate } = useCarouselFade({
+    items,
+    visible: NB_VISIBLE,
+    cycleMs: CAROUSEL_CYCLE_MS,
+    fadeMs:  CAROUSEL_FADE_MS,
+  })
 
   const { bgLight, borderColor } = config
-
-  useEffect(() => {
-    if (!shouldRotate) return
-    const interval = setInterval(() => {
-      if (pausedRef.current) return
-      const slot = turnRef.current % NB_VISIBLE
-      const idx  = cursorRef.current % items.length
-      cursorRef.current++
-      turnRef.current++
-
-      if (slot === 0) {
-        setS0Next(idx); setS0Fade(true)
-        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, NB_FADE_MS)
-      } else if (slot === 1) {
-        setS1Next(idx); setS1Fade(true)
-        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, NB_FADE_MS)
-      } else {
-        setS2Next(idx); setS2Fade(true)
-        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, NB_FADE_MS)
-      }
-    }, NB_CYCLE_MS)
-
-    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
-  }, [shouldRotate, items.length])
-
   const displayBlogTitle = (blogTitle || '네이버 블로그').replace(/님의\s*블로그$/, '').trim()
 
-  // 데스크탑 카드
   const renderCard = (item) => (
     <a
       href={item.url}
@@ -122,7 +82,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     </a>
   )
 
-  // 모바일 카드 (텍스트 위, 이미지 아래 – 데스크탑 레이아웃과 동일, 자연 높이)
+  // 모바일 카드: 텍스트 위, 이미지 아래, 자연 높이
   const renderMobileCard = (item, i) => (
     <a
       key={`nb-mob-${item._id ?? i}`}
@@ -157,14 +117,13 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     </a>
   )
 
-  // 데스크탑 크로스페이드 슬롯
-  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+  const renderSlot = ({ cur, next, fading }, key) => (
     <div key={key} className="relative" style={{ width: NB_CARD_W, flexShrink: 0, minHeight: NB_MIN_H }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCard(items[nextIdx])}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: fading ? 1 : 0, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCard(items[next])}
       </div>
-      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${NB_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCard(items[curIdx])}
+      <div style={{ position: 'relative', zIndex: 2, opacity: fading ? 0 : 1, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCard(items[cur])}
       </div>
     </div>
   )
@@ -205,8 +164,6 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
 
   return (
     <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
-
-      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
       <div className="md:hidden">
         <MobileSnsSlider
           items={items}
@@ -228,8 +185,6 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
           } : null}
         />
       </div>
-
-      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
         <div
@@ -240,9 +195,9 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
         >
           {shouldRotate ? (
             <>
-              {renderSlot(s0Cur, s0Next, s0Fade, 'nb-0')}
-              {renderSlot(s1Cur, s1Next, s1Fade, 'nb-1')}
-              {renderSlot(s2Cur, s2Next, s2Fade, 'nb-2')}
+              {renderSlot(s0, 'nb-0')}
+              {renderSlot(s1, 'nb-1')}
+              {renderSlot(s2, 'nb-2')}
             </>
           ) : (
             items.map((item, i) => (
@@ -253,7 +208,6 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
           )}
         </div>
       </div>
-
     </div>
   )
 }

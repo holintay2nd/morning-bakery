@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
-import { SNS_CONFIG, CARD_GAP } from './config'
+import { useState } from 'react'
+import { SNS_CONFIG, CARD_GAP, CAROUSEL_CYCLE_MS, CAROUSEL_FADE_MS } from './config'
 import { formatRelativeDate } from './utils'
+import { useCarouselFade } from '../../hooks/useCarouselFade'
 import SectionHeader from './SectionHeader'
 import MobileSnsSlider from './MobileSnsSlider'
 
 // 3장: 3×373.33 + 2×16 = 1152px (max-w-6xl 꽉 채움)
-const TH_CARD_W   = (1152 - 2 * CARD_GAP) / 3
-const TH_CYCLE_MS = 5000
-const TH_FADE_MS  = 1200
-const TH_VISIBLE  = 3
-
+const TH_CARD_W  = (1152 - 2 * CARD_GAP) / 3
+const TH_VISIBLE = 3
 const TH_MIN_CARD_H = Math.ceil(54 + 58 + (TH_CARD_W - 28) * 0.75 + 14)
 const GRID_COLS = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' }
 
@@ -25,55 +23,17 @@ const ThreadsWordmark = () => (
 export default function ThreadsSection({ items, username, profilePicture, tagline, followersCount, mediaCount }) {
   const [avatarError, setAvatarError] = useState(false)
 
-  const shouldRotate = items.length > TH_VISIBLE
-
-  const [s0Cur,  setS0Cur]  = useState(0)
-  const [s0Next, setS0Next] = useState(0)
-  const [s0Fade, setS0Fade] = useState(false)
-
-  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
-  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
-  const [s1Fade, setS1Fade] = useState(false)
-
-  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
-  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
-  const [s2Fade, setS2Fade] = useState(false)
-
-  const pausedRef = useRef(false)
-  const cursorRef = useRef(TH_VISIBLE)
-  const turnRef   = useRef(0)
-  const timerRef  = useRef(null)
+  const { slots: [s0, s1, s2], pausedRef, shouldRotate } = useCarouselFade({
+    items,
+    visible: TH_VISIBLE,
+    cycleMs: CAROUSEL_CYCLE_MS,
+    fadeMs:  CAROUSEL_FADE_MS,
+  })
 
   const { bgLight, borderColor } = config
-
-  useEffect(() => {
-    if (!shouldRotate) return
-    const interval = setInterval(() => {
-      if (pausedRef.current) return
-      const slot = turnRef.current % TH_VISIBLE
-      const idx  = cursorRef.current % items.length
-      cursorRef.current++
-      turnRef.current++
-
-      if (slot === 0) {
-        setS0Next(idx); setS0Fade(true)
-        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, TH_FADE_MS)
-      } else if (slot === 1) {
-        setS1Next(idx); setS1Fade(true)
-        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, TH_FADE_MS)
-      } else {
-        setS2Next(idx); setS2Fade(true)
-        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, TH_FADE_MS)
-      }
-    }, TH_CYCLE_MS)
-
-    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
-  }, [shouldRotate, items.length])
-
   const showAvatar      = !!(profilePicture && !avatarError)
   const displayUsername = username || 'threads'
 
-  // 공통 카드 렌더
   const renderCard = (item) => {
     const images   = item.images?.length > 0 ? item.images : (item.thumbnail ? [item.thumbnail] : [])
     const gridCols = GRID_COLS[Math.min(images.length, 3)] ?? 'grid-cols-3'
@@ -114,21 +74,19 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
     )
   }
 
-  // 모바일 카드 (key 포함)
   const renderMobileCard = (item, i) => (
     <div key={`th-mob-${item._id ?? i}`}>
       {renderCard(item)}
     </div>
   )
 
-  // 데스크탑 크로스페이드 슬롯
-  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+  const renderSlot = ({ cur, next, fading }, key) => (
     <div key={key} className="relative" style={{ width: TH_CARD_W, flexShrink: 0, minHeight: TH_MIN_CARD_H }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCard(items[nextIdx])}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: fading ? 1 : 0, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCard(items[next])}
       </div>
-      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${TH_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCard(items[curIdx])}
+      <div style={{ position: 'relative', zIndex: 2, opacity: fading ? 0 : 1, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCard(items[cur])}
       </div>
     </div>
   )
@@ -171,8 +129,6 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
 
   return (
     <div id="sns-threads" className="md:mb-14 scroll-mt-24">
-
-      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
       <div className="md:hidden">
         <MobileSnsSlider
           items={items}
@@ -194,14 +150,8 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           } : null}
         />
       </div>
-
-      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
-        <SectionHeader
-          config={config}
-          profileUrl={profileUrl}
-          tagline={tagline}
-        />
+        <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
         <div
           className="flex pb-6"
           style={{ gap: `${CARD_GAP}px` }}
@@ -210,9 +160,9 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
         >
           {shouldRotate ? (
             <>
-              {renderSlot(s0Cur, s0Next, s0Fade, 'th-0')}
-              {renderSlot(s1Cur, s1Next, s1Fade, 'th-1')}
-              {renderSlot(s2Cur, s2Next, s2Fade, 'th-2')}
+              {renderSlot(s0, 'th-0')}
+              {renderSlot(s1, 'th-1')}
+              {renderSlot(s2, 'th-2')}
             </>
           ) : (
             items.map((item, i) => (
@@ -223,7 +173,6 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           )}
         </div>
       </div>
-
     </div>
   )
 }

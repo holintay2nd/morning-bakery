@@ -1,5 +1,7 @@
 // SNS 채널 설정 — 색상·아이콘·레이블
 export const CARD_GAP = 16 // px — 모든 섹션 공통
+export const CAROUSEL_CYCLE_MS = 5000
+export const CAROUSEL_FADE_MS  = 1200
 
 export const SNS_CONFIG = [
   {

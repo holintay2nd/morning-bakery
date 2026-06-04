@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
-import { SNS_CONFIG, CARD_GAP } from './config'
+import { useState } from 'react'
+import { SNS_CONFIG, CARD_GAP, CAROUSEL_CYCLE_MS, CAROUSEL_FADE_MS } from './config'
 import { formatRelativeDate, formatViewCount } from './utils'
+import { useCarouselFade } from '../../hooks/useCarouselFade'
 import SectionHeader from './SectionHeader'
 import MobileSnsSlider from './MobileSnsSlider'
 
 // 2장: 2×568 + 16 = 1152px (max-w-6xl)
-const YT_CARD_W   = 568
-const YT_CYCLE_MS = 5000
-const YT_FADE_MS  = 1200
+const YT_CARD_W = 568
 
 const config = SNS_CONFIG.find(c => c.key === 'youtube')
 
@@ -21,46 +20,17 @@ const YoutubeWordmark = () => (
 export default function YoutubeSection({ items, channelName, channelAvatar, channelUrl, tagline, subscriberCount, videoCount }) {
   const [avatarError, setAvatarError] = useState(false)
 
-  const [leftCur,  setLeftCur]  = useState(0)
-  const [leftNext, setLeftNext] = useState(0)
-  const [leftFade, setLeftFade] = useState(false)
-
-  const [rightCur,  setRightCur]  = useState(Math.min(1, items.length - 1))
-  const [rightNext, setRightNext] = useState(Math.min(1, items.length - 1))
-  const [rightFade, setRightFade] = useState(false)
-
-  const pausedRef    = useRef(false)
-  const cursorRef    = useRef(Math.min(2, items.length))
-  const turnRef      = useRef(0)
-  const fadeTimerRef = useRef(null)
+  const { slots: [leftSlot, rightSlot], pausedRef, shouldRotate } = useCarouselFade({
+    items,
+    visible: 2,
+    cycleMs: CAROUSEL_CYCLE_MS,
+    fadeMs:  CAROUSEL_FADE_MS,
+  })
 
   const { bgLight, borderColor, color } = config
-
-  useEffect(() => {
-    if (items.length <= 2) return
-    const cycle = setInterval(() => {
-      if (pausedRef.current) return
-      const idx = cursorRef.current % items.length
-      cursorRef.current++
-      if (turnRef.current === 0) {
-        setLeftNext(idx)
-        setLeftFade(true)
-        fadeTimerRef.current = setTimeout(() => { setLeftCur(idx); setLeftFade(false) }, YT_FADE_MS)
-        turnRef.current = 1
-      } else {
-        setRightNext(idx)
-        setRightFade(true)
-        fadeTimerRef.current = setTimeout(() => { setRightCur(idx); setRightFade(false) }, YT_FADE_MS)
-        turnRef.current = 0
-      }
-    }, YT_CYCLE_MS)
-    return () => { clearInterval(cycle); clearTimeout(fadeTimerRef.current) }
-  }, [items.length])
-
   const showAvatar     = !!(channelAvatar && !avatarError)
   const displayChannel = channelName || 'YouTube'
 
-  // 공통 카드 내용
   const renderCardInner = (item) => (
     <a
       href={item.url}
@@ -102,21 +72,20 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     </a>
   )
 
-  // 모바일 카드
   const renderMobileCard = (item, i) => (
     <div key={`yt-mob-${item._id ?? i}`}>
       {renderCardInner(item)}
     </div>
   )
 
-  // 데스크탑 크로스페이드 슬롯
-  const renderSlot = (curIdx, nextIdx, isFading, slotKey) => (
+  // YouTube: 하단 레이어는 항상 보임, 상단 레이어(cur)만 페이드 아웃
+  const renderSlot = ({ cur, next, fading }, slotKey) => (
     <div key={slotKey} className="relative" style={{ width: YT_CARD_W, flexShrink: 0 }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-        {renderCardInner(items[nextIdx])}
+        {renderCardInner(items[next])}
       </div>
-      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${YT_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCardInner(items[curIdx])}
+      <div style={{ position: 'relative', zIndex: 2, opacity: fading ? 0 : 1, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCardInner(items[cur])}
       </div>
     </div>
   )
@@ -157,8 +126,6 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
 
   return (
     <div id="sns-youtube" className="md:mb-14 scroll-mt-24">
-
-      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
       <div className="md:hidden">
         <MobileSnsSlider
           items={items}
@@ -180,8 +147,6 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           } : null}
         />
       </div>
-
-      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={channelUrl} tagline={tagline} />
         <div
@@ -190,11 +155,20 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           onMouseEnter={() => { pausedRef.current = true  }}
           onMouseLeave={() => { pausedRef.current = false }}
         >
-          {renderSlot(leftCur, leftNext, leftFade, 'yt-left')}
-          {items.length > 1 && renderSlot(rightCur, rightNext, rightFade, 'yt-right')}
+          {shouldRotate ? (
+            <>
+              {renderSlot(leftSlot,  'yt-left')}
+              {renderSlot(rightSlot, 'yt-right')}
+            </>
+          ) : (
+            items.slice(0, 2).map((item, i) => (
+              <div key={`yt-static-${i}`} style={{ width: YT_CARD_W, flexShrink: 0 }}>
+                {renderCardInner(item)}
+              </div>
+            ))
+          )}
         </div>
       </div>
-
     </div>
   )
 }

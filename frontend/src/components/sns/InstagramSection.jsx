@@ -1,18 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
-import { SNS_CONFIG, CARD_GAP } from './config'
+import { useState } from 'react'
+import { SNS_CONFIG, CARD_GAP, CAROUSEL_CYCLE_MS, CAROUSEL_FADE_MS } from './config'
 import { parseCaption, formatRelativeDate } from './utils'
+import { useCarouselFade } from '../../hooks/useCarouselFade'
 import SectionHeader from './SectionHeader'
 import MobileSnsSlider from './MobileSnsSlider'
 
-const IG_CARD_W   = 360   // 3장: 3×360 + 2×16 = 1112px
-const IG_CYCLE_MS = 5000
-const IG_FADE_MS  = 1200
-const IG_VISIBLE  = 3
-const IG_MIN_H    = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
+const IG_CARD_W  = 360   // 3장: 3×360 + 2×16 = 1112px
+const IG_VISIBLE = 3
+const IG_MIN_H   = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
 
-// 인스타그램 공식 워드마크 이미지
 const InstagramWordmark = () => (
   <img
     src="/Instagram_wordmark.png?v=2"
@@ -33,51 +31,14 @@ const IgBigIcon = () => (
 export default function InstagramSection({ items, username, profilePicture, tagline, igProfile }) {
   const [avatarError, setAvatarError] = useState(false)
 
-  const shouldRotate = items.length > IG_VISIBLE
-
-  const [s0Cur,  setS0Cur]  = useState(0)
-  const [s0Next, setS0Next] = useState(0)
-  const [s0Fade, setS0Fade] = useState(false)
-
-  const [s1Cur,  setS1Cur]  = useState(Math.min(1, items.length - 1))
-  const [s1Next, setS1Next] = useState(Math.min(1, items.length - 1))
-  const [s1Fade, setS1Fade] = useState(false)
-
-  const [s2Cur,  setS2Cur]  = useState(Math.min(2, items.length - 1))
-  const [s2Next, setS2Next] = useState(Math.min(2, items.length - 1))
-  const [s2Fade, setS2Fade] = useState(false)
-
-  const pausedRef = useRef(false)
-  const cursorRef = useRef(IG_VISIBLE)
-  const turnRef   = useRef(0)
-  const timerRef  = useRef(null)
+  const { slots: [s0, s1, s2], pausedRef, shouldRotate } = useCarouselFade({
+    items,
+    visible:  IG_VISIBLE,
+    cycleMs:  CAROUSEL_CYCLE_MS,
+    fadeMs:   CAROUSEL_FADE_MS,
+  })
 
   const { bgLight, borderColor, color } = config
-
-  useEffect(() => {
-    if (!shouldRotate) return
-    const interval = setInterval(() => {
-      if (pausedRef.current) return
-      const slot = turnRef.current % IG_VISIBLE
-      const idx  = cursorRef.current % items.length
-      cursorRef.current++
-      turnRef.current++
-
-      if (slot === 0) {
-        setS0Next(idx); setS0Fade(true)
-        timerRef.current = setTimeout(() => { setS0Cur(idx); setS0Fade(false) }, IG_FADE_MS)
-      } else if (slot === 1) {
-        setS1Next(idx); setS1Fade(true)
-        timerRef.current = setTimeout(() => { setS1Cur(idx); setS1Fade(false) }, IG_FADE_MS)
-      } else {
-        setS2Next(idx); setS2Fade(true)
-        timerRef.current = setTimeout(() => { setS2Cur(idx); setS2Fade(false) }, IG_FADE_MS)
-      }
-    }, IG_CYCLE_MS)
-
-    return () => { clearInterval(interval); clearTimeout(timerRef.current) }
-  }, [shouldRotate, items.length])
-
   const showAvatar = !!(profilePicture && !avatarError)
 
   const avatarEl = showAvatar ? (
@@ -95,7 +56,6 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     </div>
   )
 
-  // 공통 카드 내용
   const renderCardInner = (item) => {
     const { title, body } = parseCaption(item.title)
     const timeAgo = formatRelativeDate(item.timestamp)
@@ -124,21 +84,19 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     )
   }
 
-  // 모바일 카드
   const renderMobileCard = (item, i) => (
     <div key={`ig-mob-${item._id ?? i}`} className="rounded-2xl overflow-hidden shadow-md">
       {renderCardInner(item)}
     </div>
   )
 
-  // 데스크탑 크로스페이드 슬롯
-  const renderSlot = (curIdx, nextIdx, isFading, key) => (
+  const renderSlot = ({ cur, next, fading }, key) => (
     <div key={key} className="relative" style={{ width: IG_CARD_W, flexShrink: 0, minHeight: IG_MIN_H }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: isFading ? 1 : 0, transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCardInner(items[nextIdx])}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: fading ? 1 : 0, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCardInner(items[next])}
       </div>
-      <div style={{ position: 'relative', zIndex: 2, opacity: isFading ? 0 : 1, transition: isFading ? `opacity ${IG_FADE_MS}ms ease-in-out` : 'none' }}>
-        {renderCardInner(items[curIdx])}
+      <div style={{ position: 'relative', zIndex: 2, opacity: fading ? 0 : 1, transition: fading ? `opacity ${CAROUSEL_FADE_MS}ms ease-in-out` : 'none' }}>
+        {renderCardInner(items[cur])}
       </div>
     </div>
   )
@@ -163,8 +121,6 @@ export default function InstagramSection({ items, username, profilePicture, tagl
 
   return (
     <div id="sns-instagram" className="md:mb-14 scroll-mt-24">
-
-      {/* ── 모바일: 피크 스와이프 슬라이더 ── */}
       <div className="md:hidden">
         <MobileSnsSlider
           items={items}
@@ -184,8 +140,6 @@ export default function InstagramSection({ items, username, profilePicture, tagl
           } : null}
         />
       </div>
-
-      {/* ── 데스크탑: 크로스페이드 자동 전환 ── */}
       <div className="hidden md:block">
         <SectionHeader config={config} profileUrl={profileUrl} tagline={tagline} />
         <div
@@ -196,9 +150,9 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         >
           {shouldRotate ? (
             <>
-              {renderSlot(s0Cur, s0Next, s0Fade, 'ig-0')}
-              {renderSlot(s1Cur, s1Next, s1Fade, 'ig-1')}
-              {renderSlot(s2Cur, s2Next, s2Fade, 'ig-2')}
+              {renderSlot(s0, 'ig-0')}
+              {renderSlot(s1, 'ig-1')}
+              {renderSlot(s2, 'ig-2')}
             </>
           ) : (
             items.map((item, i) => (
@@ -209,7 +163,6 @@ export default function InstagramSection({ items, username, profilePicture, tagl
           )}
         </div>
       </div>
-
     </div>
   )
 }
