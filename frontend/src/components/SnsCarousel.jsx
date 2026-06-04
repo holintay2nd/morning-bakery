@@ -18,6 +18,7 @@ export default function SnsCarousel() {
   const [thUsername,       setThUsername]       = useState('')
   const [thProfilePicture, setThProfilePicture] = useState('')
   const [taglines,         setTaglines]         = useState({})
+  const [igProfile,        setIgProfile]        = useState(null)
   const [loading,          setLoading]          = useState(true)
 
   useEffect(() => {
@@ -28,7 +29,8 @@ export default function SnsCarousel() {
       api.get('/threads/feed'),
       api.get('/naverblog/feed'),
       api.get('/content/sns-taglines'),
-    ]).then(([snsResult, igResult, ytResult, thResult, nbResult, taglineResult]) => {
+      api.get('/content/sns-profiles'),
+    ]).then(([snsResult, igResult, ytResult, thResult, nbResult, taglineResult, profilesResult]) => {
       const sns    = snsResult.status     === 'fulfilled' ? snsResult.value.data     : {}
       const igData = igResult.status      === 'fulfilled' ? igResult.value.data      : null
       const ytData = ytResult.status      === 'fulfilled' ? ytResult.value.data      : null
@@ -54,6 +56,9 @@ export default function SnsCarousel() {
       if (thData?.profilePicture) setThProfilePicture(thData.profilePicture)
 
       if (tlData) setTaglines(tlData)
+
+      const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value.data : {}
+      if (profiles.instagram) setIgProfile(profiles.instagram)
 
       setSnsData({
         ...sns,
@@ -102,6 +107,7 @@ export default function SnsCarousel() {
                 username={igUsername}
                 profilePicture={igProfilePicture}
                 tagline={taglines.instagram}
+                igProfile={igProfile}
               />
             </div>
           </div>

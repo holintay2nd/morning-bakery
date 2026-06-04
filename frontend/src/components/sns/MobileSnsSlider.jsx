@@ -17,7 +17,9 @@ export default function MobileSnsSlider({
   profileUrl,
   iconEl,
   name,
+  wordmarkEl,   // 플랫폼 워드마크 SVG/JSX — 제공 시 name 텍스트 대신 렌더링
   tagline,
+  profileInfo,  // { picture, username, bio, mediaCount, followersCount, followsCount }
   bg     = 'bg-white',
   isDark = false,
 }) {
@@ -51,7 +53,7 @@ export default function MobileSnsSlider({
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el || !el.firstElementChild) return
-    // 78vw 카드 + gap-3(12px) = 한 스텝
+    // 86vw 카드 + gap-3(12px) = 한 스텝
     const step = el.firstElementChild.offsetWidth + 12
     setActiveIdx(Math.min(Math.round(el.scrollLeft / step), total - 1))
   }
@@ -59,15 +61,41 @@ export default function MobileSnsSlider({
   return (
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
 
-      {/* ── 헤더: 아이콘(60%) + 이름 + 태그라인 ── */}
-      <div className="flex-shrink-0 flex flex-col items-center gap-2 pt-[72px] pb-7 px-4 text-center">
-        {/* 아이콘 래퍼: 원래 w-14(56px)의 60% → w-9(36px) */}
+      {/* ── 헤더: 아이콘 + 이름/워드마크 + 태그라인 + 프로필 정보 ── */}
+      <div className={`flex-shrink-0 flex flex-col items-center gap-2 ${profileInfo ? 'pt-10' : 'pt-12'} pb-6 px-4 text-center`}>
         <div className="w-9 h-9 flex items-center justify-center mb-1">
           {iconEl}
         </div>
-        <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>
+        {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
         {tagline && (
           <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
+        )}
+        {/* SNS 프로필 정보 (Instagram 등 지원 플랫폼) */}
+        {profileInfo?.username && (
+          <div className="mt-2 w-full max-w-[300px]">
+            <div className="flex items-center gap-3 text-left">
+              {profileInfo.picture ? (
+                <img
+                  src={profileInfo.picture}
+                  alt={profileInfo.username}
+                  className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className={`font-bold text-sm truncate ${t.title}`}>@{profileInfo.username}</p>
+                <div className={`flex gap-3 mt-1 text-xs ${t.sub}`}>
+                  {profileInfo.mediaCount     != null && <span><strong className={t.title}>{profileInfo.mediaCount.toLocaleString()}</strong> 게시물</span>}
+                  {profileInfo.followersCount != null && <span><strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong> 팔로워</span>}
+                  {profileInfo.followsCount   != null && <span><strong className={t.title}>{profileInfo.followsCount.toLocaleString()}</strong> 팔로우</span>}
+                </div>
+                {profileInfo.bio && (
+                  <p className={`text-xs mt-1 line-clamp-2 ${t.sub}`}>{profileInfo.bio}</p>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -79,22 +107,22 @@ export default function MobileSnsSlider({
           className="flex items-center gap-3 overflow-x-scroll no-scrollbar"
           style={{
             scrollSnapType:    'x mandatory',
-            scrollPaddingLeft: '11vw',
+            scrollPaddingLeft: '7vw',
             WebkitOverflowScrolling: 'touch',
-            paddingLeft:  '11vw',
-            paddingRight: '11vw',
+            paddingLeft:  '7vw',
+            paddingRight: '7vw',
           }}
         >
           {items.map((item, i) => (
             <div
               key={i}
               className="flex-shrink-0"
-              style={{ width: '78vw', scrollSnapAlign: 'start' }}
+              style={{ width: '86vw', scrollSnapAlign: 'start' }}
             >
               <div
                 className="transition-transform duration-300 ease-out"
                 style={{
-                  transform: i === activeIdx ? 'scale(1)' : 'scale(0.92)',
+                  transform: i === activeIdx ? 'scale(1)' : 'scale(0.82)',
                   transformOrigin: 'center center',
                 }}
               >
@@ -112,7 +140,7 @@ export default function MobileSnsSlider({
               <div
                 className="h-full transition-transform duration-300 ease-out"
                 style={{
-                  transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.92)',
+                  transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.82)',
                   transformOrigin: 'center center',
                 }}
               >

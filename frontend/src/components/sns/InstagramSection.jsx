@@ -12,6 +12,22 @@ const IG_MIN_H    = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
 
+// 인스타그램 워드마크 (Dancing Script 폰트 — 공식 워드마크와 유사한 스크립트체)
+const InstagramWordmark = () => (
+  <span
+    style={{
+      fontFamily: "'Dancing Script', cursive",
+      fontSize: '28px',
+      fontWeight: 700,
+      letterSpacing: '-0.01em',
+      color: '#1a1a1a',
+      lineHeight: 1,
+    }}
+  >
+    Instagram
+  </span>
+)
+
 const IgBigIcon = () => (
   <div className="w-full h-full rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center p-1.5">
     <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
@@ -20,7 +36,7 @@ const IgBigIcon = () => (
   </div>
 )
 
-export default function InstagramSection({ items, username, profilePicture, tagline }) {
+export default function InstagramSection({ items, username, profilePicture, tagline, igProfile }) {
   const [avatarError, setAvatarError] = useState(false)
 
   const shouldRotate = items.length > IG_VISIBLE
@@ -138,7 +154,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
     return (
       <div id="sns-instagram" className="md:mb-14 scroll-mt-24">
         <div className="md:hidden">
-          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={profileUrl} iconEl={<IgBigIcon />} name="인스타그램" tagline={tagline} />
+          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={profileUrl} iconEl={<IgBigIcon />} wordmarkEl={<InstagramWordmark />} name="인스타그램" tagline={tagline} />
         </div>
         <div className="hidden md:block">
           <SectionHeader config={config} tagline={tagline} />
@@ -160,8 +176,17 @@ export default function InstagramSection({ items, username, profilePicture, tagl
           renderCard={renderMobileCard}
           profileUrl={profileUrl}
           iconEl={<IgBigIcon />}
+          wordmarkEl={<InstagramWordmark />}
           name="인스타그램"
           tagline={tagline}
+          profileInfo={username ? {
+            picture:        profilePicture || null,
+            username,
+            bio:            igProfile?.bio            || null,
+            mediaCount:     igProfile?.mediaCount     ?? null,
+            followersCount: igProfile?.followersCount ?? null,
+            followsCount:   igProfile?.followsCount   ?? null,
+          } : null}
         />
       </div>
 
