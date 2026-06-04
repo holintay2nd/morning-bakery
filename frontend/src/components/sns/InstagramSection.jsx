@@ -15,9 +15,9 @@ const config = SNS_CONFIG.find(c => c.key === 'instagram')
 // 인스타그램 공식 워드마크 이미지
 const InstagramWordmark = () => (
   <img
-    src="/Instagram_wordmark.png"
+    src="/Instagram_wordmark.png?v=2"
     alt="Instagram"
-    className="h-[72px] w-auto object-contain"
+    className="h-[216px] w-auto object-contain"
     draggable={false}
   />
 )

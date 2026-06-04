@@ -94,7 +94,7 @@ export default function MobileSnsSlider({
 
       {/* ── 중앙 정렬 헤더 ── */}
       <div className="flex-shrink-0 flex flex-col items-center pt-12 pb-4 px-4 text-center">
-        <div className="w-9 h-9 flex items-center justify-center mb-2">
+        <div className="w-9 h-9 flex items-center justify-center mb-1">
           {iconEl}
         </div>
         <div className="mb-2">
@@ -107,7 +107,7 @@ export default function MobileSnsSlider({
 
       {/* ── 프로필 (좌측 정렬, 카드 좌변 기준) ── */}
       {hasProfile && (
-        <div className="flex-shrink-0 px-[10.5vw] pt-1">
+        <div className="flex-shrink-0 flex justify-center pt-1 px-4">
           <div className="flex items-center gap-3">
             {profileInfo.picture ? (
               <img
