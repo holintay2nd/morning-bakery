@@ -81,7 +81,8 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 block"
+        className="group bg-white rounded-2xl border border-gray-200 shadow-sm md:hover:shadow-xl transition-shadow duration-300 block touch-manipulation"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2">
           {showAvatar ? (
@@ -103,7 +104,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           <div className={`px-3.5 pb-3.5 grid gap-1.5 ${gridCols}`}>
             {images.map((src, idx) => (
               <div key={idx} className="aspect-[4/3] overflow-hidden rounded-xl bg-gray-100">
-                <img src={src} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                <img src={src} alt="" className="w-full h-full object-cover md:group-hover:scale-105 md:transition-transform md:duration-700" loading="lazy" />
               </div>
             ))}
           </div>

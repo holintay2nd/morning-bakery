@@ -94,7 +94,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 block"
+      className="group rounded-2xl bg-white border border-gray-200 shadow-sm md:hover:shadow-xl transition-shadow duration-300 block touch-manipulation"
     >
       <div className="p-3.5">
         <div className="flex items-center justify-between mb-2">
@@ -112,7 +112,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       <div className="px-3.5 pb-3.5">
         {item.thumbnail ? (
           <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
-            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover md:group-hover:scale-105 md:transition-transform md:duration-700" loading="lazy" />
           </div>
         ) : (
           <NaverBlogPlaceholder />
@@ -128,7 +128,8 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden"
+      className="block rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden touch-manipulation"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {item.thumbnail ? (
         <div className="aspect-video overflow-hidden bg-gray-100">

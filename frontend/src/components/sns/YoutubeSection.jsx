@@ -65,13 +65,14 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group bg-white shadow-sm hover:shadow-xl transition-shadow duration-300 block rounded-2xl"
+      className="group bg-white shadow-sm md:hover:shadow-xl transition-shadow duration-300 block rounded-2xl touch-manipulation"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-t-2xl">
         <img
           src={item.thumbnail}
           alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          className="w-full h-full object-cover md:group-hover:scale-105 md:transition-transform md:duration-700"
           loading="lazy"
           onError={e => { e.target.src = `https://i.ytimg.com/vi/${item._id}/hqdefault.jpg` }}
         />

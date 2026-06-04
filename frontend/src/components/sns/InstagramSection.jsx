@@ -17,7 +17,7 @@ const InstagramWordmark = () => (
   <img
     src="/Instagram_wordmark.png"
     alt="Instagram"
-    className="h-7 w-auto object-contain"
+    className="h-9 w-auto object-contain"
     draggable={false}
   />
 )
@@ -104,10 +104,11 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 block"
+        className="group rounded-2xl overflow-hidden shadow-sm md:hover:shadow-xl transition-shadow duration-300 block touch-manipulation"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
-          <img src={item.thumbnail} alt={title || '인스타그램 게시물'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+          <img src={item.thumbnail} alt={title || '인스타그램 게시물'} className="w-full h-full object-cover md:group-hover:scale-105 md:transition-transform md:duration-700" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-5 space-y-2">
             <div className="flex items-center gap-2">
