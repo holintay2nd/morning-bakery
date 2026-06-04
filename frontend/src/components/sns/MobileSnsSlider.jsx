@@ -1,14 +1,19 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { ChevronRight } from 'lucide-react'
 
 /**
  * 모바일 SNS 섹션 전체 레이아웃
- * - 중앙 정렬 헤더: 아이콘 → 워드마크/이름 → 태그라인(profileInfo 없을 때)
- * - 좌측 정렬 프로필 (profileInfo 있을 때): ID / 통계 / 태그라인
- * - 79vw 카드 가로 스크롤 (스냅) — 좌우 10.5vw, paddingRight 대신 spacer div
- * - 스케일: activeIdx 정수 기반 + CSS transition 700ms ease-out
- * - 더보기 카드 → profileUrl 이동
- * - 하단 인디케이터 점
+ *
+ * ── 스케일 전환 방식 ──
+ * onScroll → rAF → DOM style 직접 조작 (React state 업데이트 없음)
+ *   → 리렌더 없이 60fps 실시간 보간: scale = 1 - 0.12 × |i - scrollProgress|
+ *   → 팍 튀는 현상 없음, 버벅임 없음
+ * React state(activeIdx)는 인디케이터 점 전환에만 사용
+ *
+ * ── peek 균형 ──
+ * 모든 비활성 카드: transformOrigin = diff<0 ? 'right center' : 'left center'
+ *   → 뷰포트 경계 쪽 끝을 고정 → 좌/우 peek 동일
+ * (이전 버그: 더보기 카드에 'center center' 적용 → 왼쪽 끝이 안쪽으로 밀려 peek 절반)
  */
 export default function MobileSnsSlider({
   items,
@@ -18,11 +23,13 @@ export default function MobileSnsSlider({
   name,
   wordmarkEl,
   tagline,
-  profileInfo,  // { picture, username, mediaCount, followersCount }
+  profileInfo,
   bg     = 'bg-white',
   isDark = false,
 }) {
-  const scrollRef = useRef(null)
+  const scrollRef  = useRef(null)
+  const innerRefs  = useRef([])   // 스케일 div refs — DOM 직접 조작용
+  const rafRef     = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
 
   const total      = items.length + (profileUrl ? 1 : 0)
@@ -51,17 +58,36 @@ export default function MobileSnsSlider({
     chevron:   'text-gray-700',
   }
 
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el || !el.firstElementChild) return
-    const step = el.firstElementChild.offsetWidth + 12
-    setActiveIdx(Math.min(Math.round(el.scrollLeft / step), total - 1))
-  }
+  // RAF 정리
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
 
-  const getOrigin = (i) =>
-    i === activeIdx ? 'center center'
-    : i < activeIdx ? 'right center'
-    :                 'left center'
+  // ── 스크롤 핸들러: React state 없이 DOM style 직접 업데이트 ──
+  const handleScroll = () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (!el || items.length === 0 || !el.firstElementChild) return
+      const step = el.firstElementChild.offsetWidth + 12  // cardWidth + gap
+      const raw  = el.scrollLeft / step
+
+      innerRefs.current.forEach((ref, i) => {
+        if (!ref) return
+        const offset = Math.abs(i - raw)
+        const scale  = offset >= 1 ? 0.88 : 1 - 0.12 * offset
+        const diff   = i - raw
+        // 뷰포트 경계 쪽 끝을 origin으로 고정 → peek 균형
+        const origin = Math.abs(diff) < 0.02 ? 'center center'
+                     : diff < 0             ? 'right center'
+                     :                        'left center'
+        ref.style.transform       = `scale(${scale})`
+        ref.style.transformOrigin = origin
+      })
+
+      // 인디케이터 도트용 최소 리렌더 (값 변경 시에만)
+      const newIdx = Math.min(Math.round(raw), total - 1)
+      setActiveIdx(prev => (prev !== newIdx ? newIdx : prev))
+    })
+  }
 
   return (
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
@@ -129,7 +155,6 @@ export default function MobileSnsSlider({
             scrollPaddingLeft:       '10.5vw',
             WebkitOverflowScrolling: 'touch',
             paddingLeft:             '10.5vw',
-            // paddingRight 대신 하단의 spacer div로 처리 — iOS WebKit 패딩 버그 방지
           }}
         >
           {items.map((item, i) => (
@@ -138,11 +163,12 @@ export default function MobileSnsSlider({
               className="flex-shrink-0"
               style={{ width: '79vw', scrollSnapAlign: 'start' }}
             >
+              {/* 초기 스타일: activeIdx=0 → card0은 scale(1), 나머지 scale(0.88) */}
               <div
+                ref={el => { innerRefs.current[i] = el }}
                 style={{
-                  transform:       i === activeIdx ? 'scale(1)' : 'scale(0.88)',
-                  transformOrigin: getOrigin(i),
-                  transition:      'transform 700ms ease-out',
+                  transform:       i === 0 ? 'scale(1)'    : 'scale(0.88)',
+                  transformOrigin: i === 0 ? 'center center' : 'left center',
                 }}
               >
                 {renderCard(item, i)}
@@ -150,7 +176,7 @@ export default function MobileSnsSlider({
             </div>
           ))}
 
-          {/* 더보기 카드 */}
+          {/* 더보기 카드 — origin: left center (비활성 시 왼쪽 끝 고정) */}
           {profileUrl && (
             <div
               className="flex-shrink-0"
@@ -158,10 +184,10 @@ export default function MobileSnsSlider({
             >
               <div
                 className="h-full"
+                ref={el => { innerRefs.current[items.length] = el }}
                 style={{
-                  transform:       activeIdx === items.length ? 'scale(1)' : 'scale(0.88)',
-                  transformOrigin: 'center center',
-                  transition:      'transform 700ms ease-out',
+                  transform:       'scale(0.88)',
+                  transformOrigin: 'left center',
                 }}
               >
                 <a
@@ -181,7 +207,7 @@ export default function MobileSnsSlider({
             </div>
           )}
 
-          {/* paddingRight 대체 spacer — iOS WebKit에서 padding-right 무시 버그 방지 */}
+          {/* paddingRight 대체 spacer — iOS WebKit padding-right 무시 버그 방지 */}
           <div style={{ width: '10.5vw', flexShrink: 0 }} aria-hidden="true" />
         </div>
       </div>

@@ -17,7 +17,7 @@ const InstagramWordmark = () => (
   <img
     src="/Instagram_wordmark.png"
     alt="Instagram"
-    className="h-10 w-auto object-contain"
+    className="h-[72px] w-auto object-contain"
     draggable={false}
   />
 )
