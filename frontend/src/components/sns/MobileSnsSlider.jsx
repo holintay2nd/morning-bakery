@@ -90,10 +90,10 @@ export default function MobileSnsSlider({
   // 아이콘+워드마크 공통 내용
   const headerIconWordmark = (
     <>
-      <div className={`${iconSize} flex items-center justify-center mb-1`}>
+      <div className={`${iconSize} flex items-center justify-center`}>
         {iconEl}
       </div>
-      <div className="mt-2 mb-2">
+      <div>
         {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
       </div>
     </>
@@ -103,19 +103,19 @@ export default function MobileSnsSlider({
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
 
       {/* ── 중앙 정렬 헤더 ── */}
-      <div className="flex-shrink-0 flex flex-col items-center pt-12 pb-4 px-4 text-center">
+      <div className="flex-shrink-0 flex flex-col items-center pt-12 pb-4 px-4 text-center gap-2">
         {/* 아이콘 + 워드마크: profileUrl 있으면 클릭 → SNS 이동 */}
         {profileUrl ? (
           <a
             href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center active:opacity-70 transition-opacity"
+            className="flex flex-col items-center active:opacity-70 transition-opacity gap-2"
           >
             {headerIconWordmark}
           </a>
         ) : (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-2">
             {headerIconWordmark}
           </div>
         )}
