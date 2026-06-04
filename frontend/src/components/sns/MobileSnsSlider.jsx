@@ -1,12 +1,13 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 
 /**
  * 모바일 SNS 섹션 전체 레이아웃
- * - 중앙 정렬 헤더: 플랫폼 아이콘 → 워드마크/이름 → 태그라인(profileInfo 없을 때)
- * - 좌측 정렬 프로필 (profileInfo 있을 때): ID / 통계 / 태그라인, 카드와 10.5vw 간격
- * - 79vw 카드 가로 스크롤 (스냅) — 스크롤 진행도로 연속 스케일 보간
- * - 마지막 카드 다음에 '더보기' 카드 → profileUrl 이동
+ * - 중앙 정렬 헤더: 아이콘 → 워드마크/이름 → 태그라인(profileInfo 없을 때)
+ * - 좌측 정렬 프로필 (profileInfo 있을 때): ID / 통계 / 태그라인
+ * - 79vw 카드 가로 스크롤 (스냅) — 좌우 10.5vw, paddingRight 대신 spacer div
+ * - 스케일: activeIdx 정수 기반 + CSS transition 700ms ease-out
+ * - 더보기 카드 → profileUrl 이동
  * - 하단 인디케이터 점
  */
 export default function MobileSnsSlider({
@@ -22,12 +23,9 @@ export default function MobileSnsSlider({
   isDark = false,
 }) {
   const scrollRef = useRef(null)
-  const rafRef    = useRef(null)
+  const [activeIdx, setActiveIdx] = useState(0)
 
-  const [activeIdx,      setActiveIdx]      = useState(0)
-  const [scrollProgress, setScrollProgress] = useState(0)  // 소수점 스크롤 진행도
-
-  const total     = items.length + (profileUrl ? 1 : 0)
+  const total      = items.length + (profileUrl ? 1 : 0)
   const hasProfile = !!profileInfo?.username
 
   // 테마 토큰
@@ -53,30 +51,17 @@ export default function MobileSnsSlider({
     chevron:   'text-gray-700',
   }
 
-  // ── 스크롤 핸들러: rAF 배치로 60fps 제한 ──
-  const handleScroll = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (!el || !el.firstElementChild) return
-      const step = el.firstElementChild.offsetWidth + 12
-      const raw  = el.scrollLeft / step
-      setScrollProgress(raw)
-      setActiveIdx(Math.min(Math.round(raw), total - 1))
-    })
-  }, [total])
-
-  // ── 연속 스케일 계산 (0=active, 1=한 칸 이상 떨어짐) ──
-  const getScale = (i) => {
-    const offset = Math.abs(i - scrollProgress)
-    return offset >= 1 ? 0.88 : 1 - 0.12 * offset
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el || !el.firstElementChild) return
+    const step = el.firstElementChild.offsetWidth + 12
+    setActiveIdx(Math.min(Math.round(el.scrollLeft / step), total - 1))
   }
 
-  const getOrigin = (i) => {
-    const diff = i - scrollProgress
-    if (Math.abs(diff) < 0.02) return 'center center'
-    return diff < 0 ? 'right center' : 'left center'
-  }
+  const getOrigin = (i) =>
+    i === activeIdx ? 'center center'
+    : i < activeIdx ? 'right center'
+    :                 'left center'
 
   return (
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
@@ -120,7 +105,7 @@ export default function MobileSnsSlider({
                 </div>
               )}
               {tagline && (
-                <p className={`text-xs mt-1 leading-relaxed ${t.sub}`}>{tagline}</p>
+                <p className={`text-xs mt-0.5 leading-relaxed ${t.sub}`}>{tagline}</p>
               )}
             </div>
           </div>
@@ -130,8 +115,10 @@ export default function MobileSnsSlider({
       {/* ── 카드 가로 스크롤 ── */}
       <div
         className="flex-1 flex flex-col"
-        style={{ justifyContent: hasProfile ? 'flex-start' : 'center',
-                 paddingTop:     hasProfile ? '10.5vw'     : 0 }}
+        style={{
+          justifyContent: hasProfile ? 'flex-start' : 'center',
+          paddingTop:     hasProfile ? '5vw'        : 0,
+        }}
       >
         <div
           ref={scrollRef}
@@ -142,7 +129,7 @@ export default function MobileSnsSlider({
             scrollPaddingLeft:       '10.5vw',
             WebkitOverflowScrolling: 'touch',
             paddingLeft:             '10.5vw',
-            paddingRight:            '10.5vw',
+            // paddingRight 대신 하단의 spacer div로 처리 — iOS WebKit 패딩 버그 방지
           }}
         >
           {items.map((item, i) => (
@@ -151,12 +138,11 @@ export default function MobileSnsSlider({
               className="flex-shrink-0"
               style={{ width: '79vw', scrollSnapAlign: 'start' }}
             >
-              {/* transition 없음 — scrollProgress 실시간 반영으로 연속 보간 */}
               <div
                 style={{
-                  transform:       `scale(${getScale(i)})`,
+                  transform:       i === activeIdx ? 'scale(1)' : 'scale(0.88)',
                   transformOrigin: getOrigin(i),
-                  transition:      'transform 80ms ease-out',
+                  transition:      'transform 700ms ease-out',
                 }}
               >
                 {renderCard(item, i)}
@@ -173,9 +159,9 @@ export default function MobileSnsSlider({
               <div
                 className="h-full"
                 style={{
-                  transform:       `scale(${getScale(items.length)})`,
+                  transform:       activeIdx === items.length ? 'scale(1)' : 'scale(0.88)',
                   transformOrigin: 'center center',
-                  transition:      'transform 80ms ease-out',
+                  transition:      'transform 700ms ease-out',
                 }}
               >
                 <a
@@ -194,6 +180,9 @@ export default function MobileSnsSlider({
               </div>
             </div>
           )}
+
+          {/* paddingRight 대체 spacer — iOS WebKit에서 padding-right 무시 버그 방지 */}
+          <div style={{ width: '10.5vw', flexShrink: 0 }} aria-hidden="true" />
         </div>
       </div>
 
