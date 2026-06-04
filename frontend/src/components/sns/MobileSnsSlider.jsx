@@ -4,16 +4,16 @@ import { ChevronRight } from 'lucide-react'
 /**
  * 모바일 SNS 섹션 전체 레이아웃
  *
- * ── 스케일 전환 방식 ──
- * onScroll → rAF → DOM style 직접 조작 (React state 업데이트 없음)
- *   → 리렌더 없이 60fps 실시간 보간: scale = 1 - 0.12 × |i - scrollProgress|
- *   → 팍 튀는 현상 없음, 버벅임 없음
- * React state(activeIdx)는 인디케이터 점 전환에만 사용
+ * 레이아웃 구조:
+ *   [헤더: 아이콘 → 워드마크(살짝 아래) → 태그라인]  ← 항상 중앙 정렬
+ *   [flex-1 justify-center]
+ *     [프로필 행: [avatar + @ID] ←→ [게시물 N 팔로워 N]]  ← 카드 바로 위
+ *     [카드 가로 스크롤]
+ *   [인디케이터 점]
  *
- * ── peek 균형 ──
- * 모든 비활성 카드: transformOrigin = diff<0 ? 'right center' : 'left center'
- *   → 뷰포트 경계 쪽 끝을 고정 → 좌/우 peek 동일
- * (이전 버그: 더보기 카드에 'center center' 적용 → 왼쪽 끝이 안쪽으로 밀려 peek 절반)
+ * 스케일 전환: onScroll → rAF → DOM style 직접 조작 (React 리렌더 0회)
+ *   scale = 1 - 0.12 × |i - scrollProgress|  (연속 보간)
+ * peek 균형: 모든 비활성 카드 transformOrigin = 뷰포트 경계 쪽 끝 고정
  */
 export default function MobileSnsSlider({
   items,
@@ -23,19 +23,18 @@ export default function MobileSnsSlider({
   name,
   wordmarkEl,
   tagline,
-  profileInfo,
+  profileInfo,  // { picture, username, mediaCount, followersCount }
   bg     = 'bg-white',
   isDark = false,
 }) {
-  const scrollRef  = useRef(null)
-  const innerRefs  = useRef([])   // 스케일 div refs — DOM 직접 조작용
-  const rafRef     = useRef(null)
+  const scrollRef = useRef(null)
+  const innerRefs = useRef([])
+  const rafRef    = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
 
   const total      = items.length + (profileUrl ? 1 : 0)
   const hasProfile = !!profileInfo?.username
 
-  // 테마 토큰
   const t = isDark ? {
     title:     'text-white',
     sub:       'text-white/50',
@@ -58,16 +57,14 @@ export default function MobileSnsSlider({
     chevron:   'text-gray-700',
   }
 
-  // RAF 정리
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
 
-  // ── 스크롤 핸들러: React state 없이 DOM style 직접 업데이트 ──
   const handleScroll = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     rafRef.current = requestAnimationFrame(() => {
       const el = scrollRef.current
       if (!el || items.length === 0 || !el.firstElementChild) return
-      const step = el.firstElementChild.offsetWidth + 12  // cardWidth + gap
+      const step = el.firstElementChild.offsetWidth + 12
       const raw  = el.scrollLeft / step
 
       innerRefs.current.forEach((ref, i) => {
@@ -75,7 +72,6 @@ export default function MobileSnsSlider({
         const offset = Math.abs(i - raw)
         const scale  = offset >= 1 ? 0.88 : 1 - 0.12 * offset
         const diff   = i - raw
-        // 뷰포트 경계 쪽 끝을 origin으로 고정 → peek 균형
         const origin = Math.abs(diff) < 0.02 ? 'center center'
                      : diff < 0             ? 'right center'
                      :                        'left center'
@@ -83,7 +79,6 @@ export default function MobileSnsSlider({
         ref.style.transformOrigin = origin
       })
 
-      // 인디케이터 도트용 최소 리렌더 (값 변경 시에만)
       const newIdx = Math.min(Math.round(raw), total - 1)
       setActiveIdx(prev => (prev !== newIdx ? newIdx : prev))
     })
@@ -97,59 +92,54 @@ export default function MobileSnsSlider({
         <div className="w-9 h-9 flex items-center justify-center mb-1">
           {iconEl}
         </div>
-        <div className="mb-2">
+        {/* 워드마크: mt-2 로 로고 아래 살짝 내림 */}
+        <div className="mt-2 mb-2">
           {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
         </div>
-        {!hasProfile && tagline && (
+        {/* 태그라인: profileInfo 유무 관계없이 항상 워드마크 아래 표시 */}
+        {tagline && (
           <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
         )}
       </div>
 
-      {/* ── 프로필 (좌측 정렬, 카드 좌변 기준) ── */}
-      {hasProfile && (
-        <div className="flex-shrink-0 flex justify-center pt-1 px-4">
-          <div className="flex items-center gap-3">
-            {profileInfo.picture ? (
-              <img
-                src={profileInfo.picture}
-                alt={profileInfo.username}
-                className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0" />
-            )}
-            <div className="min-w-0">
-              <p className={`font-bold text-sm ${t.title}`}>@{profileInfo.username}</p>
-              {(profileInfo.mediaCount != null || profileInfo.followersCount != null) && (
-                <div className={`flex gap-4 mt-0.5 text-xs ${t.sub}`}>
-                  {profileInfo.mediaCount != null && (
-                    <span>게시물 <strong className={t.title}>{profileInfo.mediaCount.toLocaleString()}</strong></span>
-                  )}
-                  {profileInfo.followersCount != null && (
-                    <span>팔로워 <strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong></span>
-                  )}
-                </div>
-              )}
-              {tagline && (
-                <p className={`text-xs mt-0.5 leading-relaxed ${t.sub}`}>{tagline}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── 프로필 행 + 카드: 함께 수직 중앙 정렬 ── */}
+      <div className="flex-1 flex flex-col justify-center">
 
-      {/* ── 카드 가로 스크롤 ── */}
-      <div
-        className="flex-1 flex flex-col"
-        style={{
-          justifyContent: hasProfile ? 'flex-start' : 'center',
-          paddingTop:     hasProfile ? '5vw'        : 0,
-        }}
-      >
+        {/* 프로필 행: 카드 바로 위, 카드 좌우 경계 기준 */}
+        {hasProfile && (
+          <div className="flex-shrink-0 flex items-center px-[10.5vw] pb-2">
+            {/* 왼쪽: 작은 아바타 + @ID */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {profileInfo.picture ? (
+                <img
+                  src={profileInfo.picture}
+                  alt={profileInfo.username}
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0" />
+              )}
+              <p className={`text-sm font-bold truncate ${t.title}`}>@{profileInfo.username}</p>
+            </div>
+            {/* 오른쪽: 게시물 / 팔로워 */}
+            {(profileInfo.mediaCount != null || profileInfo.followersCount != null) && (
+              <div className={`flex gap-3 text-xs flex-shrink-0 ${t.sub}`}>
+                {profileInfo.mediaCount != null && (
+                  <span>게시물 <strong className={t.title}>{profileInfo.mediaCount.toLocaleString()}</strong></span>
+                )}
+                {profileInfo.followersCount != null && (
+                  <span>팔로워 <strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong></span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 카드 가로 스크롤 */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex items-center gap-3 overflow-x-scroll no-scrollbar"
+          className="flex-shrink-0 flex items-center gap-3 overflow-x-scroll no-scrollbar"
           style={{
             scrollSnapType:          'x mandatory',
             scrollPaddingLeft:       '10.5vw',
@@ -163,12 +153,11 @@ export default function MobileSnsSlider({
               className="flex-shrink-0"
               style={{ width: '79vw', scrollSnapAlign: 'start' }}
             >
-              {/* 초기 스타일: activeIdx=0 → card0은 scale(1), 나머지 scale(0.88) */}
               <div
                 ref={el => { innerRefs.current[i] = el }}
                 style={{
-                  transform:       i === 0 ? 'scale(1)'    : 'scale(0.88)',
-                  transformOrigin: i === 0 ? 'center center' : 'left center',
+                  transform:       i === 0 ? 'scale(1)'        : 'scale(0.88)',
+                  transformOrigin: i === 0 ? 'center center'   : 'left center',
                 }}
               >
                 {renderCard(item, i)}
@@ -176,7 +165,7 @@ export default function MobileSnsSlider({
             </div>
           ))}
 
-          {/* 더보기 카드 — origin: left center (비활성 시 왼쪽 끝 고정) */}
+          {/* 더보기 카드 */}
           {profileUrl && (
             <div
               className="flex-shrink-0"
@@ -185,10 +174,7 @@ export default function MobileSnsSlider({
               <div
                 className="h-full"
                 ref={el => { innerRefs.current[items.length] = el }}
-                style={{
-                  transform:       'scale(0.88)',
-                  transformOrigin: 'left center',
-                }}
+                style={{ transform: 'scale(0.88)', transformOrigin: 'left center' }}
               >
                 <a
                   href={profileUrl}
@@ -210,6 +196,7 @@ export default function MobileSnsSlider({
           {/* paddingRight 대체 spacer — iOS WebKit padding-right 무시 버그 방지 */}
           <div style={{ width: '10.5vw', flexShrink: 0 }} aria-hidden="true" />
         </div>
+
       </div>
 
       {/* ── 인디케이터 ── */}
