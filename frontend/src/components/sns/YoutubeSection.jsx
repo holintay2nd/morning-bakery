@@ -15,7 +15,7 @@ const YoutubeIcon = () => (
   <img src="/youtube_icon_red.png" alt="YouTube" className="w-full h-full object-contain" draggable={false} />
 )
 const YoutubeWordmark = () => (
-  <img src="/youtube_wordmark_black.png" alt="YouTube" className="h-7 w-auto object-contain" draggable={false} />
+  <img src="/youtube_wordmark_black.png" alt="YouTube" className="h-10 w-auto object-contain" draggable={false} />
 )
 
 export default function YoutubeSection({ items, channelName, channelAvatar, channelUrl, tagline, subscriberCount, videoCount }) {
@@ -133,7 +133,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             wordmarkEl={<YoutubeWordmark />}
             name={displayChannel}
             tagline={tagline}
-            iconSize="w-12 h-12"
+            iconSize="w-14 h-14"
             profileInfo={channelUrl ? {
               picture:        channelAvatar || null,
               username:       channelName || displayChannel,

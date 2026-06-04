@@ -19,7 +19,7 @@ const ThreadsIcon = () => (
   <img src="/threads_logo_black.svg" alt="Threads" className="w-full h-full object-contain" draggable={false} />
 )
 const ThreadsWordmark = () => (
-  <img src="/threads_wordmark_black.png" alt="Threads" className="h-5 w-auto object-contain" draggable={false} />
+  <img src="/threads_wordmark_black.png" alt="Threads" className="h-7 w-auto object-contain" draggable={false} />
 )
 
 export default function ThreadsSection({ items, username, profilePicture, tagline, followersCount, mediaCount }) {
@@ -147,6 +147,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
             wordmarkEl={<ThreadsWordmark />}
             name="Threads"
             tagline={tagline}
+            iconSize="w-10 h-10"
             profileInfo={profileUrl ? {
               picture:        profilePicture || null,
               username:       displayUsername,
@@ -181,12 +182,13 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           wordmarkEl={<ThreadsWordmark />}
           name="Threads"
           tagline={tagline}
+          iconSize="w-10 h-10"
           profileInfo={profileUrl ? {
             picture:        profilePicture || null,
             username:       displayUsername,
             namePrefix:     '@',
-            mediaCount:     null,
-            followersCount: null,
+            mediaCount:     mediaCount     ?? null,
+            followersCount: followersCount ?? null,
             mediaLabel:     '게시물',
             followersLabel: '팔로워',
           } : null}
