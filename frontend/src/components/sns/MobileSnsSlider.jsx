@@ -53,7 +53,7 @@ export default function MobileSnsSlider({
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el || !el.firstElementChild) return
-    // 86vw 카드 + gap-3(12px) = 한 스텝
+    // 84vw 카드 + gap-3(12px) = 한 스텝
     const step = el.firstElementChild.offsetWidth + 12
     setActiveIdx(Math.min(Math.round(el.scrollLeft / step), total - 1))
   }
@@ -61,43 +61,58 @@ export default function MobileSnsSlider({
   return (
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
 
-      {/* ── 헤더: 아이콘 + 이름/워드마크 + 태그라인 + 프로필 정보 ── */}
-      <div className={`flex-shrink-0 flex flex-col items-center gap-2 ${profileInfo ? 'pt-10' : 'pt-12'} pb-6 px-4 text-center`}>
-        <div className="w-9 h-9 flex items-center justify-center mb-1">
-          {iconEl}
-        </div>
-        {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
-        {tagline && (
-          <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
-        )}
-        {/* SNS 프로필 정보 (Instagram 등 지원 플랫폼) */}
-        {profileInfo?.username && (
-          <div className="mt-2 w-full max-w-[300px]">
-            <div className="flex items-center gap-3 text-left">
-              {profileInfo.picture ? (
-                <img
-                  src={profileInfo.picture}
-                  alt={profileInfo.username}
-                  className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className={`font-bold text-sm truncate ${t.title}`}>@{profileInfo.username}</p>
-                <div className={`flex gap-3 mt-1 text-xs ${t.sub}`}>
-                  {profileInfo.mediaCount     != null && <span><strong className={t.title}>{profileInfo.mediaCount.toLocaleString()}</strong> 게시물</span>}
-                  {profileInfo.followersCount != null && <span><strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong> 팔로워</span>}
-                  {profileInfo.followsCount   != null && <span><strong className={t.title}>{profileInfo.followsCount.toLocaleString()}</strong> 팔로우</span>}
+      {profileInfo?.username ? (
+        /* ── 프로필 있는 플랫폼: 좌측 정렬 헤더 (카드 왼쪽 라인 기준) ── */
+        <div className="flex-shrink-0 pt-10 pb-5 px-[8vw]">
+          {/* 아이콘 + 워드마크 행 */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+              {iconEl}
+            </div>
+            {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
+          </div>
+          {/* 태그라인 */}
+          {tagline && (
+            <p className={`text-sm leading-relaxed mb-4 ${t.sub}`}>{tagline}</p>
+          )}
+          {/* 프로필 정보: 사진 + ID + 콘텐츠수/팔로워수 */}
+          <div className="flex items-center gap-3">
+            {profileInfo.picture ? (
+              <img
+                src={profileInfo.picture}
+                alt={profileInfo.username}
+                className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className={`font-bold text-sm ${t.title}`}>@{profileInfo.username}</p>
+              {(profileInfo.mediaCount != null || profileInfo.followersCount != null) && (
+                <div className={`flex gap-4 mt-1 text-xs ${t.sub}`}>
+                  {profileInfo.mediaCount     != null && (
+                    <span><strong className={t.title}>{profileInfo.mediaCount.toLocaleString()}</strong> 게시물</span>
+                  )}
+                  {profileInfo.followersCount != null && (
+                    <span><strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong> 팔로워</span>
+                  )}
                 </div>
-                {profileInfo.bio && (
-                  <p className={`text-xs mt-1 line-clamp-2 ${t.sub}`}>{profileInfo.bio}</p>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* ── 기본: 중앙 정렬 헤더 ── */
+        <div className="flex-shrink-0 flex flex-col items-center gap-2 pt-12 pb-6 px-4 text-center">
+          <div className="w-9 h-9 flex items-center justify-center mb-1">
+            {iconEl}
+          </div>
+          {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
+          {tagline && (
+            <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
+          )}
+        </div>
+      )}
 
       {/* ── 카드 가로 스크롤: 좌우 11vw 균등 패딩으로 가운데 정렬 ── */}
       <div className="flex-1 flex flex-col justify-center">
@@ -107,23 +122,27 @@ export default function MobileSnsSlider({
           className="flex items-center gap-3 overflow-x-scroll no-scrollbar"
           style={{
             scrollSnapType:    'x mandatory',
-            scrollPaddingLeft: '7vw',
+            scrollPaddingLeft: '8vw',
             WebkitOverflowScrolling: 'touch',
-            paddingLeft:  '7vw',
-            paddingRight: '7vw',
+            paddingLeft:  '8vw',
+            paddingRight: '8vw',
           }}
         >
           {items.map((item, i) => (
             <div
               key={i}
               className="flex-shrink-0"
-              style={{ width: '86vw', scrollSnapAlign: 'start' }}
+              style={{ width: '84vw', scrollSnapAlign: 'start' }}
             >
               <div
                 className="transition-transform duration-300 ease-out"
                 style={{
-                  transform: i === activeIdx ? 'scale(1)' : 'scale(0.82)',
-                  transformOrigin: 'center center',
+                  transform: i === activeIdx ? 'scale(1)' : 'scale(0.88)',
+                  // 왼쪽 peek 카드는 오른쪽 기준 축소 → 오른쪽 끝이 보임
+                  // 오른쪽 peek 카드는 왼쪽 기준 축소 → 왼쪽 끝이 보임
+                  transformOrigin: i === activeIdx ? 'center center'
+                                 : i < activeIdx  ? 'right center'
+                                 :                  'left center',
                 }}
               >
                 {renderCard(item, i)}
@@ -140,7 +159,7 @@ export default function MobileSnsSlider({
               <div
                 className="h-full transition-transform duration-300 ease-out"
                 style={{
-                  transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.82)',
+                  transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.88)',
                   transformOrigin: 'center center',
                 }}
               >

@@ -19,6 +19,8 @@ export default function SnsCarousel() {
   const [thProfilePicture, setThProfilePicture] = useState('')
   const [taglines,         setTaglines]         = useState({})
   const [igProfile,        setIgProfile]        = useState(null)
+  const [igMediaCount,     setIgMediaCount]     = useState(null)
+  const [igFollowersCount, setIgFollowersCount] = useState(null)
   const [loading,          setLoading]          = useState(true)
 
   useEffect(() => {
@@ -39,8 +41,10 @@ export default function SnsCarousel() {
       const tlData = taglineResult.status === 'fulfilled' ? taglineResult.value.data : {}
 
       const igItems = Array.isArray(igData) ? igData : (igData?.items ?? null)
-      if (igData?.username)       setIgUsername(igData.username)
-      if (igData?.profilePicture) setIgProfilePicture(igData.profilePicture)
+      if (igData?.username)         setIgUsername(igData.username)
+      if (igData?.profilePicture)   setIgProfilePicture(igData.profilePicture)
+      if (igData?.mediaCount     != null) setIgMediaCount(igData.mediaCount)
+      if (igData?.followersCount != null) setIgFollowersCount(igData.followersCount)
 
       const ytItems = Array.isArray(ytData) ? ytData : (ytData?.items ?? null)
       if (ytData?.channelName)   setYtChannelName(ytData.channelName)
@@ -107,7 +111,11 @@ export default function SnsCarousel() {
                 username={igUsername}
                 profilePicture={igProfilePicture}
                 tagline={taglines.instagram}
-                igProfile={igProfile}
+                igProfile={{
+                  ...(igProfile || {}),
+                  mediaCount:     igMediaCount     ?? igProfile?.mediaCount     ?? null,
+                  followersCount: igFollowersCount ?? igProfile?.followersCount ?? null,
+                }}
               />
             </div>
           </div>

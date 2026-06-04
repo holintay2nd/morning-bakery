@@ -12,20 +12,14 @@ const IG_MIN_H    = Math.round(IG_CARD_W * 4 / 3)  // aspect-[3/4]
 
 const config = SNS_CONFIG.find(c => c.key === 'instagram')
 
-// 인스타그램 워드마크 (Dancing Script 폰트 — 공식 워드마크와 유사한 스크립트체)
+// 인스타그램 공식 워드마크 이미지
 const InstagramWordmark = () => (
-  <span
-    style={{
-      fontFamily: "'Dancing Script', cursive",
-      fontSize: '28px',
-      fontWeight: 700,
-      letterSpacing: '-0.01em',
-      color: '#1a1a1a',
-      lineHeight: 1,
-    }}
-  >
-    Instagram
-  </span>
+  <img
+    src="/Instagram_wordmark.png"
+    alt="Instagram"
+    className="h-7 w-auto object-contain"
+    draggable={false}
+  />
 )
 
 const IgBigIcon = () => (
