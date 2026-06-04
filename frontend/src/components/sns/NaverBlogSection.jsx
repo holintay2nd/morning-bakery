@@ -14,10 +14,11 @@ const NB_MIN_H    = 14 + 40 + 70 + 14 + NB_THUMB + 14
 
 const config = SNS_CONFIG.find(c => c.key === 'naverBlog')
 
-const NbBigIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-full h-full fill-[#03C75A]" aria-hidden="true">
-    <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
-  </svg>
+const NaverBlogIcon = () => (
+  <img src="/naver_blog_logo_black.png" alt="네이버 블로그" className="w-full h-full object-contain" draggable={false} />
+)
+const NaverBlogWordmark = () => (
+  <img src="/naver_blog_wordmark.svg" alt="네이버 블로그" className="h-10 w-auto object-contain" draggable={false} />
 )
 
 function DefaultAvatar() {
@@ -172,7 +173,24 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     return (
       <div id="sns-naverblog" className="md:mb-14 scroll-mt-24">
         <div className="md:hidden">
-          <MobileSnsSlider items={[]} renderCard={() => null} profileUrl={blogUrl} iconEl={<NbBigIcon />} name={displayBlogTitle} tagline={tagline} />
+          <MobileSnsSlider
+            items={[]}
+            renderCard={() => null}
+            profileUrl={blogUrl}
+            iconEl={<NaverBlogIcon />}
+            wordmarkEl={<NaverBlogWordmark />}
+            name={displayBlogTitle}
+            tagline={tagline}
+            profileInfo={blogUrl ? {
+              picture:        null,
+              username:       blogTitle || displayBlogTitle,
+              namePrefix:     '',
+              mediaCount:     null,
+              followersCount: null,
+              mediaLabel:     '게시물',
+              followersLabel: '이웃',
+            } : null}
+          />
         </div>
         <div className="hidden md:block">
           <SectionHeader config={config} profileUrl={blogUrl} tagline={tagline} />
@@ -193,9 +211,19 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
           items={items}
           renderCard={renderMobileCard}
           profileUrl={blogUrl}
-          iconEl={<NbBigIcon />}
+          iconEl={<NaverBlogIcon />}
+          wordmarkEl={<NaverBlogWordmark />}
           name={displayBlogTitle}
           tagline={tagline}
+          profileInfo={blogUrl ? {
+            picture:        null,
+            username:       blogTitle || displayBlogTitle,
+            namePrefix:     '',
+            mediaCount:     null,
+            followersCount: null,
+            mediaLabel:     '게시물',
+            followersLabel: '이웃',
+          } : null}
         />
       </div>
 
