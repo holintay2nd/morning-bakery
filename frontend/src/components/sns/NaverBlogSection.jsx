@@ -18,7 +18,7 @@ const NaverBlogIcon = () => (
   <img src="/naver_blog_logo_black.png" alt="네이버 블로그" className="w-full h-full object-contain" draggable={false} />
 )
 const NaverBlogWordmark = () => (
-  <img src="/naver_blog_wordmark.svg" alt="네이버 블로그" className="h-10 w-auto object-contain" draggable={false} />
+  <img src="/naver_blog_wordmark.svg" alt="네이버 블로그" className="h-10 w-auto object-contain" draggable={false} style={{ filter: 'brightness(0)' }} />
 )
 
 function DefaultAvatar() {
@@ -87,7 +87,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     return () => { clearInterval(interval); clearTimeout(timerRef.current) }
   }, [shouldRotate, items.length])
 
-  const displayBlogTitle = blogTitle || '네이버 블로그'
+  const displayBlogTitle = (blogTitle || '네이버 블로그').replace(/님의\s*블로그$/, '').trim()
 
   // 데스크탑 카드
   const renderCard = (item) => (
@@ -181,9 +181,10 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
             wordmarkEl={<NaverBlogWordmark />}
             name={displayBlogTitle}
             tagline={tagline}
+            iconSize="w-10 h-10"
             profileInfo={blogUrl ? {
               picture:        null,
-              username:       blogTitle || displayBlogTitle,
+              username:       displayBlogTitle,
               namePrefix:     '',
               mediaCount:     null,
               followersCount: null,
@@ -215,9 +216,10 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
           wordmarkEl={<NaverBlogWordmark />}
           name={displayBlogTitle}
           tagline={tagline}
+          iconSize="w-10 h-10"
           profileInfo={blogUrl ? {
             picture:        null,
-            username:       blogTitle || displayBlogTitle,
+            username:       displayBlogTitle,
             namePrefix:     '',
             mediaCount:     null,
             followersCount: null,

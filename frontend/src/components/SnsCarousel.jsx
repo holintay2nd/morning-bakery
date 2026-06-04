@@ -10,13 +10,17 @@ export default function SnsCarousel() {
   const [snsData,          setSnsData]          = useState(null)
   const [igUsername,       setIgUsername]       = useState('')
   const [igProfilePicture, setIgProfilePicture] = useState('')
-  const [ytChannelName,    setYtChannelName]    = useState('')
-  const [ytChannelAvatar,  setYtChannelAvatar]  = useState('')
-  const [ytChannelUrl,     setYtChannelUrl]     = useState('')
+  const [ytChannelName,      setYtChannelName]      = useState('')
+  const [ytChannelAvatar,    setYtChannelAvatar]    = useState('')
+  const [ytChannelUrl,       setYtChannelUrl]       = useState('')
+  const [ytSubscriberCount,  setYtSubscriberCount]  = useState(null)
+  const [ytVideoCount,       setYtVideoCount]       = useState(null)
   const [nbBlogTitle,      setNbBlogTitle]      = useState('')
   const [nbBlogUrl,        setNbBlogUrl]        = useState('')
   const [thUsername,       setThUsername]       = useState('')
   const [thProfilePicture, setThProfilePicture] = useState('')
+  const [thFollowersCount, setThFollowersCount] = useState(null)
+  const [thMediaCount,     setThMediaCount]     = useState(null)
   const [taglines,         setTaglines]         = useState({})
   const [igProfile,        setIgProfile]        = useState(null)
   const [igMediaCount,     setIgMediaCount]     = useState(null)
@@ -50,6 +54,8 @@ export default function SnsCarousel() {
       if (ytData?.channelName)   setYtChannelName(ytData.channelName)
       if (ytData?.channelAvatar) setYtChannelAvatar(ytData.channelAvatar)
       if (ytData?.channelUrl)    setYtChannelUrl(ytData.channelUrl)
+      if (ytData?.subscriberCount != null) setYtSubscriberCount(ytData.subscriberCount)
+      if (ytData?.videoCount      != null) setYtVideoCount(ytData.videoCount)
 
       const nbItems = Array.isArray(nbData) ? nbData : (nbData?.items ?? null)
       if (nbData?.blogTitle) setNbBlogTitle(nbData.blogTitle)
@@ -58,6 +64,8 @@ export default function SnsCarousel() {
       const thItems = Array.isArray(thData) ? thData : (thData?.items ?? null)
       if (thData?.username)       setThUsername(thData.username)
       if (thData?.profilePicture) setThProfilePicture(thData.profilePicture)
+      if (thData?.followersCount != null) setThFollowersCount(thData.followersCount)
+      if (thData?.mediaCount     != null) setThMediaCount(thData.mediaCount)
 
       if (tlData) setTaglines(tlData)
 
@@ -128,6 +136,8 @@ export default function SnsCarousel() {
                 channelAvatar={ytChannelAvatar}
                 channelUrl={ytChannelUrl}
                 tagline={taglines.youtube}
+                subscriberCount={ytSubscriberCount}
+                videoCount={ytVideoCount}
               />
             </div>
           </div>
@@ -150,6 +160,8 @@ export default function SnsCarousel() {
                 username={thUsername}
                 profilePicture={thProfilePicture}
                 tagline={taglines.threads}
+                followersCount={thFollowersCount}
+                mediaCount={thMediaCount}
               />
             </div>
           </div>

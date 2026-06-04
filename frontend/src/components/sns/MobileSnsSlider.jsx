@@ -26,8 +26,9 @@ export default function MobileSnsSlider({
   wordmarkEl,
   tagline,
   profileInfo,
-  bg     = 'bg-white',
-  isDark = false,
+  bg       = 'bg-white',
+  isDark   = false,
+  iconSize = 'w-9 h-9',
 }) {
   const scrollRef = useRef(null)
   const innerRefs = useRef([])
@@ -89,7 +90,7 @@ export default function MobileSnsSlider({
   // 아이콘+워드마크 공통 내용
   const headerIconWordmark = (
     <>
-      <div className="w-9 h-9 flex items-center justify-center mb-1">
+      <div className={`${iconSize} flex items-center justify-center mb-1`}>
         {iconEl}
       </div>
       <div className="mt-2 mb-2">
