@@ -18,7 +18,7 @@ const NaverBlogIcon = () => (
   <img src="/naver_blog_logo_black.png" alt="네이버 블로그" className="w-full h-full object-contain" draggable={false} />
 )
 const NaverBlogWordmark = () => (
-  <img src="/naver_blog_wordmark(2)_black.svg" alt="네이버 블로그" className="h-8 w-auto" draggable={false} />
+  <img src="/naver_blog_wordmark(2)_black.svg" alt="네이버 블로그" className="h-7 w-auto" draggable={false} />
 )
 
 function DefaultAvatar() {

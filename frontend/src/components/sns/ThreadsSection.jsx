@@ -147,7 +147,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
             wordmarkEl={<ThreadsWordmark />}
             name="Threads"
             tagline={tagline}
-            iconSize="w-10 h-10"
+            iconSize="w-9 h-9"
             profileInfo={profileUrl ? {
               picture:        profilePicture || null,
               username:       displayUsername,
