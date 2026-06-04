@@ -3,8 +3,8 @@ import { ChevronRight } from 'lucide-react'
 
 /**
  * 모바일 SNS 섹션 전체 레이아웃
- * - 중앙 정렬 헤더: 플랫폼 아이콘 → 워드마크/이름(아래) → 태그라인(아래)
- * - 좌측 정렬 프로필 (profileInfo 있을 때만): 헤더 아래 border-t 구분선 후 프로필
+ * - 중앙 정렬 헤더: 플랫폼 아이콘 → 워드마크/이름(아래) → 태그라인(profileInfo 없을 때)
+ * - 중앙 정렬 프로필 (profileInfo 있을 때만): 사진 + ID + 통계 + 태그라인
  * - 79vw 카드 가로 스크롤 (스냅) — 좌우 10.5vw 패딩으로 peek
  * - 마지막 카드 다음에 '더보기' 카드 → profileUrl 이동
  * - 하단 인디케이터 점
@@ -39,7 +39,6 @@ export default function MobileSnsSlider({
     moreTitle: 'text-white',
     moreSub:   'text-white/40',
     chevron:   'text-white',
-    divider:   'border-white/10',
   } : {
     title:     'text-gray-900',
     sub:       'text-gray-400',
@@ -50,7 +49,6 @@ export default function MobileSnsSlider({
     moreTitle: 'text-gray-800',
     moreSub:   'text-gray-400',
     chevron:   'text-gray-700',
-    divider:   'border-gray-100',
   }
 
   const handleScroll = () => {
@@ -73,25 +71,26 @@ export default function MobileSnsSlider({
         <div className="mb-2">
           {wordmarkEl ?? <h2 className={`text-[22px] font-bold tracking-tight ${t.title}`}>{name}</h2>}
         </div>
-        {tagline && (
+        {/* profileInfo 없는 플랫폼만 여기서 태그라인 표시 */}
+        {!profileInfo?.username && tagline && (
           <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
         )}
       </div>
 
-      {/* ── 프로필 섹션 (좌측 정렬, 카드 왼쪽 라인 기준) ── */}
+      {/* ── 프로필 섹션 (중앙 정렬) ── */}
       {profileInfo?.username && (
-        <div className={`flex-shrink-0 border-t ${t.divider} pt-3 pb-4 px-[10.5vw]`}>
+        <div className="flex-shrink-0 pb-4 flex justify-center px-4">
           <div className="flex items-center gap-3">
             {profileInfo.picture ? (
               <img
                 src={profileInfo.picture}
                 alt={profileInfo.username}
-                className="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
+                className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-gray-100 flex-shrink-0" />
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex-shrink-0" />
             )}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0">
               <p className={`font-bold text-sm ${t.title}`}>@{profileInfo.username}</p>
               {(profileInfo.mediaCount != null || profileInfo.followersCount != null) && (
                 <div className={`flex gap-4 mt-1 text-xs ${t.sub}`}>
@@ -102,6 +101,10 @@ export default function MobileSnsSlider({
                     <span><strong className={t.title}>{profileInfo.followersCount.toLocaleString()}</strong> 팔로워</span>
                   )}
                 </div>
+              )}
+              {/* 태그라인: 게시물/팔로워 아래 */}
+              {tagline && (
+                <p className={`text-xs mt-1.5 leading-relaxed ${t.sub}`}>{tagline}</p>
               )}
             </div>
           </div>
@@ -129,9 +132,8 @@ export default function MobileSnsSlider({
               style={{ width: '79vw', scrollSnapAlign: 'start' }}
             >
               <div
-                className="transition-transform duration-500"
+                className="transition-transform duration-700 ease-out"
                 style={{
-                  transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                   transform: i === activeIdx ? 'scale(1)' : 'scale(0.88)',
                   // 왼쪽 peek 카드는 오른쪽 기준 축소 → 오른쪽 끝이 보임
                   // 오른쪽 peek 카드는 왼쪽 기준 축소 → 왼쪽 끝이 보임
@@ -152,9 +154,8 @@ export default function MobileSnsSlider({
               style={{ width: '79vw', scrollSnapAlign: 'start', alignSelf: 'stretch' }}
             >
               <div
-                className="h-full transition-transform duration-500"
+                className="h-full transition-transform duration-700 ease-out"
                 style={{
-                  transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                   transform: activeIdx === items.length ? 'scale(1)' : 'scale(0.88)',
                   transformOrigin: 'center center',
                 }}
