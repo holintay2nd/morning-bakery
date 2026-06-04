@@ -69,7 +69,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       className="group bg-white shadow-sm md:hover:shadow-xl transition-shadow duration-300 block rounded-2xl touch-manipulation"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-t-2xl">
+      <div className={`relative ${item.isShort ? 'aspect-[3/4]' : 'aspect-video'} overflow-hidden bg-gray-200 rounded-t-2xl`}>
         <img
           src={item.thumbnail}
           alt={item.title}
@@ -91,7 +91,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1.5">{item.title}</p>
+          <p className="text-brown-800 text-sm font-semibold line-clamp-2 leading-snug mb-1">{item.title}</p>
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-brown-400 text-xs">
             <span>{displayChannel}</span>
             {item.viewCount && <><span>·</span><span>{formatViewCount(item.viewCount)}</span></>}
@@ -168,7 +168,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           wordmarkEl={<YoutubeWordmark />}
           name={displayChannel}
           tagline={tagline}
-          iconSize="w-12 h-12"
+          iconSize="w-11 h-11"
           profileInfo={channelUrl ? {
             picture:        channelAvatar || null,
             username:       channelName || displayChannel,

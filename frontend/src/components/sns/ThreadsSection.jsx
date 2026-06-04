@@ -19,7 +19,7 @@ const ThreadsIcon = () => (
   <img src="/threads_logo_black.svg" alt="Threads" className="w-full h-full object-contain" draggable={false} />
 )
 const ThreadsWordmark = () => (
-  <img src="/threads_wordmark_black.png" alt="Threads" className="h-7 w-auto object-contain" draggable={false} />
+  <img src="/threads_wordmark_black.png" alt="Threads" className="h-[22px] w-auto object-contain" draggable={false} />
 )
 
 export default function ThreadsSection({ items, username, profilePicture, tagline, followersCount, mediaCount }) {
@@ -147,7 +147,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
             wordmarkEl={<ThreadsWordmark />}
             name="Threads"
             tagline={tagline}
-            iconSize="w-9 h-9"
+            iconSize="w-[34px] h-[34px]"
             profileInfo={profileUrl ? {
               picture:        profilePicture || null,
               username:       displayUsername,
@@ -182,7 +182,7 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           wordmarkEl={<ThreadsWordmark />}
           name="Threads"
           tagline={tagline}
-          iconSize="w-10 h-10"
+          iconSize="w-[34px] h-[34px]"
           profileInfo={profileUrl ? {
             picture:        profilePicture || null,
             username:       displayUsername,

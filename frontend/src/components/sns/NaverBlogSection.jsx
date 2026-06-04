@@ -122,7 +122,7 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
     </a>
   )
 
-  // 모바일 카드 (16:9 썸네일)
+  // 모바일 카드 (텍스트 위, 이미지 아래 – 데스크탑 레이아웃과 동일, 자연 높이)
   const renderMobileCard = (item, i) => (
     <a
       key={`nb-mob-${item._id ?? i}`}
@@ -132,27 +132,27 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
       className="block rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden touch-manipulation"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      {item.thumbnail ? (
-        <div className="aspect-video overflow-hidden bg-gray-100">
-          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
-        </div>
-      ) : (
-        <div className="aspect-video bg-green-50 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="w-14 h-14 opacity-15 fill-[#03C75A]" aria-hidden="true">
-            <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z"/>
-          </svg>
-        </div>
-      )}
-      <div className="p-4">
+      <div className="p-3.5">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             <DefaultAvatar />
-            <span className="text-xs text-gray-600 font-medium">{displayBlogTitle}</span>
+            <span className="text-xs text-gray-600 font-medium truncate">{displayBlogTitle}</span>
           </div>
-          {item.timestamp && <span className="text-[11px] text-gray-400">{formatBlogDate(item.timestamp)}</span>}
+          {item.timestamp && (
+            <span className="text-[11px] text-gray-400 flex-shrink-0 ml-2">{formatBlogDate(item.timestamp)}</span>
+          )}
         </div>
-        <p className="text-base font-bold text-gray-900 mb-1.5 leading-snug line-clamp-2">{item.title}</p>
-        <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">{item.summary || ''}</p>
+        <p className="text-sm font-bold text-gray-900 line-clamp-2 mb-1.5 leading-snug">{item.title}</p>
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">{item.summary || ''}</p>
+      </div>
+      <div className="px-3.5 pb-3.5">
+        {item.thumbnail ? (
+          <div className="overflow-hidden rounded-xl bg-gray-100">
+            <img src={item.thumbnail} alt={item.title} className="w-full h-auto object-cover" loading="lazy" />
+          </div>
+        ) : (
+          <NaverBlogPlaceholder />
+        )}
       </div>
     </a>
   )
