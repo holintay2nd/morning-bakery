@@ -195,15 +195,9 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
           name={displayBlogTitle}
           tagline={tagline}
           iconSize="w-10 h-10"
-          profileInfo={blogUrl ? {
-            picture:        null,
-            username:       displayBlogTitle,
-            namePrefix:     '',
-            mediaCount:     null,
-            followersCount: null,
-            mediaLabel:     '게시물',
-            followersLabel: '이웃',
-          } : null}
+          logoClickable={false}
+          headerTopPadding="pt-[52px]"
+          profileEl={profileEl}
         />
       </div>
       <div className="hidden md:block">
