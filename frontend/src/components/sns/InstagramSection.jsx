@@ -137,7 +137,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         href={profileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-shrink-0 px-3 py-1 rounded-lg border border-gray-200 bg-gray-100 text-xs font-medium text-gray-700 active:opacity-70 transition-opacity"
+        className="flex-shrink-0 px-3 py-1 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 active:opacity-70 transition-opacity"
       >
         이동
       </a>
@@ -157,7 +157,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
             name="인스타그램"
             tagline={tagline}
             logoClickable={false}
-            headerTopPadding="pt-14"
+            headerTopPadding="pt-[52px]"
           />
         </div>
         <div className="hidden md:block">
