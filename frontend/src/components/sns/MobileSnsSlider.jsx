@@ -246,21 +246,21 @@ export default function MobileSnsSlider({
           {/* paddingRight 대체 spacer — iOS WebKit padding-right 무시 버그 방지 */}
           <div style={{ width: '10.5vw', flexShrink: 0 }} aria-hidden="true" />
         </div>
-      </div>
 
-      {/* ── 인디케이터 ── */}
-      {total > 1 && (
-        <div className="flex-shrink-0 flex justify-center gap-1.5 pb-20 pt-4">
-          {Array.from({ length: total }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === activeIdx ? `w-4 ${t.dotOn}` : `w-1.5 ${t.dotOff}`
-              }`}
-            />
-          ))}
-        </div>
-      )}
+        {/* ── 인디케이터: 카드 바로 아래 ── */}
+        {total > 1 && (
+          <div className="flex-shrink-0 flex justify-center gap-1.5 pt-4 pb-2">
+            {Array.from({ length: total }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === activeIdx ? `w-4 ${t.dotOn}` : `w-1.5 ${t.dotOff}`
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
     </div>
   )

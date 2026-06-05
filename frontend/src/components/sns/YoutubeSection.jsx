@@ -36,7 +36,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group bg-white shadow-sm md:hover:shadow-xl transition-shadow duration-300 block rounded-2xl touch-manipulation"
+      className="group bg-white border border-gray-200 shadow-sm md:hover:shadow-xl transition-shadow duration-300 block rounded-2xl touch-manipulation"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-t-2xl">
