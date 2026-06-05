@@ -33,9 +33,10 @@ export default function MobileSnsSlider({
   isDark            = false,
   iconSize          = 'w-9 h-9',
   taglineClassName  = '',
-  logoClickable      = true,
-  headerTopPadding   = 'pt-12',
-  iconWordmarkGap    = 'gap-2',
+  logoClickable         = true,
+  headerTopPadding      = 'pt-12',
+  iconWordmarkGap       = 'gap-2',
+  contentBottomSpacer   = 0,
 }) {
   const scrollRef = useRef(null)
   const innerRefs = useRef([])
@@ -134,7 +135,7 @@ export default function MobileSnsSlider({
       </div>
 
       {/* ── 프로필 행 + 카드: 함께 수직 중앙 정렬 ── */}
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center" style={contentBottomSpacer ? { paddingBottom: contentBottomSpacer } : undefined}>
 
         {/* profileEl 방식: 카드 바로 위 고정 */}
         {profileEl && (
