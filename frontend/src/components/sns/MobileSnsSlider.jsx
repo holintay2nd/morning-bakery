@@ -34,8 +34,9 @@ export default function MobileSnsSlider({
   isDark            = false,
   iconSize          = 'w-9 h-9',
   taglineClassName  = '',
-  logoClickable     = true,
-  headerTopPadding  = 'pt-12',
+  logoClickable      = true,
+  headerTopPadding   = 'pt-12',
+  iconWordmarkGap    = 'gap-2',
 }) {
   const scrollRef    = useRef(null)
   const innerRefs    = useRef([])
@@ -146,12 +147,12 @@ export default function MobileSnsSlider({
             href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center active:opacity-70 transition-opacity gap-2"
+            className={`flex flex-col items-center active:opacity-70 transition-opacity ${iconWordmarkGap}`}
           >
             {headerIconWordmark}
           </a>
         ) : (
-          <div className="flex flex-col items-center gap-2">
+          <div className={`flex flex-col items-center ${iconWordmarkGap}`}>
             {headerIconWordmark}
           </div>
         )}

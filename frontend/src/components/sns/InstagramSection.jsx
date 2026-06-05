@@ -163,6 +163,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
             tagline={tagline}
             logoClickable={false}
             headerTopPadding="pt-[52px]"
+            iconWordmarkGap="gap-4"
           />
         </div>
         <div className="hidden md:block">
