@@ -29,11 +29,13 @@ export default function MobileSnsSlider({
   wordmarkEl,
   tagline,
   profileInfo,
-  profileEl        = null,
-  bg               = 'bg-white',
-  isDark           = false,
-  iconSize         = 'w-9 h-9',
-  taglineClassName = '',
+  profileEl         = null,
+  bg                = 'bg-white',
+  isDark            = false,
+  iconSize          = 'w-9 h-9',
+  taglineClassName  = '',
+  logoClickable     = true,
+  headerTopPadding  = 'pt-12',
 }) {
   const scrollRef    = useRef(null)
   const innerRefs    = useRef([])
@@ -137,9 +139,9 @@ export default function MobileSnsSlider({
     <div className={`${bg} flex flex-col min-h-[100svh]`}>
 
       {/* ── 중앙 정렬 헤더 ── */}
-      <div className="flex-shrink-0 flex flex-col items-center pt-12 pb-4 px-4 text-center gap-2">
-        {/* 아이콘 + 워드마크: profileUrl 있으면 클릭 → SNS 이동 */}
-        {profileUrl ? (
+      <div className={`flex-shrink-0 flex flex-col items-center ${headerTopPadding} pb-4 px-4 text-center gap-2`}>
+        {/* 아이콘 + 워드마크: logoClickable && profileUrl일 때만 클릭 → SNS 이동 */}
+        {logoClickable && profileUrl ? (
           <a
             href={profileUrl}
             target="_blank"
