@@ -73,33 +73,36 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     </a>
   )
 
-  const renderMobileCard = (item, i) => (
-    <div key={`yt-mob-${item._id ?? i}`}>
-      {/* Profile row: lives inside the slide so it scales with the card */}
-      <div className="flex items-center gap-2 px-1 pb-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {showAvatar ? (
-            <img src={channelAvatar} alt={displayChannel} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
-          ) : (
-            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2 flex-shrink-0`}>
-              <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-            </div>
-          )}
-          <p className="text-sm font-bold text-gray-900 truncate">{displayChannel}</p>
-        </div>
-        {(videoCount != null || subscriberCount != null) && (
-          <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
-            {videoCount != null && (
-              <span>동영상{' '}<strong className="text-gray-900">{videoCount.toLocaleString()}</strong></span>
-            )}
-            {subscriberCount != null && (
-              <span>구독자{' '}<strong className="text-gray-900">{subscriberCount.toLocaleString()}</strong></span>
-            )}
+  // 단일 프로필 행 — MobileSnsSlider의 profileEl로 전달, 카드 높이에 맞춰 translateY 조정됨
+  const profileEl = (
+    <div className="flex items-center gap-2 w-full">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {showAvatar ? (
+          <img src={channelAvatar} alt={displayChannel} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
+        ) : (
+          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2 flex-shrink-0`}>
+            <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
           </div>
         )}
+        <p className="text-sm font-bold text-gray-900 truncate">{displayChannel}</p>
       </div>
+      {(videoCount != null || subscriberCount != null) && (
+        <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
+          {videoCount != null && (
+            <span>동영상{' '}<strong className="text-gray-900">{videoCount.toLocaleString()}</strong></span>
+          )}
+          {subscriberCount != null && (
+            <span>구독자{' '}<strong className="text-gray-900">{subscriberCount.toLocaleString()}</strong></span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
+  const renderMobileCard = (item, i) => (
+    <div key={`yt-mob-${item._id ?? i}`}>
       {renderCardInner(item)}
     </div>
   )
@@ -130,6 +133,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             tagline={tagline}
             iconSize="w-[66px] h-[66px]"
             taglineClassName="mt-5"
+            profileEl={channelUrl ? profileEl : null}
           />
         </div>
         <div className="hidden md:block">
@@ -154,6 +158,8 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           name={displayChannel}
           tagline={tagline}
           iconSize="w-[66px] h-[66px]"
+          taglineClassName="mt-5"
+          profileEl={channelUrl ? profileEl : null}
         />
       </div>
       <div className="hidden md:block">
