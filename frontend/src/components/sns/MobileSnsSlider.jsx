@@ -26,9 +26,10 @@ export default function MobileSnsSlider({
   wordmarkEl,
   tagline,
   profileInfo,
-  bg       = 'bg-white',
-  isDark   = false,
-  iconSize = 'w-9 h-9',
+  bg              = 'bg-white',
+  isDark          = false,
+  iconSize        = 'w-9 h-9',
+  taglineClassName = '',
 }) {
   const scrollRef = useRef(null)
   const innerRefs = useRef([])
@@ -121,7 +122,7 @@ export default function MobileSnsSlider({
         )}
         {/* 태그라인: 항상 워드마크 아래 */}
         {tagline && (
-          <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub}`}>{tagline}</p>
+          <p className={`text-sm leading-relaxed max-w-[260px] ${t.sub} ${taglineClassName}`}>{tagline}</p>
         )}
       </div>
 

@@ -129,6 +129,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             name={displayChannel}
             tagline={tagline}
             iconSize="w-[66px] h-[66px]"
+            taglineClassName="mt-2"
           />
         </div>
         <div className="hidden md:block">
