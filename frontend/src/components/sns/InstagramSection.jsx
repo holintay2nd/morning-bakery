@@ -137,9 +137,9 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         href={profileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-shrink-0 inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 leading-none active:opacity-70 transition-opacity"
+        className="flex-shrink-0 inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 active:opacity-70 transition-opacity"
       >
-        이동
+        <span className="translate-y-px">이동</span>
       </a>
     </div>
   ) : null
