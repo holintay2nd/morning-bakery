@@ -50,6 +50,33 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
   const { bgLight, borderColor } = config
   const displayBlogTitle = (blogTitle || '네이버 블로그').replace(/님의\s*블로그$/, '').trim()
 
+  // 단일 프로필 행: 블로그명 + 게시물 수(RSS) + 이동 버튼
+  const profileEl = blogUrl ? (
+    <div className="flex items-center gap-2 w-full">
+      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-gray-400" aria-hidden="true">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-gray-900 leading-tight truncate">{displayBlogTitle}</p>
+        {items.length > 0 && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            게시물{' '}<strong className="text-gray-700">{items.length}</strong>
+          </p>
+        )}
+      </div>
+      <a
+        href={blogUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-shrink-0 inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 active:opacity-70 transition-opacity"
+      >
+        <span className="translate-y-px">이동</span>
+      </a>
+    </div>
+  ) : null
+
   const renderCard = (item) => (
     <a
       href={item.url}
@@ -141,15 +168,9 @@ export default function NaverBlogSection({ items, blogTitle, blogUrl, tagline })
             name={displayBlogTitle}
             tagline={tagline}
             iconSize="w-10 h-10"
-            profileInfo={blogUrl ? {
-              picture:        null,
-              username:       displayBlogTitle,
-              namePrefix:     '',
-              mediaCount:     null,
-              followersCount: null,
-              mediaLabel:     '게시물',
-              followersLabel: '이웃',
-            } : null}
+            logoClickable={false}
+            headerTopPadding="pt-[52px]"
+            profileEl={profileEl}
           />
         </div>
         <div className="hidden md:block">
