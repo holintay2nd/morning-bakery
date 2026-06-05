@@ -105,7 +105,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
 
   // 단일 프로필 행: avatar + [ID / 게시물·팔로워 스택] + 더 보기 버튼
   const profileEl = profileUrl ? (
-    <div className="flex items-center gap-3 w-full">
+    <div className="flex items-center gap-2 w-full">
       {showAvatar ? (
         <img
           src={profilePicture}
@@ -137,7 +137,7 @@ export default function InstagramSection({ items, username, profilePicture, tagl
         href={profileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-shrink-0 px-3 py-1 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 active:opacity-70 transition-opacity"
+        className="flex-shrink-0 inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 leading-none active:opacity-70 transition-opacity"
       >
         이동
       </a>
