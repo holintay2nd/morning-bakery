@@ -139,7 +139,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             name={displayChannel}
             tagline={tagline}
             iconSize="w-[66px] h-[66px]"
-            taglineClassName="mt-3"
+            taglineClassName="mt-0.5"
             logoClickable={false}
             headerTopPadding="pt-[52px]"
             profileEl={profileEl}
@@ -167,7 +167,7 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
           name={displayChannel}
           tagline={tagline}
           iconSize="w-[66px] h-[66px]"
-          taglineClassName="mt-5"
+          taglineClassName="mt-1.5"
           profileEl={channelUrl ? profileEl : null}
         />
       </div>

@@ -142,8 +142,8 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
             name="Threads"
             tagline={tagline}
             iconSize="w-[34px] h-[34px]"
-            iconWordmarkGap="gap-3"
-            taglineClassName="mt-1"
+            iconWordmarkGap="gap-[14px]"
+            taglineClassName="mt-1.5"
             logoClickable={false}
             headerTopPadding="pt-[52px]"
             profileEl={profileEl}
@@ -171,6 +171,8 @@ export default function ThreadsSection({ items, username, profilePicture, taglin
           name="Threads"
           tagline={tagline}
           iconSize="w-[34px] h-[34px]"
+          iconWordmarkGap="gap-[14px]"
+          taglineClassName="mt-1.5"
           logoClickable={false}
           headerTopPadding="pt-[52px]"
           profileEl={profileEl}

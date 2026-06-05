@@ -134,7 +134,7 @@ export default function MobileSnsSlider({
       </div>
 
       {/* ── 프로필 행 + 카드: 함께 수직 중앙 정렬 ── */}
-      <div className="flex-1 flex flex-col pt-[29px]">
+      <div className="flex-1 flex flex-col pt-4">
 
         {/* profileEl 방식: 카드 바로 위 고정 */}
         {profileEl && (
