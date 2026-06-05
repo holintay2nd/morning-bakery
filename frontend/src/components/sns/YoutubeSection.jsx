@@ -39,12 +39,11 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
       className="group bg-white shadow-sm md:hover:shadow-xl transition-shadow duration-300 block rounded-2xl touch-manipulation"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      <div className={`relative ${item.isShort ? 'aspect-[3/4]' : 'aspect-video'} overflow-hidden bg-gray-200 rounded-t-2xl`}>
+      <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-t-2xl">
         <img
           src={item.thumbnail}
           alt={item.title}
-          className={`w-full h-full object-cover${item.isShort ? '' : ' md:group-hover:scale-105 md:transition-transform md:duration-700'}`}
-          style={item.isShort ? { transform: 'scale(1.5)' } : undefined}
+          className="w-full h-full object-cover md:group-hover:scale-105 md:transition-transform md:duration-700"
           loading="lazy"
           onError={e => { e.target.src = `https://i.ytimg.com/vi/${item._id}/hqdefault.jpg` }}
         />
@@ -73,33 +72,41 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
     </a>
   )
 
-  // 단일 프로필 행 — MobileSnsSlider의 profileEl로 전달, 카드 높이에 맞춰 translateY 조정됨
-  const profileEl = (
+  // 단일 프로필 행: 채널명 아래 동영상·구독자 수 + 이동 버튼
+  const profileEl = channelUrl ? (
     <div className="flex items-center gap-2 w-full">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        {showAvatar ? (
-          <img src={channelAvatar} alt={displayChannel} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
-        ) : (
-          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2 flex-shrink-0`}>
-            <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
-          </div>
-        )}
-        <p className="text-sm font-bold text-gray-900 truncate">{displayChannel}</p>
-      </div>
-      {(videoCount != null || subscriberCount != null) && (
-        <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
-          {videoCount != null && (
-            <span>동영상{' '}<strong className="text-gray-900">{videoCount.toLocaleString()}</strong></span>
-          )}
-          {subscriberCount != null && (
-            <span>구독자{' '}<strong className="text-gray-900">{subscriberCount.toLocaleString()}</strong></span>
-          )}
+      {showAvatar ? (
+        <img src={channelAvatar} alt={displayChannel} className="w-10 h-10 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
+      ) : (
+        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} flex items-center justify-center p-2 flex-shrink-0`}>
+          <svg viewBox="0 0 24 24" className="w-full h-full fill-white" aria-hidden="true">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
         </div>
       )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-gray-900 leading-tight truncate">{displayChannel}</p>
+        {(videoCount != null || subscriberCount != null) && (
+          <div className="flex gap-3 text-xs text-gray-400 mt-0.5">
+            {videoCount != null && (
+              <span>동영상{' '}<strong className="text-gray-700">{videoCount.toLocaleString()}</strong></span>
+            )}
+            {subscriberCount != null && (
+              <span>구독자{' '}<strong className="text-gray-700">{subscriberCount.toLocaleString()}</strong></span>
+            )}
+          </div>
+        )}
+      </div>
+      <a
+        href={channelUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-shrink-0 inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 active:opacity-70 transition-opacity"
+      >
+        <span className="translate-y-px">이동</span>
+      </a>
     </div>
-  )
+  ) : null
 
   const renderMobileCard = (item, i) => (
     <div key={`yt-mob-${item._id ?? i}`}>
@@ -133,7 +140,9 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             tagline={tagline}
             iconSize="w-[66px] h-[66px]"
             taglineClassName="mt-5"
-            profileEl={channelUrl ? profileEl : null}
+            logoClickable={false}
+            headerTopPadding="pt-[52px]"
+            profileEl={profileEl}
           />
         </div>
         <div className="hidden md:block">
