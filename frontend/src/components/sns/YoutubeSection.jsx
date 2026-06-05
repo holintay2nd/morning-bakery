@@ -140,7 +140,6 @@ export default function YoutubeSection({ items, channelName, channelAvatar, chan
             tagline={tagline}
             iconSize="w-[66px] h-[66px]"
             taglineClassName="mt-3"
-            contentBottomSpacer={192}
             logoClickable={false}
             headerTopPadding="pt-[52px]"
             profileEl={profileEl}
