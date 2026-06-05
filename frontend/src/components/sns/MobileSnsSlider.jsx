@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react'
  * 레이아웃:
  *   [헤더: 아이콘+워드마크(profileUrl 클릭 → SNS 이동) → 태그라인]
  *   [flex-1 justify-center]
- *     [프로필 행: profileInfo(기존) 또는 profileEl(동적 위치)]
+ *     [프로필 행: profileInfo(기존) 또는 profileEl(고정)]
  *     [카드 가로 스크롤]
  *   [인디케이터 점]
  *
@@ -15,8 +15,7 @@ import { ChevronRight } from 'lucide-react'
  *   picture, username, namePrefix('@'|''), mediaCount, followersCount,
  *   mediaLabel('게시물'|'동영상'|...), followersLabel('팔로워'|'구독자'|'이웃'|...)
  *
- * profileEl: ReactNode — 단일 프로필 행. 스크롤 시 활성 카드 높이에 맞춰
- *   translateY로 상하 위치가 자동 조정됨 (React 리렌더 없이 DOM 직접 조작).
+ * profileEl: ReactNode — 단일 프로필 행. 카드 위 고정 표시.
  *
  * 스케일: onScroll → rAF → DOM style 직접 조작 (React 리렌더 0회)
  */
@@ -38,10 +37,9 @@ export default function MobileSnsSlider({
   headerTopPadding   = 'pt-12',
   iconWordmarkGap    = 'gap-2',
 }) {
-  const scrollRef    = useRef(null)
-  const innerRefs    = useRef([])
-  const rafRef       = useRef(null)
-  const profileElRef = useRef(null)
+  const scrollRef = useRef(null)
+  const innerRefs = useRef([])
+  const rafRef    = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
 
   const total      = items.length + (profileUrl ? 1 : 0)
@@ -72,21 +70,6 @@ export default function MobileSnsSlider({
   // rAF 정리
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
 
-  // profileEl 초기 위치: 첫 카드 위에 붙도록
-  useEffect(() => {
-    if (!profileEl || !profileElRef.current || !scrollRef.current) return
-    const raf = requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (!el) return
-      const containerH = el.offsetHeight
-      const cardH      = innerRefs.current[0]?.offsetHeight ?? containerH
-      if (containerH > 0) {
-        profileElRef.current.style.transform = `translateY(${(containerH - cardH) / 2}px)`
-      }
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [profileEl, items.length])
-
   const handleScroll = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     rafRef.current = requestAnimationFrame(() => {
@@ -106,18 +89,6 @@ export default function MobileSnsSlider({
         ref.style.transform       = `scale(${scale})`
         ref.style.transformOrigin = origin
       })
-
-      // profileEl: 활성 카드 상단에 맞춰 translateY 조정 (카드 높이 보간)
-      if (profileElRef.current) {
-        const containerH = el.offsetHeight
-        const floorIdx   = Math.max(0, Math.min(Math.floor(raw), items.length - 1))
-        const ceilIdx    = Math.max(0, Math.min(Math.ceil(raw),  items.length - 1))
-        const frac       = raw - Math.floor(raw)
-        const floorH     = innerRefs.current[floorIdx]?.offsetHeight ?? containerH
-        const ceilH      = innerRefs.current[ceilIdx]?.offsetHeight  ?? containerH
-        const cardH      = floorH + (ceilH - floorH) * frac
-        profileElRef.current.style.transform = `translateY(${(containerH - cardH) / 2}px)`
-      }
 
       const newIdx = Math.min(Math.round(raw), total - 1)
       setActiveIdx(prev => (prev !== newIdx ? newIdx : prev))
@@ -165,13 +136,9 @@ export default function MobileSnsSlider({
       {/* ── 프로필 행 + 카드: 함께 수직 중앙 정렬 ── */}
       <div className="flex-1 flex flex-col justify-center">
 
-        {/* profileEl 방식: 단일 프로필, 활성 카드 위에 동적 위치 조정 */}
+        {/* profileEl 방식: 카드 바로 위 고정 */}
         {profileEl && (
-          <div
-            ref={profileElRef}
-            className="flex-shrink-0 flex items-center px-[10.5vw] pb-2"
-            style={{ willChange: 'transform' }}
-          >
+          <div className="flex-shrink-0 flex items-center px-[10.5vw] pb-2">
             {profileEl}
           </div>
         )}
