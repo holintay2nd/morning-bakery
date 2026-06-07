@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
-import BottomNav from './components/BottomNav'
+import MobileTopNav from './components/MobileTopNav'
 import Hero from './components/Hero'
 import About from './components/About'
 import RecommendSection from './components/RecommendSection'
@@ -33,8 +33,8 @@ function HomePage() {
       <div className="hidden md:block">
         <Footer />
       </div>
-      {/* 모바일 전용 하단 네비게이션 바 */}
-      <BottomNav />
+      {/* 모바일 전용 상단 네비게이션 바 (홈 섹션에서 자동 숨김) */}
+      <MobileTopNav />
     </div>
   )
 }
