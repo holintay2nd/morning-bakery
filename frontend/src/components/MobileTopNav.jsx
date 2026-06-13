@@ -79,31 +79,29 @@ export default function MobileTopNav() {
   const [sheetOpen,   setSheetOpen]   = useState(false)
   const [sitemapOpen, setSitemapOpen] = useState(false)
 
-  // Hide navbar while home section is visible
+  // 스크롤 기반 active section 추적 — IntersectionObserver 대신 사용
+  // snap 컨테이너의 overflow:scroll 환경에서 더 신뢰도 높음
   useEffect(() => {
-    const hero = document.getElementById('home')
-    if (!hero) return
-    const obs = new IntersectionObserver(
-      ([entry]) => setIsAtHome(entry.isIntersecting),
-      { threshold: 0.1 },
-    )
-    obs.observe(hero)
-    return () => obs.disconnect()
-  }, [])
+    const container = document.querySelector('.mobile-snap-container')
+    if (!container) return
 
-  // Track active section for center label
-  useEffect(() => {
-    const observers = NAV_ITEMS.map(({ id }) => {
-      const el = document.getElementById(id)
-      if (!el) return null
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveId(id) },
-        { threshold: 0.5 },
-      )
-      obs.observe(el)
-      return obs
-    }).filter(Boolean)
-    return () => observers.forEach(o => o.disconnect())
+    const update = () => {
+      const mid = window.innerHeight / 2
+      for (const { id } of NAV_ITEMS) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        const { top, bottom } = el.getBoundingClientRect()
+        if (top <= mid && mid < bottom) {
+          setIsAtHome(id === 'home')
+          setActiveId(id)
+          return
+        }
+      }
+    }
+
+    container.addEventListener('scroll', update, { passive: true })
+    update()
+    return () => container.removeEventListener('scroll', update)
   }, [])
 
   // Close panels on Escape

@@ -2,8 +2,8 @@ import { Phone, Mail } from 'lucide-react'
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="mobile-snap-section py-24 px-5 bg-brown-800 overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
+    <section id="contact" className="mobile-snap-section flex flex-col md:block pt-14 pb-4 md:py-24 px-5 bg-brown-800 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center md:block max-w-6xl mx-auto w-full">
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">Contact</p>
         <h2 className="font-sans font-bold text-3xl md:text-4xl text-cream-50 text-center mb-14">문의</h2>
 

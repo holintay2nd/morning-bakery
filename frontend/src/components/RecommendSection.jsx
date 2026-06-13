@@ -67,8 +67,8 @@ export default function RecommendSection() {
   const [active, setActive] = useState(0)
 
   return (
-    <section id="recommend" className="mobile-snap-section py-24 px-5 bg-brown-900 scroll-mt-24 overflow-y-auto">
-      <div className="max-w-5xl mx-auto">
+    <section id="recommend" className="mobile-snap-section flex flex-col md:block pt-14 pb-4 md:py-24 px-5 bg-brown-900 scroll-mt-[52px] md:scroll-mt-24 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center md:block max-w-5xl mx-auto w-full">
 
         <p className="text-center text-xs tracking-[0.3em] text-brown-400 uppercase mb-3">Visit Guide</p>
         <h2 className="font-sans font-bold text-3xl md:text-4xl text-cream-50 text-center mb-3">
