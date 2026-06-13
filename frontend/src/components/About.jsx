@@ -94,10 +94,10 @@ export default function About() {
   )
 
   return (
-    <section id="about" ref={sectionRef} className="mobile-snap-section bg-cream-50 overflow-y-auto">
+    <section id="about" ref={sectionRef} className="mobile-snap-section flex flex-col md:block pt-14 pb-4 bg-cream-50 overflow-y-auto">
 
       {/* ── 모바일 레이아웃: 카드 1장씩 스와이프 ── */}
-      <div className="md:hidden pt-14 px-4 pb-6">
+      <div className="md:hidden flex-1 flex flex-col justify-center px-4">
         <p className="text-center text-2xl tracking-[0.2em] uppercase text-brown-800 font-bold mb-4">
           Menu
         </p>
