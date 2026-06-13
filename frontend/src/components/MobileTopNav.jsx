@@ -131,29 +131,30 @@ export default function MobileTopNav() {
         className={`md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm transition-transform duration-300 ease-in-out ${isAtHome ? '-translate-y-full' : 'translate-y-0'}`}
       >
         <div
-          className="flex items-center justify-between px-4 h-[52px]"
+          className="relative flex items-center justify-between px-4 h-[52px]"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
-          {/* 좌측: 브랜드 로고 */}
+          {/* 좌측: 브랜드 로고 (두 줄) */}
           <button
             onClick={() => scrollTo('#home')}
             className="flex flex-col leading-none text-left active:opacity-70 transition-opacity"
             aria-label="홈으로 이동"
           >
-            <span className="font-serif text-[15px] tracking-wide text-brown-800">Morning Bakery</span>
-            <span className="text-[9px] tracking-[0.15em] text-brown-400 uppercase">모닝베이커리</span>
+            <span className="font-serif text-[15px] tracking-wide text-brown-800">Morning</span>
+            <span className="font-serif text-[15px] tracking-wide italic text-brown-300">Bakery</span>
           </button>
 
-          {/* 가운데: 현재 섹션 로고 + 아래 화살표 */}
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="flex items-center gap-1.5 text-brown-800 active:opacity-70 transition-opacity"
-            aria-label="네비게이션 메뉴 열기"
-          >
-            <SectionIcon id={activeId} />
-            <span className="text-[13px] font-semibold leading-none">{activeItem?.label}</span>
-            <ChevronDown size={12} strokeWidth={2.5} className="text-brown-500 mt-px" />
-          </button>
+          {/* 가운데: 절대 중앙 정렬 — 현재 섹션 이름 + 아래 화살표 */}
+          <div className="absolute inset-x-0 flex justify-center pointer-events-none">
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="flex items-center gap-1 text-brown-800 active:opacity-70 transition-opacity pointer-events-auto"
+              aria-label="네비게이션 메뉴 열기"
+            >
+              <span className="text-[13px] font-semibold leading-none">{activeItem?.label}</span>
+              <ChevronDown size={12} strokeWidth={2.5} className="text-brown-500 mt-px" />
+            </button>
+          </div>
 
           {/* 우측: 전체 사이트맵 */}
           <button
